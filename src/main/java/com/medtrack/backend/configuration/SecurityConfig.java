@@ -11,12 +11,26 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  //TODO: static final CorsConfiguration corsConfig = new CorsConfiguration().setAllowedOriginPatterns().setAllowedMethods()
+  private static final CorsConfiguration corsConfig = buildCorsConfiguration();
+
+  private static CorsConfiguration buildCorsConfiguration() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.addAllowedOrigin("*");
+    config.addAllowedHeader("*");
+    config.addAllowedMethod("OPTIONS");
+    config.addAllowedMethod("HEAD");
+    config.addAllowedMethod("GET");
+    config.addAllowedMethod("PUT");
+    config.addAllowedMethod("POST");
+    config.addAllowedMethod("DELETE");
+    config.addAllowedMethod("PATCH");
+    return config;
+  }
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-      .cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
+      .cors().configurationSource(request -> corsConfig)
       .and()
       .csrf().disable()
       .authorizeHttpRequests()
