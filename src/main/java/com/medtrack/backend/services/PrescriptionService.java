@@ -3,7 +3,6 @@ package com.medtrack.backend.services;
 import com.medtrack.backend.commands.Prescription.inputs.PrescriptionCommand;
 import com.medtrack.backend.commands.Prescription.outputs.PrescriptionDTO;
 import com.medtrack.backend.commands.PrescriptionItem.inputs.PrescriptionItemCommand;
-import com.medtrack.backend.entities.MedicationPresentation;
 import com.medtrack.backend.entities.Prescription;
 import com.medtrack.backend.entities.PrescriptionItem;
 import com.medtrack.backend.repositories.PrescriptionItemRepository;
@@ -39,7 +38,7 @@ public class PrescriptionService {
             prescriptionItem.setDuration(item.getDuration());
             prescriptionItem.setDosage(item.getDosage());
             prescriptionItem.setFrequency(item.getFrequency());
-            prescriptionItem.setMedicationPresentation(MedicationPresentation.builder().medicationPresentationId(item.getMedicationPresentationId()).build());
+            //prescriptionItem.setMedicationPresentation(MedicationCompanyPresentation.builder().medicationPresentationId(item.getMedicationPresentationId()).build());
 
             prescription.getItemList().add(prescriptionItem);
             itemRepository.saveAndFlush(prescriptionItem);

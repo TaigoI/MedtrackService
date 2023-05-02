@@ -1,5 +1,7 @@
 package com.medtrack.backend.entities;
 
+import com.medtrack.backend.entities.domain.Medication;
+import com.medtrack.backend.entities.domain.Presentation;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,20 +11,25 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "medication_presentation")
 public class MedicationPresentation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long medicationPresentationId;
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "medicationId")
+    @JoinColumn(name = "medicationid")
     private Medication medication;
 
-    private String presentationType;
+    @ManyToOne
+    @JoinColumn(name = "presentationid")
+    private Presentation presentation;
 
-    private Integer doseAmount;
+    @Column(name = "dosage_amount")
+    private String dosageAmount;
 
-    private String doseUnit;
+    @Column(name = "dosage_unit")
+    private String dosageUnit;
 
 }

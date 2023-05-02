@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
 
     @Query(value = "SELECT * " +
-            "FROM Prescription P " +
+            "FROM prescription P " +
             "WHERE :value IS NULL OR (P.title ILIKE CONCAT('%',:value,'%'))"
             ,nativeQuery = true)
     Page<Prescription> searchByTitle(String value, Pageable pageable);

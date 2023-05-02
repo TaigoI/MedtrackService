@@ -16,12 +16,12 @@ public class PrescriptionItem {
     private Long prescriptionItemId;
 
     @ManyToOne
-    @JoinColumn(name = "prescriptionId")
+    @JoinColumn(name = "prescriptionid")
     private Prescription prescription;
 
     @ManyToOne
-    @JoinColumn(name = "medicationPresentationId")
-    private MedicationPresentation medicationPresentation;
+    @JoinColumn(name = "mpcid")
+    private MedicationPresentationCompany medicationPresentationCompany;
 
     private Integer dosage;
     private Integer frequency; //in minutes

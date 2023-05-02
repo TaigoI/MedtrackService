@@ -18,6 +18,7 @@ public class PrescriptionController {
     public ResponseEntity<?> search(@RequestParam(required = false) String value,
                                     @RequestParam(defaultValue = "0") Integer page,
                                     @RequestParam(defaultValue = "20") Integer size) {
+        if (value == null) value = "";
         return ResponseEntity.ok(service.search(value, PageRequest.of(page, size)));
     }
 

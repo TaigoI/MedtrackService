@@ -25,10 +25,10 @@ public class PrescriptionItemDTO {
     this.dosage = item.getDosage();
     this.frequency = item.getFrequency();
     this.duration = item.getDuration();
-    this.medicationName = item.getMedicationPresentation().getMedication().getName();
-    this.presentationType = item.getMedicationPresentation().getPresentationType();
-    this.doseAmount = item.getMedicationPresentation().getDoseAmount();
-    this.doseUnit = item.getMedicationPresentation().getDoseUnit();
+    //this.medicationName = item.getMedicationPresentation().getMedication().getName();
+    //this.presentationType = item.getMedicationPresentation().getPresentationType();
+    //this.doseAmount = item.getMedicationPresentation().getDoseAmount();
+    //this.doseUnit = item.getMedicationPresentation().getDoseUnit();
   }
 
 
