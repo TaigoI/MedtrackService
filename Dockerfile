@@ -1,11 +1,10 @@
-FROM openjdk:17-jdk-alpine as build
+FROM maven:3-eclipse-temurin-17-alpine as build
 
 WORKDIR /app
 
 COPY . .
 
-RUN chmod +x mvnw
-RUN ./mvnw clean package -Dmaven.test.skip=true
+RUN mvn clean package -Dmaven.test.skip=true
 
 FROM openjdk:17-jdk-alpine
 
