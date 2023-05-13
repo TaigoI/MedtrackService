@@ -1,8 +1,8 @@
 package com.medtrack.backend.services;
 
 import com.medtrack.backend.commands.Medication.inputs.MedicationCommand;
-import com.medtrack.backend.entities.domain.Medication;
-import com.medtrack.backend.repositories.MedicationRepository;
+import com.medtrack.backend.entities.dataset.Medication;
+import com.medtrack.backend.repositories.dataset.MedicationRepository;
 import com.medtrack.backend.util.Searchable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

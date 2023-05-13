@@ -1,4 +1,4 @@
-package com.medtrack.backend.entities.domain;
+package com.medtrack.backend.entities.dataset;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,8 +9,8 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "presentation")
-public class Presentation {
+@Table(name = "medication")
+public class Medication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

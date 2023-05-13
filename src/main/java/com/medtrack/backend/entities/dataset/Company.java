@@ -1,4 +1,4 @@
-package com.medtrack.backend.entities.domain;
+package com.medtrack.backend.entities.dataset;
 
 import jakarta.persistence.*;
 import lombok.*;

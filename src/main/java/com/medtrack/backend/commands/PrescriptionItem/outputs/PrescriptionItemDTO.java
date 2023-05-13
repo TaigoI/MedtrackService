@@ -1,6 +1,6 @@
 package com.medtrack.backend.commands.PrescriptionItem.outputs;
 
-import com.medtrack.backend.entities.PrescriptionItem;
+import com.medtrack.backend.entities.prescription.PrescriptionItem;
 import lombok.*;
 
 @Getter

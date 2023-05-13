@@ -1,6 +1,6 @@
-package com.medtrack.backend.repositories;
+package com.medtrack.backend.repositories.dataset;
 
-import com.medtrack.backend.entities.domain.Medication;
+import com.medtrack.backend.entities.dataset.Medication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

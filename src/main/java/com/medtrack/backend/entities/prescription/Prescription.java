@@ -1,4 +1,4 @@
-package com.medtrack.backend.entities;
+package com.medtrack.backend.entities.prescription;
 
 import jakarta.persistence.*;
 import lombok.*;
