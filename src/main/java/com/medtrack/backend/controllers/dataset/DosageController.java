@@ -1,7 +1,8 @@
-package com.medtrack.backend.controllers;
+package com.medtrack.backend.controllers.dataset;
 
-import com.medtrack.backend.commands.Medication.inputs.MedicationCommand;
-import com.medtrack.backend.services.MedicationService;
+import com.medtrack.backend.commands.dataset.Medication.MedicationCommand;
+import com.medtrack.backend.services.dataset.MedicationService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,9 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/medication")
 @RequiredArgsConstructor
-public class MedicationController {
+public class DosageController {
 
     private final MedicationService service;
 

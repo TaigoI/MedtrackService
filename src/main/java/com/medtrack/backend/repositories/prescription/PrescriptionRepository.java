@@ -10,8 +10,10 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
 
     @Query(value = "SELECT * " +
             "FROM prescription P " +
-            "WHERE :value IS NULL OR (P.title ILIKE CONCAT('%',:value,'%'))"
-            ,nativeQuery = true)
-    Page<Prescription> searchByTitle(String value, Pageable pageable);
+            "WHERE P.user_id = :userId " +
+            "AND (:templatesOnly IS FALSE OR (P.template IS TRUE)) " +
+            "AND (:value IS NULL OR (P.title ILIKE CONCAT('%',:value,'%'))) "
+            , nativeQuery = true)
+    Page<Prescription> searchByTitle(Long userId, String value, Boolean templatesOnly, Pageable pageable);
 
 }

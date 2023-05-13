@@ -1,7 +1,5 @@
 package com.medtrack.backend.entities.dataset;
 
-import com.medtrack.backend.entities.dataset.Company;
-import com.medtrack.backend.entities.dataset.MedicationPresentation;
 import jakarta.persistence.*;
 import lombok.*;
 

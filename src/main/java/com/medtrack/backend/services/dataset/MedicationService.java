@@ -1,6 +1,6 @@
-package com.medtrack.backend.services;
+package com.medtrack.backend.services.dataset;
 
-import com.medtrack.backend.commands.Medication.inputs.MedicationCommand;
+import com.medtrack.backend.commands.dataset.Medication.MedicationCommand;
 import com.medtrack.backend.entities.dataset.Medication;
 import com.medtrack.backend.repositories.dataset.MedicationRepository;
 import com.medtrack.backend.util.Searchable;

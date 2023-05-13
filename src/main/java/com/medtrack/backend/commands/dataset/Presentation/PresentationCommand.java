@@ -1,4 +1,4 @@
-package com.medtrack.backend.commands.Medication.inputs;
+package com.medtrack.backend.commands.dataset.Presentation;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MedicationCommand {
+public class PresentationCommand {
 
     private String name;
 
