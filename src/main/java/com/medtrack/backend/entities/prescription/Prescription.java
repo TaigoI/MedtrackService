@@ -1,6 +1,6 @@
 package com.medtrack.backend.entities.prescription;
 
-import com.medtrack.backend.commands.prescription.Prescription.PrescriptionCommand;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionCommand;
 import com.medtrack.backend.entities.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,7 +25,7 @@ public class Prescription {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "userid")
     private User user;
 
     @CreationTimestamp

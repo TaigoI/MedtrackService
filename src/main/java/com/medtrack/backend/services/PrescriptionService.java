@@ -1,10 +1,11 @@
 package com.medtrack.backend.services;
 
-import com.medtrack.backend.commands.prescription.Prescription.PrescriptionCommand;
-import com.medtrack.backend.commands.prescription.Prescription.PrescriptionDTO;
-import com.medtrack.backend.commands.prescription.PrescriptionItem.PrescriptionItemCommand;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionCommand;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionDTO;
+import com.medtrack.backend.commands.Prescription.PrescriptionItem.PrescriptionItemCommand;
 import com.medtrack.backend.entities.prescription.Prescription;
 import com.medtrack.backend.entities.prescription.PrescriptionItem;
+import com.medtrack.backend.entities.user.User;
 import com.medtrack.backend.repositories.prescription.PrescriptionItemRepository;
 import com.medtrack.backend.repositories.prescription.PrescriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +28,10 @@ public class PrescriptionService {
         return repository.findById(prescriptionId).map(PrescriptionDTO::new).orElseThrow(Exception::new);
     }
 
-    public PrescriptionDTO create(PrescriptionCommand command) {
+    public PrescriptionDTO create(PrescriptionCommand command, Long userId) {
         Prescription prescription = new Prescription();
         prescription.setTitle(command.getTitle());
+        prescription.setUser(User.builder().id(userId).build());
         repository.saveAndFlush(prescription);
 
         for (PrescriptionItemCommand itemCommand : command.getItems()) {
