@@ -4,7 +4,7 @@ import com.medtrack.backend.auth.JwtService;
 import com.medtrack.backend.auth.LoginCommand;
 import com.medtrack.backend.auth.MedtrackUserDetails;
 import com.medtrack.backend.auth.TokenDTO;
-import com.medtrack.backend.commands.user.CreateUserCommand;
+import com.medtrack.backend.commands.User.CreateUserCommand;
 import com.medtrack.backend.entities.user.User;
 import com.medtrack.backend.repositories.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,8 @@ public class AuthService {
 
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository repository;
 
     public TokenDTO login(LoginCommand command) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(command.getUsername(), command.getPassword()));
@@ -31,6 +33,14 @@ public class AuthService {
             throw new UsernameNotFoundException("invalid user request!");
         }
     }
+
+    public User signup(CreateUserCommand command) {
+        User user = new User();
+        user.updateWithCommand(command);
+        user.updateEncodedPassword(passwordEncoder.encode(command.getPassword()));
+        return repository.saveAndFlush(user);
+    }
+
 
     //TODO
     //public void updatePassword() {}

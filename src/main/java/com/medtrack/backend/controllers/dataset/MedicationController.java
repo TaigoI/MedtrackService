@@ -19,12 +19,13 @@ public class MedicationController {
 
     //TODO
     @GetMapping
-    public ResponseEntity<?> search(@RequestParam(required = false) String value,
+    public ResponseEntity<?> search(@RequestParam(required = false) String medication,
+                                    @RequestParam(required = false) String presentation,
+                                    @RequestParam(required = false) String dosage,
                                     @RequestParam(defaultValue = "0") Integer page,
                                     @RequestParam(defaultValue = "20") Integer size) {
-        if (value == null) value = "";
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(service.search(value, pageable));
+        return ResponseEntity.ok(service.search(medication, presentation, dosage, pageable));
     }
 
     @GetMapping("/{id}")

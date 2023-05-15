@@ -1,6 +1,6 @@
 package com.medtrack.backend.entities.user;
 
-import com.medtrack.backend.commands.user.CreateUserCommand;
+import com.medtrack.backend.commands.User.CreateUserCommand;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

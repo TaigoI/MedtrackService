@@ -9,16 +9,16 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "medication_company_presentation")
-public class MedicationPresentationCompany {
+@Table(name = "company_medication_presentation_dosage")
+public class CompanyMedicationPresentationDosage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "medicationpresentationid")
-    private MedicationPresentation medicationPresentation;
+    @JoinColumn(name = "medicationpresentationdosageid")
+    private MedicationPresentationDosage medicationPresentationDosage;
 
     @ManyToOne
     @JoinColumn(name = "companyid")

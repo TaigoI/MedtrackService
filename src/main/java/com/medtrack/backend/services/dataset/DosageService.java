@@ -1,8 +1,8 @@
 package com.medtrack.backend.services.dataset;
 
-import com.medtrack.backend.commands.dataset.Medication.MedicationCommand;
-import com.medtrack.backend.entities.dataset.Medication;
-import com.medtrack.backend.repositories.dataset.MedicationRepository;
+import com.medtrack.backend.commands.dataset.Dosage.DosageCommand;
+import com.medtrack.backend.entities.dataset.Dosage;
+import com.medtrack.backend.repositories.dataset.DosageRepository;
 import com.medtrack.backend.util.Searchable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MedicationService {
+public class DosageService {
 
-    private final MedicationRepository repository;
+    private final DosageRepository repository;
 
-    public Page<Medication> search(String medication, String presentation, String dosage, Pageable pageable) {
+    public Page<Dosage> search(String medication, String presentation, String dosage, Pageable pageable) {
         return repository.searchAssociated(
                 medication == null ? null : Searchable.toLike(medication),
                 presentation == null ? null : Searchable.toLike(presentation),
@@ -25,21 +25,21 @@ public class MedicationService {
         );
     }
 
-    public Medication findById(Long id) throws Exception {
+    public Dosage findById(Long id) throws Exception {
         return repository.findById(id).orElseThrow(Exception::new);
     }
 
-    public Medication create(MedicationCommand command) {
-        Medication entity = new Medication();
+    public Dosage create(DosageCommand command) {
+        Dosage entity = new Dosage();
         return update(entity, command);
     }
 
-    public Medication updateById(Long id, MedicationCommand command) throws Exception {
-        Medication entity = findById(id);
+    public Dosage updateById(Long id, DosageCommand command) throws Exception {
+        Dosage entity = findById(id);
         return update(entity, command);
     }
 
-    public Medication update(Medication entity, MedicationCommand command) {
+    public Dosage update(Dosage entity, DosageCommand command) {
         entity.updateWithCommand(command);
         return repository.saveAndFlush(entity);
     }

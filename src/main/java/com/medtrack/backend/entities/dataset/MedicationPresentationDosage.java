@@ -9,8 +9,8 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "medication_presentation")
-public class MedicationPresentation {
+@Table(name = "medication_presentation_dosage")
+public class MedicationPresentationDosage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +23,10 @@ public class MedicationPresentation {
     @ManyToOne
     @JoinColumn(name = "presentationid")
     private Presentation presentation;
+
+    @ManyToOne
+    @JoinColumn(name = "dosageid")
+    private Dosage dosage;
 
     @Column(name = "dosage_amount")
     private String dosageAmount;

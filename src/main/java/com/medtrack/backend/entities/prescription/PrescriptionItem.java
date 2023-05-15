@@ -1,7 +1,7 @@
 package com.medtrack.backend.entities.prescription;
 
 import com.medtrack.backend.commands.prescription.PrescriptionItem.PrescriptionItemCommand;
-import com.medtrack.backend.entities.dataset.MedicationPresentation;
+import com.medtrack.backend.entities.dataset.MedicationPresentationDosage;
 import com.medtrack.backend.enums.TimeUnit;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,7 +24,7 @@ public class PrescriptionItem {
 
     @ManyToOne
     @JoinColumn(name = "medication_presentation_id")
-    private MedicationPresentation medicationPresentation;
+    private MedicationPresentationDosage medicationPresentationDosage;
 
     private Integer doseAmount;
 
@@ -37,7 +37,7 @@ public class PrescriptionItem {
 
     public PrescriptionItem(Prescription prescription, PrescriptionItemCommand command) {
         this.prescription = prescription;
-        this.medicationPresentation = MedicationPresentation.builder().id(command.getMedicationPresentationId()).build();
+        this.medicationPresentationDosage = MedicationPresentationDosage.builder().id(command.getMedicationPresentationId()).build();
         this.doseAmount = command.getDoseAmount();
         this.interval = command.getInterval();
         this.intervalUnit = command.getIntervalUnit();

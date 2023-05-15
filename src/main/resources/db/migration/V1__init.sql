@@ -1,11 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
-
-CREATE TABLE public.company
-(
-    id         integer           NOT NULL,
-    name       character varying NOT NULL,
+CREATE TABLE public.company (
+    id integer NOT NULL,
+    name character varying NOT NULL,
     searchable character varying NOT NULL
 );
 CREATE SEQUENCE public.company_id_seq
@@ -19,10 +17,42 @@ ALTER SEQUENCE public.company_id_seq OWNED BY public.company.id;
 
 
 
-CREATE TABLE public.medication
-(
-    id         integer           NOT NULL,
-    name       character varying NOT NULL,
+CREATE TABLE public.company_medication_presentation_dosage (
+    id integer NOT NULL,
+    companyid integer NOT NULL,
+    medicationpresentationdosageid integer NOT NULL
+);
+CREATE SEQUENCE public.company_medication_presentation_dosage_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE public.company_medication_presentation_dosage_id_seq OWNED BY public.company_medication_presentation_dosage.id;
+
+
+
+CREATE TABLE public.dosage (
+    id integer NOT NULL,
+    amount character varying NOT NULL,
+    unit character varying NOT NULL,
+    searchable character varying NOT NULL
+);
+CREATE SEQUENCE public.dosage_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE public.dosage_id_seq OWNED BY public.dosage.id;
+
+
+
+CREATE TABLE public.medication (
+    id integer NOT NULL,
+    name character varying NOT NULL,
     searchable character varying NOT NULL
 );
 CREATE SEQUENCE public.medication_id_seq
@@ -36,45 +66,27 @@ ALTER SEQUENCE public.medication_id_seq OWNED BY public.medication.id;
 
 
 
-CREATE TABLE public.company_medication_presentation
-(
-    id                       integer NOT NULL,
-    companyid                integer NOT NULL,
-    medicationpresentationid integer NOT NULL
+CREATE TABLE public.medication_presentation_dosage (
+    id bigint NOT NULL,
+    medicationid bigint,
+    presentationid bigint,
+    dosageid bigint,
+    dosage_amount character varying(255),
+    dosage_unit character varying(255)
 );
-CREATE SEQUENCE public.company_medication_presentation_id_seq
-    AS integer
+CREATE SEQUENCE public.medication_presentation_dosage_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE public.company_medication_presentation_id_seq OWNED BY public.company_medication_presentation.id;
+ALTER SEQUENCE public.medication_presentation_dosage_id_seq OWNED BY public.medication_presentation_dosage.id;
 
 
-
-CREATE TABLE public.medication_presentation
-(
-    id             bigint NOT NULL,
-    dosage_amount  character varying(255),
-    dosage_unit    character varying(255),
-    medicationid   bigint,
-    presentationid bigint
-);
-CREATE SEQUENCE public.medication_presentation_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE public.medication_presentation_id_seq OWNED BY public.medication_presentation.id;
-
-
-
-CREATE TABLE public.presentation
-(
-    id         integer           NOT NULL,
-    name       character varying NOT NULL,
+ 
+CREATE TABLE public.presentation (
+    id integer NOT NULL,
+    name character varying NOT NULL,
     searchable character varying NOT NULL
 );
 CREATE SEQUENCE public.presentation_id_seq
@@ -88,27 +100,23 @@ ALTER SEQUENCE public.presentation_id_seq OWNED BY public.presentation.id;
 
 
 
-ALTER TABLE ONLY public.company
-    ALTER COLUMN id SET DEFAULT nextval('public.company_id_seq'::regclass);
-ALTER TABLE ONLY public.company_medication_presentation
-    ALTER COLUMN id SET DEFAULT nextval('public.company_medication_presentation_id_seq'::regclass);
-ALTER TABLE ONLY public.medication
-    ALTER COLUMN id SET DEFAULT nextval('public.medication_id_seq'::regclass);
-ALTER TABLE ONLY public.medication_presentation
-    ALTER COLUMN id SET DEFAULT nextval('public.medication_presentation_id_seq'::regclass);
-ALTER TABLE ONLY public.presentation
-    ALTER COLUMN id SET DEFAULT nextval('public.presentation_id_seq'::regclass);
+ALTER TABLE ONLY public.company ALTER COLUMN id SET DEFAULT nextval('public.company_id_seq'::regclass);
+ALTER TABLE ONLY public.company_medication_presentation_dosage ALTER COLUMN id SET DEFAULT nextval('public.company_medication_presentation_dosage_id_seq'::regclass);
+ALTER TABLE ONLY public.dosage ALTER COLUMN id SET DEFAULT nextval('public.dosage_id_seq'::regclass);
+ALTER TABLE ONLY public.medication ALTER COLUMN id SET DEFAULT nextval('public.medication_id_seq'::regclass);
+ALTER TABLE ONLY public.medication_presentation_dosage ALTER COLUMN id SET DEFAULT nextval('public.medication_presentation_dosage_id_seq'::regclass);
+ALTER TABLE ONLY public.presentation ALTER COLUMN id SET DEFAULT nextval('public.presentation_id_seq'::regclass);
 
 
 
 COPY public.company (id, name, searchable) FROM stdin;
+7	Adium S.A.	adiums.a.
 1	1farma Industria Farmaceutica Ltda	1farmaindustriafarmaceuticaltda
 2	3m Do Brasil Ltda	3mdobrasilltda
 3	Abbott Laboratórios Do Brasil Ltda	abbottlaboratoriosdobrasilltda
 4	Abbvie Farmacêutica Ltda.	abbviefarmaceuticaltda.
 5	Accord Farmacêutica Ltda	accordfarmaceuticaltda
 6	Aché Laboratórios Farmacêuticos S.A	achelaboratoriosfarmaceuticoss.a
-7	Adium S.A.	adiums.a.
 8	Airela Indústria Farmacêutica Ltda.	airelaindustriafarmaceuticaltda.
 9	Alexion Servicos E Farmaceutica Do Brasil Ltda	alexionservicosefarmaceuticadobrasilltda
 10	Alko Do Brasil Industria E Comercio Ltda	alkodobrasilindustriaecomercioltda
@@ -153,6 +161,7 @@ COPY public.company (id, name, searchable) FROM stdin;
 49	Catalent Brasil Ltda.	catalentbrasilltda.
 50	Cazi Quimica Farmaceutica Industria E Comercio Ltda	caziquimicafarmaceuticaindustriaecomercioltda
 51	Cellera Farmacêutica S.A.	cellerafarmaceuticas.a.
+125	Industria Farmaceutica Basa Ltda	industriafarmaceuticabasaltda
 52	Celltrion Healthcare Distribuicao De Produtos Farmaceuticos Dos Brasil Ltda	celltrionhealthcaredistribuicaodeprodutosfarmaceuticosdosbrasilltda
 53	Chemicaltech Farmaceutica Ltda	chemicaltechfarmaceuticaltda
 54	Chiesi Farmacêutica Ltda	chiesifarmaceuticaltda
@@ -226,7 +235,6 @@ COPY public.company (id, name, searchable) FROM stdin;
 122	Hypofarma - Instituto De Hypodermia E Farmácia Ltda	hypofarmainstitutodehypodermiaefarmacialtda
 123	Ibf - Industria Brasileira De Farmoquimicos S.A.	ibfindustriabrasileiradefarmoquimicoss.a.
 124	Ifal Industria E Comercio De Produtos Farmac Ltda	ifalindustriaecomerciodeprodutosfarmacltda
-125	Industria Farmaceutica Basa Ltda	industriafarmaceuticabasaltda
 126	Indústria Química Do Estado De Goiás S/A - Iquego	industriaquimicadoestadodegoiass/aiquego
 127	Infan Industria Quimica Farmaceutica Nacional S/A	infanindustriaquimicafarmaceuticanacionals/a
 128	Innovative Medicines Brasil Sp Distribuicao De Medicamentos Ltda	innovativemedicinesbrasilspdistribuicaodemedicamentosltda
@@ -358,7 +366,9 @@ COPY public.company (id, name, searchable) FROM stdin;
 \.
 
 
-COPY public.company_medication_presentation (id, companyid, medicationpresentationid) FROM stdin;
+
+
+COPY public.company_medication_presentation_dosage (id, companyid, medicationpresentationdosageid) FROM stdin;
 4328	95	9351
 4985	77	9206
 6150	22	5430
@@ -13852,13 +13862,1592 @@ COPY public.company_medication_presentation (id, companyid, medicationpresentati
 \.
 
 
+
+COPY public.dosage (id, amount, unit, searchable) FROM stdin;
+264	(3	MG	(3mg
+606	1.5	G	1.5g
+1567	XPE		xpe
+1			
+2	(0.005 + 0.005)	ML/ML	(0.005+0.005)mlml
+3	(0.006 + 0.0003 + 0.0002 + 0.0031)	G/ML	(0.006+0.0003+0.0002+0.0031)gml
+4	(0.015 + 0.06)	MG	(0.015+0.06)mg
+5	(0.02 + 0.075)	MG	(0.02+0.075)mg
+6	(0.03 + 0.075)	MG	(0.03+0.075)mg
+7	(0.035 + 2)	MG	(0.035+2)mg
+8	(0.04 + 5)	MG/ML	(0.04+5)mgml
+9	(0.05	MG	(0.05mg
+10	(0.075 + 0.03)	MG	(0.075+0.03)mg
+11	(0.1 + 17)	MG/ML	(0.1+17)mgml
+12	(0.10 + 0.0012 + 45)	MG/ML	(0.10+0.0012+45)mgml
+13	(0.100 + 0.150)	G/G	(0.100+0.150)gg
+14	(0.125	MG+0.030	(0.125mg+0.030
+15	(0.15 + 0.02)	MG	(0.15+0.02)mg
+16	(0.15 + 0.03)	MG	(0.15+0.03)mg
+17	(0.15 + 0.30)	MG/ML	(0.15+0.30)mgml
+18	(0.18	ML	(0.18ml
+19	(0.2 + 0.1)	MG/ML	(0.2+0.1)mgml
+203	(200	MG/ML	(200mgml
+20	(0.25 + 0.33 + 0.05)	G/G	(0.25+0.33+0.05)gg
+21	(0.250 + 0.250)	G/G	(0.250+0.250)gg
+22	(0.3 + 5.0)	MG/ML	(0.3+5.0)mgml
+23	(0.30 + 0.15)	MG/ML	(0.30+0.15)mgml
+24	(0.4 + 0.05)	MG/ML	(0.4+0.05)mgml
+25	(0.436 + 0.367 + 0.1765)	G/G	(0.436+0.367+0.1765)gg
+26	(0.5 + 0.4)	MG	(0.5+0.4)mg
+27	(0.5 + 1)	MG/G	(0.5+1)mgg
+28	(0.5 + 1.0)	MG/G	(0.5+1.0)mgg
+29	(0.5 + 1.0 + 10.0 + 10.0)	MG/G	(0.5+1.0+10.0+10.0)mgg
+30	(0.5 + 1 + 10 + 10)	MG/G	(0.5+1+10+10)mgg
+31	(0.5 + 30)	MG/G	(0.5+30)mgg
+32	(0.5 + 4.0)	MG/ML	(0.5+4.0)mgml
+33	(0.50 + 1.00)	MG/G	(0.50+1.00)mgg
+34	(0.50 + 2.15 + 2.15)	G/4.8	(0.50+2.15+2.15)g4.8
+35	(0.50 + 2.15 + 2.15)	G/4.90	(0.50+2.15+2.15)g4.90
+36	(0.50 + 2.15 + 2.15)	G/4.90G	(0.50+2.15+2.15)g4.90g
+37	(0.50 + 50.0 + 50.0 + 5.0)	MG/ML	(0.50+50.0+50.0+5.0)mgml
+38	(0.6 + 0.02 + 0.03 + 0.31)	G/ML	(0.6+0.02+0.03+0.31)gml
+39	(0.60 + 6.00)	MG	(0.60+6.00)mg
+40	(0.625	ML	(0.625ml
+41	(1.0 + 0.5)	G	(1.0+0.5)g
+42	(1.0 + 0.5)	MG	(1.0+0.5)mg
+43	(1.0 + 0.5)	MG/G	(1.0+0.5)mgg
+44	(1.0 + 100.0 + 100.0 + 100.0)	MG	(1.0+100.0+100.0+100.0)mg
+45	(1.0 + 2.0)	G	(1.0+2.0)g
+46	(1.0 + 2.0)	MG	(1.0+2.0)mg
+47	(1.0 + 2.5 + 1.5)	MG	(1.0+2.5+1.5)mg
+48	(1.0 + 50.0 + 50.0 + 50.0)	MG	(1.0+50.0+50.0+50.0)mg
+49	(1.00 + 10.00)	MG/G	(1.00+10.00)mgg
+50	(1.00 + 12.00)	MG/ML	(1.00+12.00)mgml
+51	(1.00 + 20.00)	MG/G	(1.00+20.00)mgg
+52	(1.49 + 2.34 + 1.96 + 19.83)	MG/ML	(1.49+2.34+1.96+19.83)mgml
+53	(1.5 + 1.2)	G	(1.5+1.2)g
+54	(1.5 + 45)	MG/G	(1.5+45)mgg
+55	(1 + 0.5)	G	(1+0.5)g
+56	(1 + 0.55 + 0.4 + 4 + 0.5)	MG/ML	(1+0.55+0.4+4+0.5)mgml
+57	(1 + 100 + 50)	MG	(1+100+50)mg
+58	(1 + 25)	MG	(1+25)mg
+59	(1 + 5)	MG	(1+5)mg
+60	(10.0 + 10.0)	MG	(10.0+10.0)mg
+61	(10.0 + 10.0 + 50.0)	MG/G	(10.0+10.0+50.0)mgg
+62	(10.0 + 15.0)	MG	(10.0+15.0)mg
+63	(10.0 + 2.5 + 10.0)	MG	(10.0+2.5+10.0)mg
+64	(10.0 + 2.5 + 5.0)	MG	(10.0+2.5+5.0)mg
+65	(10.0 + 20.0)	MG	(10.0+20.0)mg
+66	(10.0 + 25.0)	MG	(10.0+25.0)mg
+67	(10.0 + 250.0)	MG	(10.0+250.0)mg
+68	(10.0 + 5.0)	MG	(10.0+5.0)mg
+69	(10.0 + 500.0)	MG	(10.0+500.0)mg
+70	(10 + 0.00025 + 0.0012)	MG/ML	(10+0.00025+0.0012)mgml
+71	(10 + 10)	MG	(10+10)mg
+72	(10 + 10 + 10 + 30)	MG	(10+10+10+30)mg
+73	(10 + 1000)	MG	(10+1000)mg
+74	(10 + 2.5)	MG	(10+2.5)mg
+75	(10 + 20)	MG	(10+20)mg
+76	(10 + 250)	MG	(10+250)mg
+77	(10 + 5)	MG	(10+5)mg
+78	(10 + 50)	MG/G	(10+50)mgg
+79	(10 + 50 + 100)	MG/ML	(10+50+100)mgml
+80	(10 + 500)	MG	(10+500)mg
+81	(100.0 + 100.0)	MG/ML	(100.0+100.0)mgml
+82	(100.0 + 1000.0)	MG	(100.0+1000.0)mg
+83	(100.0 + 25.0)	MG	(100.0+25.0)mg
+84	(100.0 + 6.0 + 12.5)	MCG	(100.0+6.0+12.5)mcg
+85	(100 + 100)	MG/ML	(100+100)mgml
+86	(100 + 100 + 5)	MG	(100+100+5)mg
+87	(100 + 125)	MG	(100+125)mg
+88	(100 + 150)	MG	(100+150)mg
+89	(100 + 150)	MG/G	(100+150)mgg
+90	(100 + 2 + 2)	MG/ML	(100+2+2)mgml
+91	(100 + 20)	MG	(100+20)mg
+92	(100 + 200)	MG	(100+200)mg
+93	(100 + 220)	MG	(100+220)mg
+94	(100 + 25)	MG	(100+25)mg
+95	(100 + 50 + 10)	MG/ML	(100+50+10)mgml
+96	(100 + 50 + 75)	MG	(100+50+75)mg
+97	(1000.0 + 200.0)	MG	(1000.0+200.0)mg
+98	(1000 + 200)	MG	(1000+200)mg
+99	(103 + 1.0 + 2.5 + 1.0)	MEQ/L	(103+1.0+2.5+1.0)meql
+100	(103 + 1.0 + 3.5 + 1.0)	MEQ/L	(103+1.0+3.5+1.0)meql
+101	(103 + 1.5 + 3.0 + 1.0)	MEQ/L	(103+1.5+3.0+1.0)meql
+102	(103 + 1.5 + 3.5 + 1.0)	MEQ/L	(103+1.5+3.5+1.0)meql
+103	(103 + 1.5 + 3 + 1)	MEQ/L	(103+1.5+3+1)meql
+104	(103 + 2.0 + 2.5 + 1.0)	MEQ/L	(103+2.0+2.5+1.0)meql
+105	(103 + 2.0 + 3.0 + 1.0)	MEQ/L	(103+2.0+3.0+1.0)meql
+106	(103 + 2.0 + 3.5 + 1.0)	MEQ/L	(103+2.0+3.5+1.0)meql
+107	(103 + 2 + 2.5 + 1)	MEQ/L	(103+2+2.5+1)meql
+108	(103 + 2 + 3.5 + 1)	MEQ/L	(103+2+3.5+1)meql
+109	(103 + 2 + 3 + 1)	MEQ/L	(103+2+3+1)meql
+110	(105 + 1.5 + 2.5 + 1)	MEQ/L	(105+1.5+2.5+1)meql
+111	(105 + 1.5 + 2.5 + 1.0)	MEQ/L	(105+1.5+2.5+1.0)meql
+112	(105 + 1.5 + 3.5 + 1)	MEQ/L	(105+1.5+3.5+1)meql
+113	(105 + 1.5 + 3.5 + 1.0)	MEQ/L	(105+1.5+3.5+1.0)meql
+114	(10	MG	(10mg
+115	(11.1 + 35 + 20)	G/L	(11.1+35+20)gl
+116	(120 + 20)	COM	(120+20)com
+117	(120 + 8.58)	MG/ML	(120+8.58)mgml
+118	(125.0 + 5.0)	MG	(125.0+5.0)mg
+119	(125.0 + 50.0 + 300.0 + 30.0)	MG	(125.0+50.0+300.0+30.0)mg
+120	(125 + 50 + 300 + 30)	MG	(125+50+300+30)mg
+121	(13.30 + 0.33 + 0.13)	MG/ML	(13.30+0.33+0.13)mgml
+122	(138 + 2.0 + 2.5 + 1.0 + 104.56 + 4.0 + 35.44 + 1)	MEQ/L	(138+2.0+2.5+1.0+104.56+4.0+35.44+1)meql
+123	(138 + 2.0 + 2.5 + 1.0 + 107.51 + 3.0 + 32 + 1)	MEQ/L	(138+2.0+2.5+1.0+107.51+3.0+32+1)meql
+124	(138 + 2.0 + 2.5 + 1.0 + 111.02 + 3.0 + 32 + 1)	MEQ/L	(138+2.0+2.5+1.0+111.02+3.0+32+1)meql
+125	(138 + 2.0 + 3.0 + 1.0 + 104.56 + 4.0 + 35.44 + 1)	MEQ/L	(138+2.0+3.0+1.0+104.56+4.0+35.44+1)meql
+126	(138 + 2.0 + 3.5 + 1.0 + 113.02 + 3.0 + 32 + 1)	MEQ/L	(138+2.0+3.5+1.0+113.02+3.0+32+1)meql
+127	(138 + 2 + 2.5 + 1)	MEQ/L	(138+2+2.5+1)meql
+128	(138 + 2 + 3.5 + 1 + 109.5 + 3 + 32)	MEQ/L	(138+2+3.5+1+109.5+3+32)meql
+129	(138 + 2 + 3 + 1)	MEQ/L	(138+2+3+1)meql
+130	(14.2 + 27.5 + 20)	G/L	(14.2+27.5+20)gl
+131	(14.634 + 11.700)	MG	(14.634+11.700)mg
+132	(14.91 + 23.40 + 19.61 + 198.28)	MG/ML	(14.91+23.40+19.61+198.28)mgml
+133	(15 + 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	(15+5.38+4.48+0.183+0.0508)mgml
+134	(15 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	(15+5.38+4.48+0.257+0.0508)mgml
+135	(15 + 5.6 + 5 + 0.20 + 0.15)	MG/ML	(15+5.6+5+0.20+0.15)mgml
+136	(15 + 5.786 + 3.924 + 0.184 + 0.1017)	MG/ML	(15+5.786+3.924+0.184+0.1017)mgml
+137	(15 + 5.786 + 3.924 + 0.2573 + 0.1017)	MG/ML	(15+5.786+3.924+0.2573+0.1017)mgml
+138	(15 + 90)	MG	(15+90)mg
+139	(150.0 + 12.5)	MG	(150.0+12.5)mg
+140	(150.0 + 150.0 + 15.0 + 50.0)	MG	(150.0+150.0+15.0+50.0)mg
+141	(150.00 + 300.00)	MG	(150.00+300.00)mg
+142	(150 + 10)	MG/ML	(150+10)mgml
+143	(150 + 188)	MG	(150+188)mg
+144	(150 + 70)	MG/G	(150+70)mgg
+145	(150	MG	(150mg
+146	(153 + 200 + 25)	MG	(153+200+25)mg
+147	(15	MG/ML	(15mgml
+148	(15	MG/ML+0.147	(15mgml+0.147
+149	(15	MG/ML+0.2573	(15mgml+0.2573
+150	(160.0 + 10.0)	MG	(160.0+10.0)mg
+151	(160.0 + 5.0)	MG	(160.0+5.0)mg
+152	(160.00 + 10.00)	MG	(160.00+10.00)mg
+153	(160.00 + 12.50)	MG	(160.00+12.50)mg
+154	(160.00 + 12.50 + 10.00)	MG	(160.00+12.50+10.00)mg
+155	(160.00 + 12.50 + 5.00)	MG	(160.00+12.50+5.00)mg
+156	(160.00 + 25.00)	MG	(160.00+25.00)mg
+157	(160.00 + 25.00 + 10.00)	MG	(160.00+25.00+10.00)mg
+158	(160.00 + 25.00 + 5.00)	MG	(160.00+25.00+5.00)mg
+159	(160.00 + 5.00)	MG	(160.00+5.00)mg
+160	(160 + 60)	MG/ML	(160+60)mgml
+161	(178 + 185 + 230)	MG	(178+185+230)mg
+162	(18.6 + 1.30)	MG/ML	(18.6+1.30)mgml
+163	(180.0 + 240.0)	MG	(180.0+240.0)mg
+164	(2.0 + 0.03)	MG	(2.0+0.03)mg
+165	(2.0 + 0.035)	MG	(2.0+0.035)mg
+166	(2.0 + 1.0)	G	(2.0+1.0)g
+167	(2.0 + 5.0)	MG	(2.0+5.0)mg
+168	(2.0 + 5.0)	MG/ML	(2.0+5.0)mgml
+169	(2.00 + 0.03)	MG	(2.00+0.03)mg
+170	(2.000 + 0.035)	MG	(2.000+0.035)mg
+171	(2.05 + 0.98 + 22.75 + 2.16)	MG/ML	(2.05+0.98+22.75+2.16)mgml
+172	(2.16 + 4.68 + 0.98 + 20.00)	MG/ML	(2.16+4.68+0.98+20.00)mgml
+173	(2.5 + 1.5)	MG	(2.5+1.5)mg
+174	(2.5 + 10)	MG	(2.5+10)mg
+175	(2.5 + 120.0)	MG	(2.5+120.0)mg
+176	(2.5 + 2.5)	MCG	(2.5+2.5)mcg
+177	(2.5 + 25.0 + 11.25)	MG/ML	(2.5+25.0+11.25)mgml
+178	(2.5 + 6.25)	MG	(2.5+6.25)mg
+179	(2.5 + 60.0)	MG	(2.5+60.0)mg
+180	(2 + 0.03)	MG	(2+0.03)mg
+181	(2 + 0.035)	MG	(2+0.035)mg
+182	(2 + 0.5)	PCC	(2+0.5)pcc
+183	(2 + 1)	MG	(2+1)mg
+184	(2 + 1000)	MG	(2+1000)mg
+185	(20.0 + 0.5 + 2.5)	MG/G	(20.0+0.5+2.5)mgg
+186	(20.0 + 0.64)	MG/G	(20.0+0.64)mgg
+187	(20.0 + 0.64 + 2.5)	MG	(20.0+0.64+2.5)mg
+188	(20.0 + 0.64 + 2.5)	MG/G	(20.0+0.64+2.5)mgg
+189	(20.0 + 10.0)	MG	(20.0+10.0)mg
+190	(20.0 + 12.5 + 5.0)	MG	(20.0+12.5+5.0)mg
+191	(20.0 + 30.0)	MG/G	(20.0+30.0)mgg
+192	(20.0 + 5.0)	MG	(20.0+5.0)mg
+193	(20.00 + 12.50)	MG	(20.00+12.50)mg
+194	(20 + 0.64 + 2.5)	MG/G	(20+0.64+2.5)mgg
+195	(20 + 10)	MG	(20+10)mg
+196	(20 + 12.5)	MG	(20+12.5)mg
+197	(200.0 + 300.0)	MG	(200.0+300.0)mg
+198	(200.0 + 500.0)	MG	(200.0+500.0)mg
+199	(200.0 + 6.0)	MCG/DOSE	(200.0+6.0)mcgdose
+200	(200 + 50)	MG	(200+50)mg
+201	(200 + 6)	MCG	(200+6)mcg
+202	(200	MG+5MG+5MG)/5	(200mg+5mg+5mg)5
+204	(21.60 + 46.80 + 9.80 + 200.0)	MG/ML	(21.60+46.80+9.80+200.0)mgml
+205	(22.70	MG/ML	(22.70mgml
+206	(22.73 + 5.786 + 3.924 + 0.184 + 0.1017)	MG/ML	(22.73+5.786+3.924+0.184+0.1017)mgml
+207	(22.73 + 5.7860 + 3.924 + 0.2573 + 0.1017)	MG/ML	(22.73+5.7860+3.924+0.2573+0.1017)mgml
+208	(22.73	MG/ML+0.2573	(22.73mgml+0.2573
+209	(22.7	MG/ML+0.147	(22.7mgml+0.147
+210	(230 + 141.47 + 185)	MG	(230+141.47+185)mg
+211	(25.0 + 12.5)	MG/G	(25.0+12.5)mgg
+212	(25.0 + 25.0)	MG	(25.0+25.0)mg
+213	(25.0 + 5.0)	MG	(25.0+5.0)mg
+214	(25 + 25)	MG/G	(25+25)mgg
+215	(25 + 5)	MG/ML	(25+5)mgml
+216	(25 + 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	(25+5.38+4.48+0.183+0.0508)mgml
+217	(25 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	(25+5.38+4.48+0.257+0.0508)mgml
+218	(25 + 55)	MG	(25+55)mg
+219	(25 + 6.25)	MG/ML	(25+6.25)mgml
+220	(250 + 100)	MCG	(250+100)mcg
+221	(27 + 5.4)	MG/ML	(27+5.4)mgml
+222	(29.268 + 23.400)	MG	(29.268+23.400)mg
+223	(3.0 + 0.05 + 0.8)	MG/ML	(3.0+0.05+0.8)mgml
+224	(3.00 + 3.00)	MG/ML	(3.00+3.00)mgml
+225	(3 + 0.02)	MG	(3+0.02)mg
+226	(3 + 0.03)	MG	(3+0.03)mg
+227	(3 + 1)	MG/G	(3+1)mgg
+228	(3 + 1)	MG/ML	(3+1)mgml
+229	(3 + 1.5 + 93.33)	MG/G	(3+1.5+93.33)mgg
+230	(3 + 25)	MG/G	(3+25)mgg
+231	(3 + 3 + 3 + 10 + 25)	MG	(3+3+3+10+25)mg
+232	(3 + 3 + 3 + 10 + 25)	MG/ML	(3+3+3+10+25)mgml
+233	(30 + 20)	MG/G	(30+20)mgg
+234	(30 + 38.5 + 38.5 + 19)	MG/ML	(30+38.5+38.5+19)mgml
+235	(30 + 60 + 100 + 60)	MG	(30+60+100+60)mg
+236	(300.0 + 12.5)	MG	(300.0+12.5)mg
+237	(300.0 + 125.0 + 50.0 + 30.0)	MG	(300.0+125.0+50.0+30.0)mg
+238	(300.0 + 300.0)	MG	(300.0+300.0)mg
+239	(300 + 300)	MG	(300+300)mg
+240	(300 + 50)	MG	(300+50)mg
+241	(3000 + 800)	UI/ML	(3000+800)uiml
+242	(30	MG	(30mg
+243	(320.0 + 10.0)	MG	(320.0+10.0)mg
+244	(320.0 + 12.5)	MG	(320.0+12.5)mg
+245	(320.0 + 5.0)	MG	(320.0+5.0)mg
+246	(320.00 + 10.00)	MG	(320.00+10.00)mg
+247	(320.00 + 12.50)	MG	(320.00+12.50)mg
+248	(320.00 + 25.00)	MG	(320.00+25.00)mg
+249	(320.00 + 25.00 + 10.00)	MG	(320.00+25.00+10.00)mg
+250	(320.00 + 5.00)	MG	(320.00+5.00)mg
+251	(33.0 + 22.0 + 22.0 + 5.5)	MG/ML	(33.0+22.0+22.0+5.5)mgml
+252	(333.4 + 6.67)	MG/ML	(333.4+6.67)mgml
+253	(35.6 + 37.0 + 46.0)	MG/G	(35.6+37.0+46.0)mgg
+254	(35.6 + 37 + 47.6)	MG/ML	(35.6+37+47.6)mgml
+255	(35.6 + 37 + 48.4)	MG/ML	(35.6+37+48.4)mgml
+256	(35 + 300 + 50)	MG	(35+300+50)mg
+257	(35 + 300 + 50)	MG/ML	(35+300+50)mgml
+258	(37.5 + 325)	MG	(37.5+325)mg
+259	(37.5 + 325.0)	MG	(37.5+325.0)mg
+260	(37.50 + 2.25)	MG/ML	(37.50+2.25)mgml
+261	(37 + 40 + 5)	MG/ML	(37+40+5)mgml
+262	(375 + 12.50 + 12.50)	MG/ML	(375+12.50+12.50)mgml
+263	(38.130 + 4.194 + 12.155 + 50)	MG/COM	(38.130+4.194+12.155+50)mgcom
+265	(4.0 + 0.5)	G	(4.0+0.5)g
+266	(4.0 + 500.0)	MG/ML	(4.0+500.0)mgml
+267	(4.878 + 4.719)	MG	(4.878+4.719)mg
+268	(4 + 0.5)	G	(4+0.5)g
+269	(4 + 1 + 2 + 20 + 3)	MG/ML	(4+1+2+20+3)mgml
+270	(4 + 1000)	MG	(4+1000)mg
+271	(4 + 2.632 + 10 + 1 + 2)	MG	(4+2.632+10+1+2)mg
+272	(4 + 500)	MG/ML	(4+500)mgml
+273	(40.0 + 1.8)	MG/ML	(40.0+1.8)mgml
+274	(40.0 + 10.0)	MG	(40.0+10.0)mg
+275	(40.0 + 12.5)	MG	(40.0+12.5)mg
+276	(40.0 + 12.5 + 5.0)	MG	(40.0+12.5+5.0)mg
+277	(40.0 + 150.0 + 30.0 + 50.0 + 0.5)	MG/ML	(40.0+150.0+30.0+50.0+0.5)mgml
+278	(40.0 + 25.0 + 10.0)	MG	(40.0+25.0+10.0)mg
+279	(40.0 + 5.0)	MG	(40.0+5.0)mg
+280	(40.00 + 25.00)	MG	(40.00+25.00)mg
+281	(40 + 0.6 + 0.6)	MG/ML	(40+0.6+0.6)mgml
+282	(40 + 12.5)	MG	(40+12.5)mg
+283	(40 + 2 + 2.5 + 1 + 47.5 + 0.25)	MEQ/L	(40+2+2.5+1+47.5+0.25)meql
+284	(40 + 2 + 3.5 + 1 + 48.5 + 0.35)	MEQ/L	(40+2+3.5+1+48.5+0.35)meql
+285	(40 + 25)	MG	(40+25)mg
+286	(40 + 3 + 2.5 + 1 + 48.5 + 0.25)	MEQ/L	(40+3+2.5+1+48.5+0.25)meql
+287	(40 + 5.7)	MG/ML	(40+5.7)mgml
+288	(400.0 + 4.0 + 4.0)	MG	(400.0+4.0+4.0)mg
+289	(400 + 4 + 4)	MG	(400+4+4)mg
+290	(400 + 400 + 30)	MG/5	(400+400+30)mg5
+291	(400 + 400 + 30)	MG/5ML	(400+400+30)mg5ml
+292	(400 + 5 + 5)	MG	(400+5+5)mg
+293	(400 + 80)	MG	(400+80)mg
+294	(400 + 800)	MCG/ML	(400+800)mcgml
+295	(42.5 + 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	(42.5+5.38+4.48+0.183+0.0508)mgml
+296	(42.5 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	(42.5+5.38+4.48+0.257+0.0508)mgml
+297	(42.5 + 5.786 + 3.924 + 0.184 + 0.1017)	MG/ML	(42.5+5.786+3.924+0.184+0.1017)mgml
+298	(42.5 + 5.786 + 3.924 + 0.2573 + 0.1017)	MG/ML	(42.5+5.786+3.924+0.2573+0.1017)mgml
+299	(42.50	MG/ML	(42.50mgml
+300	(42.5	MG/ML+0.147	(42.5mgml+0.147
+301	(42.5	MG/ML+0.2573	(42.5mgml+0.2573
+302	(430 + 430 + 100)	MG/G	(430+430+100)mgg
+303	(450.0 + 50.0 + 35.0)	MG	(450.0+50.0+35.0)mg
+304	(46.3 + 46.3 + 46.3 + 46.3)	MG/COM	(46.3+46.3+46.3+46.3)mgcom
+305	(460 + 440 + 100)	MG/G	(460+440+100)mgg
+306	(462 + 438 + 90)	MG/G	(462+438+90)mgg
+307	(462 + 90 + 438)	MG/G	(462+90+438)mgg
+308	(48.93 + 64.30 + 57.50 + 791.55)	MG/G	(48.93+64.30+57.50+791.55)mgg
+309	(5.0 + 1.25 + 10.0)	MG	(5.0+1.25+10.0)mg
+310	(5.0 + 1.25 + 5.0)	MG	(5.0+1.25+5.0)mg
+311	(5.0 + 10.0)	MG	(5.0+10.0)mg
+312	(5.0 + 12.5)	MG	(5.0+12.5)mg
+313	(5.0 + 25.0)	MG	(5.0+25.0)mg
+314	(5.0 + 5.0)	MG	(5.0+5.0)mg
+315	(5.0 + 50.0)	MG	(5.0+50.0)mg
+316	(5.0 + 50.0 + 10.0)	MG	(5.0+50.0+10.0)mg
+317	(5.0 + 6.25)	MG	(5.0+6.25)mg
+318	(5.00 + 120.00)	MG	(5.00+120.00)mg
+319	(5 + 0.55 + 500)	MG	(5+0.55+500)mg
+320	(5 + 1)	MG/ML	(5+1)mgml
+321	(5 + 1.25)	MG	(5+1.25)mg
+322	(5 + 10)	MG	(5+10)mg
+323	(5 + 100 + 100)	MG	(5+100+100)mg
+324	(5 + 100 + 100 + 0.5)	MG	(5+100+100+0.5)mg
+325	(5 + 1000)	MG	(5+1000)mg
+326	(5 + 20)	MG	(5+20)mg
+327	(5 + 3)	MG/ML	(5+3)mgml
+328	(5 + 500)	MG	(5+500)mg
+329	(50.0 + 1000.0)	MG	(50.0+1000.0)mg
+330	(50.0 + 12.5)	MG	(50.0+12.5)mg
+331	(50.0 + 12.5)	MG/ML	(50.0+12.5)mgml
+332	(50.0 + 5.0)	MG	(50.0+5.0)mg
+333	(50.0 + 50.0)	MG	(50.0+50.0)mg
+334	(50.0 + 50.0)	MG/ML	(50.0+50.0)mgml
+335	(50.0 + 500.0)	MG	(50.0+500.0)mg
+336	(50.0 + 850.0)	MG	(50.0+850.0)mg
+337	(50.0 + 9.0)	MG/ML	(50.0+9.0)mgml
+338	(50.00 + 20.00)	MG/G	(50.00+20.00)mgg
+339	(50.84 + 66.82 + 59.77 + 822.64)	MG/G	(50.84+66.82+59.77+822.64)mgg
+340	(50 + 10)	MG	(50+10)mg
+341	(50 + 100)	MCG	(50+100)mcg
+342	(50 + 12.5)	MG/	(50+12.5)mg
+343	(50 + 12.5)	MG/ML	(50+12.5)mgml
+344	(50 + 2.5 + 180 + 35)	MG	(50+2.5+180+35)mg
+345	(50 + 25 + 37.5)	MG	(50+25+37.5)mg
+346	(50 + 300 + 30)	MG/ML	(50+300+30)mgml
+347	(50 + 50 + 2.5)	MG/ML	(50+50+2.5)mgml
+348	(50 + 9)	MG	(50+9)mg
+349	(500.0 + 100.0)	MG	(500.0+100.0)mg
+350	(500.0 + 125.0)	MG	(500.0+125.0)mg
+351	(500.0 + 30.0)	MG	(500.0+30.0)mg
+352	(500.0 + 65.0)	MG	(500.0+65.0)mg
+353	(500.0 + 7.5)	MG	(500.0+7.5)mg
+354	(500 + 10 + 5)	MG	(500+10+5)mg
+355	(500 + 10 + 5)	MG/1.5	(500+10+5)mg1.5
+356	(500 + 100)	MG	(500+100)mg
+357	(500 + 125)	MG	(500+125)mg
+358	(500 + 30)	MG	(500+30)mg
+359	(50000 + 10000)	UI/ML	(50000+10000)uiml
+360	(52.5 + 44.4 + 20)	MG/G	(52.5+44.4+20)mgg
+361	(52.5 + 44.4 + 20.0)	MG/G	(52.5+44.4+20.0)mgg
+362	(520	MG/G	(520mgg
+363	(53.76 + 103.94 + 125.45 + 716.84)	MG/G	(53.76+103.94+125.45+716.84)mgg
+364	(5	MG	(5mg
+365	(6.0 + 0.25)	MG/ML	(6.0+0.25)mgml
+366	(6.0 + 0.3 + 0.2 + 3.1)	MG/ML	(6.0+0.3+0.2+3.1)mgml
+367	(6.0 + 5.0 + 2.0 + 0.015 + 15.0)	MG	(6.0+5.0+2.0+0.015+15.0)mg
+368	(6.00 + 0.30 + 0.20 + 3.20)	MG/ML	(6.00+0.30+0.20+3.20)mgml
+369	(6.14 + 0.18596)	MG/ML	(6.14+0.18596)mgml
+370	(6.3 + 18.75 + 15)	G/L	(6.3+18.75+15)gl
+371	(6.44 + 0.314 + 3.68 + 2.44 + 2.92 + 0.225)	G/L	(6.44+0.314+3.68+2.44+2.92+0.225)gl
+372	(6.67 + 333.4)	MG/ML	(6.67+333.4)mgml
+373	(6 + 0.3 + 0.2 + 3.1)	MG/ML	(6+0.3+0.2+3.1)mgml
+374	(60.0 + 120.0)	MG	(60.0+120.0)mg
+375	(60 + 6 + 0.40 + 0.134 + 0.20 + 3.70)	MG/ML	(60+6+0.40+0.134+0.20+3.70)mgml
+376	(60 + 60 + 50 + 30)	MG/ML	(60+60+50+30)mgml
+377	(60 + 60 + 60 + 60)	MCG	(60+60+60+60)mcg
+378	(7.01 + 0.314 + 3.05 + 2.12 + 0.187)	G/L	(7.01+0.314+3.05+2.12+0.187)gl
+379	(8.2 + 28.75 + 20)	G/L	(8.2+28.75+20)gl
+380	(8.6 + 0.3 + 0.33)	MG/ML	(8.6+0.3+0.33)mgml
+381	(8.6 + 0.33 + 0.30)	MG/ML	(8.6+0.33+0.30)mgml
+382	(80.0 + 11.4)	MG/ML	(80.0+11.4)mgml
+383	(80.0 + 12.5)	MG	(80.0+12.5)mg
+384	(80.0 + 25.0)	MG	(80.0+25.0)mg
+385	(80.0 + 5.0)	MG	(80.0+5.0)mg
+386	(80.00 + 12.50)	MG	(80.00+12.50)mg
+387	(80.00 + 5.00)	MG	(80.00+5.00)mg
+388	(80 + 11.4)	MG/ML	(80+11.4)mgml
+389	(80 + 11.5)	MG/ML	(80+11.5)mgml
+390	(800 + 160)	MG	(800+160)mg
+391	(875.0 + 125.0)	MG	(875.0+125.0)mg
+392	(875 + 125)	MG	(875+125)mg
+393	(9.0	MG	(9.0mg
+394	(9.532 + 1.049 + 3.039 + 12.5)	MG/COM	(9.532+1.049+3.039+12.5)mgcom
+395	(9.95 + 0.334 + 0.6686)	MG/ML	(9.95+0.334+0.6686)mgml
+396	(9 + 0.3 + 0.3)	MG/ML	(9+0.3+0.3)mgml
+397	(95 + 30 + 65)	MEQ/L	(95+30+65)meql
+398	(98 + 35 + 63)	MEQ/L	(98+35+63)meql
+399	(99.65 + 1.5 + 2.5 + 1)	MEQ/L	(99.65+1.5+2.5+1)meql
+400	(99.65 + 1.5 + 2.5 + 1.0)	MEQ/L	(99.65+1.5+2.5+1.0)meql
+401	(99.65 + 1.5 + 3.0 + 1.0)	MEQ/L	(99.65+1.5+3.0+1.0)meql
+402	(99.65 + 1.5 + 3.5 + 1)	MEQ/L	(99.65+1.5+3.5+1)meql
+403	(99.65 + 1.5 + 3.5 + 1.0)	MEQ/L	(99.65+1.5+3.5+1.0)meql
+404	(99.65 + 2.0 + 2.5 + 1.0)	MEQ/L	(99.65+2.0+2.5+1.0)meql
+405	(99.65 + 2.0 + 3.0 + 1.0)	MEQ/L	(99.65+2.0+3.0+1.0)meql
+406	(99.65 + 2.0 + 3.5 + 1.0)	MEQ/L	(99.65+2.0+3.5+1.0)meql
+407	(99.65 + 2 + 2.5 + 1)	MEQ/L	(99.65+2+2.5+1)meql
+408	(99.65 + 2 + 3 + 1)	MEQ/L	(99.65+2+3+1)meql
+409	(9	MG	(9mg
+410	(	CANCELAR	(cancelar
+411	(	PO	(po
+412	0.00032	ML/ML	0.00032mlml
+413	0.0015	G/ML	0.0015gml
+414	0.0018	G/ML	0.0018gml
+415	0.0022	G/ML	0.0022gml
+416	0.003	G/ML	0.003gml
+417	0.0040	G	0.0040g
+418	0.0045	G/ML	0.0045gml
+419	0.005	G	0.005g
+420	0.009	G/ML	0.009gml
+421	0.010	G	0.010g
+422	0.015	MG	0.015mg
+423	0.01	G/ML	0.01gml
+424	0.02	G/G	0.02gg
+425	0.02	G/ML	0.02gml
+426	0.02	MG	0.02mg
+427	0.030 + 0.075	MG	0.030+0.075mg
+428	0.030	MG	0.030mg
+429	0.0325	ML/ML	0.0325mlml
+430	0.03	G/G	0.03gg
+431	0.03	MG	0.03mg
+432	0.043	ML/ML	0.043mlml
+433	0.0444	ML/G	0.0444mlg
+434	0.04	G/G	0.04gg
+435	0.04	MG/ML	0.04mgml
+436	0.0585	ML/5	0.0585ml5
+437	0.05	G/ML	0.05gml
+438	0.05	MG	0.05mg
+439	0.05	MG/DOSE	0.05mgdose
+440	0.05	MG/G	0.05mgg
+441	0.05	MG/ML	0.05mgml
+442	0.05	ML/ML	0.05mlml
+443	0.060	MG	0.060mg
+444	0.060	MG+0.015MG	0.060mg+0.015mg
+445	0.067	ML/ML	0.067mlml
+446	0.06	G/ML	0.06gml
+447	0.06	MG	0.06mg
+448	0.075	MG	0.075mg
+449	0.0785	MG/ML	0.0785mgml
+450	0.07	ML/ML	0.07mlml
+451	0.084	G/ML	0.084gml
+452	0.084	MG/ML	0.084mgml
+453	0.08	ML/ML	0.08mlml
+454	0.09	G/ML	0.09gml
+455	0.1%	SOL	0.1%sol
+456	0.10	G/G	0.10gg
+457	0.10	G/ML	0.10gml
+458	0.10	MG	0.10mg
+459	0.10	MG/ML	0.10mgml
+460	0.10	ML	0.10ml
+461	0.10	ML/ML	0.10mlml
+462	0.125	MG	0.125mg
+463	0.125	MG/G	0.125mgg
+464	0.12	G/ML	0.12gml
+465	0.12	MG/ML	0.12mgml
+466	0.15%	SOL	0.15%sol
+467	0.150	MG	0.150mg
+468	0.15	G	0.15g
+469	0.15	MG	0.15mg
+470	0.15	MG/ML	0.15mgml
+471	0.16	G/ML	0.16gml
+472	0.16	MG/ML	0.16mgml
+473	0.1	G/G	0.1gg
+474	0.1	G/ML	0.1gml
+475	0.1	MG	0.1mg
+476	0.1	MG/G	0.1mgg
+477	0.1	MG/ML	0.1mgml
+478	0.1	ML/ML	0.1mlml
+479	0.1	PCC	0.1pcc
+480	0.2%	SOL	0.2%sol
+481	0.200	MG/DOSE	0.200mgdose
+482	0.20	MG/ML	0.20mgml
+483	0.24	MG/ML	0.24mgml
+484	0.25%	SOL	0.25%sol
+485	0.250	MG/	0.250mg
+486	0.250	MG/2	0.250mg2
+487	0.250	MG/ML	0.250mgml
+488	0.25	G/ML	0.25gml
+489	0.25	MCG	0.25mcg
+490	0.25	MG/	0.25mg
+491	0.25	MG/5	0.25mg5
+492	0.25	MG/5ML	0.25mg5ml
+493	0.25	MG/G	0.25mgg
+494	0.25	MG/ML	0.25mgml
+495	0.25	ML/ML	0.25mlml
+496	0.25	PCC	0.25pcc
+497	0.275	MG/	0.275mg
+498	0.275	MG/ML+3.850	0.275mgml+3.850
+499	0.2	G/G	0.2gg
+500	0.2	G/ML	0.2gml
+501	0.2	MG/	0.2mg
+502	0.2	MG/ML	0.2mgml
+503	0.300	MG/ML	0.300mgml
+504	0.30	MG	0.30mg
+505	0.32	G/G	0.32gg
+506	0.35	MG	0.35mg
+507	0.35	MG/ML	0.35mgml
+508	0.375	MG	0.375mg
+509	0.3	MG/	0.3mg
+510	0.3	MG/G	0.3mgg
+511	0.3	MG/ML	0.3mgml
+512	0.40	MG	0.40mg
+513	0.462	G/G	0.462gg
+514	0.48	MG/ML	0.48mgml
+515	0.4	GBQ	0.4gbq
+516	0.4	MG/	0.4mg
+517	0.4	MG/ML	0.4mgml
+518	0.4	ML/ML	0.4mlml
+519	0.5%	SOL	0.5%sol
+520	0.50%	SOL	0.50%sol
+521	0.50	MG	0.50mg
+522	0.50	MG/G	0.50mgg
+523	0.50	MG/ML	0.50mgml
+524	0.544	MG/ML	0.544mgml
+525	0.56	MG	0.56mg
+526	0.585	MG	0.585mg
+527	0.5	G	0.5g
+528	0.5	G/ML	0.5gml
+529	0.5	MG/	0.5mg
+530	0.5	MG/2	0.5mg2
+531	0.5	MG/G	0.5mgg
+532	0.5	MG/G+1.0MG/G+10	0.5mgg+1.0mgg+10
+533	0.5	MG/ML	0.5mgml
+534	0.5	MMOL/ML	0.5mmolml
+535	0.5	PCC	0.5pcc
+536	0.60	G	0.60g
+537	0.64	MG/G	0.64mgg
+538	0.64	MG/G+	0.64mgg+
+539	0.64	MG/ML	0.64mgml
+540	0.66	G/ML	0.66gml
+541	0.67	MG/ML	0.67mgml
+542	0.67	ML/ML	0.67mlml
+543	0.6	G	0.6g
+544	0.6	G/G	0.6gg
+545	0.6	MG	0.6mg
+546	0.6	MG/0.5	0.6mg0.5
+547	0.6	MG/G	0.6mgg
+548	0.6	MG/ML	0.6mgml
+549	0.6	U/G	0.6ug
+550	0.6	UI/G	0.6uig
+551	0.75%	SOL	0.75%sol
+552	0.750	MG	0.750mg
+553	0.75	MG	0.75mg
+554	0.75	MG/ML	0.75mgml
+555	0.7	MG	0.7mg
+556	0.80	MG	0.80mg
+557	0.86	G	0.86g
+558	0.88	G/ML	0.88gml
+559	0.8	MG	0.8mg
+560	0.8	MG/G	0.8mgg
+561	0.8	MG/ML	0.8mgml
+562	0.9	G	0.9g
+563	0.9	G/100ML	0.9g100ml
+564	0.9	MG/ML	0.9mgml
+565	01	MG	01mg
+566	05	MCG/ML	05mcgml
+567	1% + 0.4%	CREM	1%+0.4%crem
+568	1% + 0.4%	GEL	1%+0.4%gel
+569	1% + 2.2%	CREM	1%+2.2%crem
+570	1%	PO	1%po
+571	1%	POM	1%pom
+572	1%	SOL	1%sol
+573	1.000.000	UI	1.000.000ui
+574	1.000	MG	1.000mg
+575	1.000	UI	1.000ui
+576	1.00	MCG	1.00mcg
+577	1.00	MG	1.00mg
+578	1.00	MG/G	1.00mgg
+579	1.00	MG/ML	1.00mgml
+580	1.093	MG/ML	1.093mgml
+581	1.0	G	1.0g
+582	1.0	MG	1.0mg
+583	1.0	MG/G	1.0mgg
+584	1.0	MG/ML	1.0mgml
+585	1.0	ML/ML	1.0mlml
+586	1.0	X10E11	1.0x10e11
+587	1.11	MG/ML	1.11mgml
+588	1.170	MG	1.170mg
+589	1.1	MG	1.1mg
+590	1.200.000	U	1.200.000u
+591	1.200.000	UI	1.200.000ui
+592	1.25	MG	1.25mg
+593	1.25	MG/2	1.25mg2
+594	1.25	MG/ML	1.25mgml
+595	1.2	MG	1.2mg
+596	1.2	MG/ML	1.2mgml
+597	1.2	U/G	1.2ug
+598	1.30	MG/ML	1.30mgml
+599	1.33	MG	1.33mg
+600	1.34	MG/ML	1.34mgml
+601	1.466	MG	1.466mg
+602	1.4	MG	1.4mg
+603	1.5 + 1.2	G	1.5+1.2g
+604	1.500.000	UI	1.500.000ui
+605	1.50	MG	1.50mg
+607	1.5	MG/	1.5mg
+608	1.5	MG/ML	1.5mgml
+609	1.5	MUI	1.5mui
+610	1.60	MG/ML	1.60mgml
+611	1.6	MG	1.6mg
+612	1.6	MG/ML	1.6mgml
+613	1.8	MG/ML	1.8mgml
+614	10%	SOL	10%sol
+615	10.000	U	10.000u
+616	10.000	UI	10.000ui
+617	10.000	UI/G	10.000uig
+618	10.000	UI/ML	10.000uiml
+619	10.0	G	10.0g
+620	10.0	MG	10.0mg
+621	10.0	MG/ML	10.0mgml
+622	10.8	MG	10.8mg
+623	10 + 0.02 + 15	MG/ML	10+0.02+15mgml
+624	10 + 10	MG	10+10mg
+625	10 + 20	MG	10+20mg
+626	10 + 40	MG	10+40mg
+627	10 + 80	MG	10+80mg
+628	100%	LIQ	100%liq
+629	100.000	U/G	100.000ug
+630	100.000	UI	100.000ui
+631	100.000	UI/G	100.000uig
+632	100.000	UI/ML	100.000uiml
+633	100.0	MG	100.0mg
+634	10000000	UI	10000000ui
+635	100000	UI	100000ui
+636	100000	UI/ML	100000uiml
+637	10000	UI	10000ui
+638	10000	UI/ML	10000uiml
+639	1000	KBQ/ML	1000kbqml
+640	1000	MCG	1000mcg
+641	1000	MG	1000mg
+642	1000	MG/G	1000mgg
+643	1000	MG/SUP	1000mgsup
+644	1000	U	1000u
+645	1000	UI	1000ui
+646	1000	UI/1000UI	1000ui1000ui
+647	1000	UI/ML	1000uiml
+648	100	G	100g
+649	100	MCG	100mcg
+650	100	MCG/DIA	100mcgdia
+651	100	MCG/DOS	100mcgdos
+652	100	MCG/DOSE	100mcgdose
+653	100	MCG/DOSES	100mcgdoses
+654	100	MCG/JATO	100mcgjato
+655	100	MCG/ML	100mcgml
+656	100	MG/	100mg
+657	100	MG+	100mg+
+658	100	MG+25	100mg+25
+659	100	MG/15	100mg15
+660	100	MG/200MG	100mg200mg
+661	100	MG/2ML	100mg2ml
+662	100	MG/5	100mg5
+663	100	MG/5ML	100mg5ml
+664	100	MG/G	100mgg
+665	100	MG/ML	100mgml
+666	100	MG/ML+2	100mgml+2
+667	100	MILHÕES/ML	100milhoesml
+668	100	U	100u
+669	100	UI	100ui
+670	100	UI/DOSE	100uidose
+671	100	UI/ML	100uiml
+672	100	U/ML	100uml
+673	103	MG/ML	103mgml
+674	1050	UI/1.75	1050ui1.75
+675	105	MG	105mg
+676	10730	MBQ	10730mbq
+677	108	MG	108mg
+678	10	DH	10dh
+679	10	DOSES	10doses
+680	10	G	10g
+681	10	MCG	10mcg
+682	10	MCG/1.0	10mcg1.0
+683	10	MCG/ML	10mcgml
+684	10	MG/	10mg
+685	10	MG+10MG	10mg+10mg
+686	10	MG+15MG	10mg+15mg
+687	10	MG+20MG	10mg+20mg
+688	10	MG+5MG	10mg+5mg
+689	10	MG/25	10mg25
+690	10	MG/5ML	10mg5ml
+691	10	MG/6.25	10mg6.25
+692	10	MG/G	10mgg
+693	10	MG/ML	10mgml
+694	10	PCC	10pcc
+695	11.50	MG/ML	11.50mgml
+696	11.60	MG/	11.60mg
+697	11.6	MG/	11.6mg
+698	11.6	MG/G	11.6mgg
+699	11.76 + 0.04 + 30	MG/ML	11.76+0.04+30mgml
+700	11.7	MG/2.7	11.7mg2.7
+701	1100	KBQ/ML	1100kbqml
+702	110	MCG	110mcg
+703	110	MG	110mg
+704	11100	MBQ	11100mbq
+705	1110	MBQ	1110mbq
+706	111	MBQ	111mbq
+707	11217	MBQ	11217mbq
+708	1125	MG	1125mg
+709	112	MCG	112mcg
+710	1155	MG	1155mg
+711	117.6	MG/ML	117.6mgml
+712	11	DH	11dh
+713	11	MG/G	11mgg
+714	11	MG/ML	11mgml
+715	12.50	MG	12.50mg
+716	12.5	COM	12.5com
+717	12.5	MCG	12.5mcg
+718	12.5	MG	12.5mg
+719	12.5	MG/5ML+125MG/5ML+56.25MG/5ML	12.5mg5ml+125mg5ml+56.25mg5ml
+720	12.5	MG/G	12.5mgg
+721	12.5	MG/ML	12.5mgml
+722	12.6	MG	12.6mg
+723	1200000	UI	1200000ui
+724	1200	MG	1200mg
+725	120	KUI	120kui
+726	120	MG	120mg
+727	120	MG/G	120mgg
+728	120	MG/ML	120mgml
+729	123	MG	123mg
+730	1250	MG	1250mg
+731	1250	UI	1250ui
+732	125	MCG	125mcg
+733	125	MG	125mg
+734	125	MG/5	125mg5
+735	125	MG/5ML	125mg5ml
+736	125	MG/G	125mgg
+737	125	MG/ML	125mgml
+738	125	UI/ML	125uiml
+739	126	MG	126mg
+740	127	MG	127mg
+741	12950	MBQ	12950mbq
+742	12	DH	12dh
+743	12	G	12g
+744	12	MCG	12mcg
+745	12	MCG/INAL	12mcginal
+746	12	MG	12mg
+747	12	MG/ML	12mgml
+748	12	U	12u
+749	12	UI	12ui
+750	13.333	MG/ML	13.333mgml
+751	13.33	MG/ML	13.33mgml
+752	13.3	MG/ML	13.3mgml
+753	130	MCG	130mcg
+754	130	MG	130mg
+755	132	MCG	132mcg
+756	132	MG	132mg
+757	133.33	MG/ML	133.33mgml
+758	134	MG	134mg
+759	1350	UFP	1350ufp
+760	137	MCG	137mcg
+761	138		138
+762	1389	MG	1389mg
+763	13	DH	13dh
+764	13	GBQ	13gbq
+765	14.3	MG/ML	14.3mgml
+766	14000	UI	14000ui
+767	14000	UI/ML	14000uiml
+768	140	MG	140mg
+769	140	MG/ML	140mgml
+770	142	MG/ML	142mgml
+771	1440	UEL/ML	1440uelml
+772	144	MG	144mg
+773	1459	MBQ	1459mbq
+774	1480	MBQ	1480mbq
+775	14810	MBQ	14810mbq
+776	14	DH	14dh
+777	14	MG	14mg
+778	14	MG/ML	14mgml
+779	15 + 90	MG	15+90mg
+780	150.000	U/	150.000u
+781	150.000	U/ML	150.000uml
+782	150 + 37.5 + 200	MG	150+37.5+200mg
+783	150000	UI/ML	150000uiml
+784	15000	UI	15000ui
+785	15000	UI/ML	15000uiml
+786	1500	MG	1500mg
+787	1500	UI	1500ui
+788	1500	UI/ML	1500uiml
+789	150	MCG	150mcg
+790	150	MCG/ML	150mcgml
+791	150	MG	150mg
+792	150	MG+	150mg+
+793	150	MG/100	150mg100
+794	150	MG/G	150mgg
+795	150	MG/ML	150mgml
+796	150	U	150u
+797	150	UI	150ui
+798	150	UI/75	150ui75
+799	152	MG	152mg
+800	15984	MBQ	15984mbq
+801	15	DH	15dh
+802	15	MCG	15mcg
+803	15	MCG/ML	15mcgml
+804	15	MG	15mg
+805	15	MG+250MG+20MG+15MG	15mg+250mg+20mg+15mg
+806	15	MG/5	15mg5
+807	15	MG/5ML	15mg5ml
+808	15	MG/G	15mgg
+809	15	MG/ML	15mgml
+810	15	U	15u
+811	15	UI	15ui
+812	16.00	MG/ML	16.00mgml
+813	16.2	MG/G	16.2mgg
+814	16.8	MG	16.8mg
+815	16.8	MG/ML	16.8mgml
+816	160 + 12.5	MG	160+12.5mg
+817	160 + 25	MG	160+25mg
+818	160	MG	160mg
+819	160	MG/5ML	160mg5ml
+820	160	MG/ML	160mgml
+821	160	U/ML	160uml
+822	16280	MBQ	16280mbq
+823	162	MG	162mg
+824	16	GBQ	16gbq
+825	16	MG	16mg
+826	16	MG/ML	16mgml
+827	16	UI	16ui
+828	17.60	MG/ML	17.60mgml
+829	1739	MBQ	1739mbq
+830	175.5	MG/ML	175.5mgml
+831	175	MCG	175mcg
+832	175	MG/ML	175mgml
+833	18.05	MG/ML	18.05mgml
+834	1800	MG	1800mg
+835	180	MCG	180mcg
+836	180	MG	180mg
+837	181.43	MG/ML	181.43mgml
+838	182.93	MG	182.93mg
+839	18500	MBQ	18500mbq
+840	1850	MBQ	1850mbq
+841	185	MBQ	185mbq
+842	185	MG	185mg
+843	185	MG/COM	185mgcom
+844	185	MG/G	185mgg
+845	187	MG/	187mg
+846	187	MG/5ML	187mg5ml
+847	189	MG/ML	189mgml
+848	18	MCG	18mcg
+849	18	MG	18mg
+850	18	MG/G	18mgg
+851	191	MG	191mg
+852	191	MG/ML	191mgml
+853	19435	MBQ	19435mbq
+854	19	GBQ	19gbq
+855	1	DOSE	1dose
+856	1	G	1g
+857	1	GBQ	1gbq
+858	1	G/G	1gg
+859	1	MCG	1mcg
+860	1	MG/	1mg
+861	1	MG/G	1mgg
+862	1	MG/MG	1mgmg
+863	1	MG/ML	1mgml
+864	1	ML/ML	1mlml
+865	1	PCC	1pcc
+866	1	UI/MG	1uimg
+867	1	UI/ML	1uiml
+868	1	X	1x
+869	2%	CREM	2%crem
+870	2%	GEL	2%gel
+871	2%	SOL	2%sol
+872	2.000.000	UI	2.000.000ui
+873	2.000	UI	2.000ui
+874	2.000	UI/ML	2.000uiml
+875	2.00	MG	2.00mg
+876	2.05	MG/ML	2.05mgml
+877	2.0	MG	2.0mg
+878	2.0	MG/5.0	2.0mg5.0
+879	2.0	MG/G	2.0mgg
+880	2.0	MG/ML	2.0mgml
+881	2.0	X	2.0x
+882	2.0	X10E13	2.0x10e13
+883	2.1	MG	2.1mg
+884	2.22	MG/ML	2.22mgml
+885	2.25	G	2.25g
+886	2.2	MG	2.2mg
+887	2.3	MG	2.3mg
+888	2.4	MG/ML	2.4mgml
+889	2.50	MG	2.50mg
+890	2.50	UI	2.50ui
+891	2.5	G	2.5g
+892	2.5	MCG	2.5mcg
+893	2.5	MG/	2.5mg
+894	2.5	MG/G	2.5mgg
+895	2.5	MG/ML	2.5mgml
+896	2.5	MG/ML+	2.5mgml+
+897	2.5	MG/ML+0.0091	2.5mgml+0.0091
+898	2.5	PCC	2.5pcc
+899	2.5	SOL	2.5sol
+900	2.5	UI	2.5ui
+901	2.8	MG/ML	2.8mgml
+902	2.9	MG/5ML	2.9mg5ml
+903	20% + 0.5% + 5%	POM	20%+0.5%+5%pom
+904	20%	SOL	20%sol
+905	20.000	UI	20.000ui
+906	20.0	G	20.0g
+907	20.0	MG/G	20.0mgg
+908	200.000	UI	200.000ui
+909	2000	MCG/ML	2000mcgml
+910	2000	MG	2000mg
+911	2000	UI	2000ui
+912	2000	UI/0.3	2000ui0.3
+913	2000	UI/ML	2000uiml
+914	200	G/L	200gl
+915	200	MCG	200mcg
+916	200	MCG/DOSE	200mcgdose
+917	200	MCG/ML	200mcgml
+918	200	MG/	200mg
+919	200	MG/5ML	200mg5ml
+920	200	MG/5ML+	200mg5ml+
+921	200	MG/COM	200mgcom
+922	200	MG/G	200mgg
+923	200	MG/ML	200mgml
+924	200	U	200u
+925	200	U/G	200ug
+926	200	UI/DOSE	200uidose
+927	200	UI/G	200uig
+928	200	UI/ML	200uiml
+929	200	U/ML	200uml
+930	20350	MBQ	20350mbq
+931	206	MG/ML	206mgml
+932	20	G	20g
+933	20	GM/G	20gmg
+934	20	MCG	20mcg
+935	20	MCG/DOSE	20mcgdose
+936	20	MCG/ML	20mcgml
+937	20	MG/	20mg
+938	20	MG/0.2	20mg0.2
+939	20	MG/12.5	20mg12.5
+940	20	MG/5	20mg5
+941	20	MG/G	20mgg
+942	20	MG/G+	20mgg+
+943	20	MG/MG	20mgmg
+944	20	MG/ML	20mgml
+945	20	PCC	20pcc
+946	20	PPC	20ppc
+947	20	U/ML	20uml
+948	210	MG	210mg
+949	215	MG	215mg
+950	216	MG/ML	216mgml
+951	21	MG	21mg
+952	21	MG/ML	21mgml
+953	21	MG/ML+	21mgml+
+954	22.00	MG	22.00mg
+955	22.25	MG	22.25mg
+956	22.5	MG	22.5mg
+957	22.75	MG/ML	22.75mgml
+958	2220	MBQ	2220mbq
+959	222	MBQ	222mbq
+960	22400	UI	22400ui
+961	2249	MBQ	2249mbq
+962	225.75	MG	225.75mg
+963	225	MCG	225mcg
+964	225	MG	225mg
+965	22	MCG	22mcg
+966	23.2	MG/G	23.2mgg
+967	230	MG	230mg
+968	235	MG	235mg
+969	23680	MBQ	23680mbq
+970	240	KUI	240kui
+971	240	MG	240mg
+972	240	MG/ML	240mgml
+973	24	MCG	24mcg
+974	24	MG	24mg
+975	24	MG/ML	24mgml
+976	24	UI	24ui
+977	25%	SOL	25%sol
+978	25.000	U.I./	25.000u.i.
+979	25.000	U.I./G	25.000u.i.g
+980	25.000	UI/G	25.000uig
+981	25.0	MG	25.0mg
+982	25000	UI/G	25000uig
+983	2500	MCG/ML	2500mcgml
+984	2500	U	2500u
+985	2500	UI	2500ui
+986	250	MCG	250mcg
+987	250	MCG/DOSE	250mcgdose
+988	250	MCG/ML	250mcgml
+989	250	MG/	250mg
+990	250	MG/1.25	250mg1.25
+991	250	MG/5	250mg5
+992	250	MG/5ML	250mg5ml
+993	250	MG/G	250mgg
+994	250	MG/ML	250mgml
+995	250	UI	250ui
+996	250	UI/G	250uig
+997	250	UI/ML	250uiml
+998	25390	MBQ	25390mbq
+999	254	MG	254mg
+1000	2590	MBQ	2590mbq
+1001	25	MCG	25mcg
+1002	25	MCG+	25mcg+
+1003	25	MCG/DIA	25mcgdia
+1004	25	MCG/H	25mcgh
+1005	25	MCG/ML	25mcgml
+1006	25	MG/	25mg
+1007	25	MG+	25mg+
+1008	25	MG/0.5ML	25mg0.5ml
+1009	25	MG/G	25mgg
+1010	25	MG/ML	25mgml
+1011	25	U	25u
+1012	25	UI/ML	25uiml
+1013	26.70	MG	26.70mg
+1014	260	MG	260mg
+1015	263.16	MG/ML	263.16mgml
+1016	263.2	MG	263.2mg
+1017	265	MG	265mg
+1018	267	MG	267mg
+1019	27.0	G	27.0g
+1020	27.0	G/1000	27.0g1000
+1021	27 + 5.4	MG/ML	27+5.4mgml
+1022	275	MG	275mg
+1023	27750	MBQ	27750mbq
+1024	279.3	MG/ML	279.3mgml
+1025	27	G/1000	27g1000
+1026	27	MG	27mg
+1027	28.2	MG/G	28.2mgg
+1028	28.2	MG/G+52.6MG/G+13.3MG/G	28.2mgg+52.6mgg+13.3mgg
+1029	280	MG	280mg
+1030	280	MG/ML	280mgml
+1031	287	MG	287mg
+1032	28	MG	28mg
+1033	2923	MBQ	2923mbq
+1034	29600	MBQ	29600mbq
+1035	2960	MBQ	2960mbq
+1036	2960	MBQ/ML	2960mbqml
+1037	29	GBQ	29gbq
+1038	29	MG	29mg
+1039	2	G	2g
+1040	2	G+	2g+
+1041	2	GBQ	2gbq
+1042	2	MEQ/ML	2meqml
+1043	2	MG/	2mg
+1044	2	MG/5ML	2mg5ml
+1045	2	MG/G	2mgg
+1046	2	MG/ML	2mgml
+1047	2	PCC	2pcc
+1048	3%	SOL	3%sol
+1049	3.000	UI	3.000ui
+1050	3.00	MG	3.00mg
+1051	3.0	G+0.352G+17.602G+11.735G	3.0g+0.352g+17.602g+11.735g
+1052	3.0	MG/	3.0mg
+1053	3.0	MG/G	3.0mgg
+1054	3.0	MG/ML	3.0mgml
+1055	3.0	MG/ML+1.0	3.0mgml+1.0
+1056	3.0	MGPAS	3.0mgpas
+1057	3.125	MG	3.125mg
+1058	3.2	MG	3.2mg
+1059	3.2	MG/ML	3.2mgml
+1060	3.54	MG/ML	3.54mgml
+1061	3.5	G	3.5g
+1062	3.5	MG	3.5mg
+1063	3.5	MG/G	3.5mgg
+1064	3.5	MG/ML	3.5mgml
+1065	3.5	PCC	3.5pcc
+1066	3.6	MG	3.6mg
+1067	3.75	MG	3.75mg
+1068	300.000	U/ML	300.000uml
+1069	3000000	UI	3000000ui
+1070	30000	UI	30000ui
+1071	3000	UI	3000ui
+1072	3000	UI/ML	3000uiml
+1073	300	MCG	300mcg
+1074	300	MCG/ML	300mcgml
+1075	300	MG	300mg
+1076	300	MG/5ML	300mg5ml
+1077	300	MG/ML	300mgml
+1078	300	SPY	300spy
+1079	300	U	300u
+1080	300	UI	300ui
+1081	300	UI/150	300ui150
+1082	300	U/ML	300uml
+1083	30	MCG/ML	30mcgml
+1084	30	MG	30mg
+1085	30	MG/5	30mg5
+1086	30	MG/5ML	30mg5ml
+1087	30	MG/G	30mgg
+1088	30	MG/G+20MG/G	30mgg+20mgg
+1089	30	MG/ML	30mgml
+1090	30	MU	30mu
+1091	30	MUI	30mui
+1092	30	MU/ML	30muml
+1093	30	UI	30ui
+1094	315	MG	315mg
+1095	32.65	MG	32.65mg
+1096	320	MG	320mg
+1097	320	U/ML	320uml
+1098	325	MG	325mg
+1099	3266	MBQ	3266mbq
+1100	327	MG	327mg
+1101	32	MCG/	32mcg
+1102	32	MCG/DOSE	32mcgdose
+1103	32	MG	32mg
+1104	32	MG/ML	32mgml
+1105	33.3	MCG/ML	33.3mcgml
+1106	33.3	UI/ML	33.3uiml
+1107	3300	UI/ML	3300uiml
+1108	33055	MBQ	33055mbq
+1109	333.33	MG/ML	333.33mgml
+1110	333.4	MG/ML	333.4mgml
+1111	3330	MBQ	3330mbq
+1112	333	MBQ	333mbq
+1113	335	MG	335mg
+1114	34891	MBQ	34891mbq
+1115	35.4	MG/ML	35.4mgml
+1116	35.6	MG	35.6mg
+1117	35.6	MG+37MG+48.4MG/ML	35.6mg+37mg+48.4mgml
+1118	3500	UI	3500ui
+1119	350	MG	350mg
+1120	350	MG/G	350mgg
+1121	350	MG/ML	350mgml
+1122	35	MG	35mg
+1123	35	MG+	35mg+
+1124	35	MG+1	35mg+1
+1125	35	MG+300MG+50MG	35mg+300mg+50mg
+1126	35	MG+300MG+50MG/ML	35mg+300mg+50mgml
+1127	35	MG/ML	35mgml
+1128	360	MG	360mg
+1129	360	MG/G	360mgg
+1130	360	U.EL	360u.el
+1131	360	UEL	360uel
+1132	360	UEL/0.5	360uel0.5
+1133	36	MG	36mg
+1134	37.5	MCG	37.5mcg
+1135	37.5	MG	37.5mg
+1136	37.5	UI	37.5ui
+1137	37.84	MG/ML	37.84mgml
+1138	37000	MBQ	37000mbq
+1139	3700	MBQ	3700mbq
+1140	370	MBQ	370mbq
+1141	375	MG/	375mg
+1142	375	MG/5ML	375mg5ml
+1143	37	MBQ	37mbq
+1144	37	MG/G	37mgg
+1145	37	MG/ML	37mgml
+1146	38.5	MCG	38.5mcg
+1147	380	MG	380mg
+1148	385	MG	385mg
+1149	385	MG/ML	385mgml
+1150	3	G	3g
+1151	3	GBQ	3gbq
+1152	3	MG	3mg
+1153	3	MG/G	3mgg
+1154	3	MG/ML	3mgml
+1155	3	MUI/0.5	3mui0.5
+1156	3	PCC	3pcc
+1157	3	U/I	3ui
+1158	4.000	UI	4.000ui
+1159	4.000	UI/ML	4.000uiml
+1160	4.0	MG	4.0mg
+1161	4.0	MG/ML	4.0mgml
+1162	4.2	MG	4.2mg
+1163	4.5% + 0.5% + 0.5%	AER	4.5%+0.5%+0.5%aer
+1164	4.500.000	UI	4.500.000ui
+1165	4.5	MG	4.5mg
+1166	4.5	MG/ML	4.5mgml
+1167	4.5	MUI/0.5	4.5mui0.5
+1168	4.68	MG/ML	4.68mgml
+1169	40.000	UI/ML	40.000uiml
+1170	40.00	MG/ML	40.00mgml
+1171	40.0	MG/G	40.0mgg
+1172	400.000	U/ML	400.000uml
+1173	400:80	MG	400:80mg
+1174	400 + 400	MG	400+400mg
+1175	400 + 50	MG/COM	400+50mgcom
+1176	400000	U	400000u
+1177	40000	UI	40000ui
+1178	40000	UI/ML	40000uiml
+1179	4000	UI	4000ui
+1180	4000	UI/ML	4000uiml
+1181	400	MCG	400mcg
+1182	400	MCG/DOSE	400mcgdose
+1183	400	MCG/ML	400mcgml
+1184	400	MG/	400mg
+1185	400	MG/5G	400mg5g
+1186	400	MG/5ML	400mg5ml
+1187	400	MG/ML	400mgml
+1188	400	U	400u
+1189	400	UI	400ui
+1190	4070	MBQ	4070mbq
+1191	40	MCG	40mcg
+1192	40	MCG/1.0	40mcg1.0
+1193	40	MCG/ML	40mcgml
+1194	40	MCL/ML	40mclml
+1195	40	MG/	40mg
+1196	40	MG/0.4	40mg0.4
+1197	40	MG/100	40mg100
+1198	40	MG/G	40mgg
+1199	40	MG/ML	40mgml
+1200	40	MG/ML+	40mgml+
+1201	40	UI/ML	40uiml
+1202	420	MG	420mg
+1203	425	MG	425mg
+1204	425	UI	425ui
+1205	425	UI/ML	425uiml
+1206	42923	MBQ	42923mbq
+1207	44.3	MG	44.3mg
+1208	44.94	MG	44.94mg
+1209	44.94	MG/ML	44.94mgml
+1210	440	MG	440mg
+1211	4440	MBQ	4440mbq
+1212	4440	MBQ/ML	4440mbqml
+1213	44	MCG	44mcg
+1214	450 + 50	MG	450+50mg
+1215	45050	MG	45050mg
+1216	450	MG	450mg
+1217	450	PPC	450ppc
+1218	450	UI/	450ui
+1219	450	UI/0.75	450ui0.75
+1220	450	UI/400	450ui400
+1221	4574	MBQ	4574mbq
+1222	45	MG	45mg
+1223	46.5	MG	46.5mg
+1224	460	MG/G	460mgg
+1225	46250	MBQ	46250mbq
+1226	4625	MBQ	4625mbq
+1227	469	MG/ML	469mgml
+1228	480	MG	480mg
+1229	4810	MBQ	4810mbq
+1230	48	MG	48mg
+1231	48	MG/ML	48mgml
+1232	48	MU	48mu
+1233	48	MUI	48mui
+1234	498.72	MG/ML	498.72mgml
+1235	4	G	4g
+1236	4	G+	4g+
+1237	4	MCG	4mcg
+1238	4	MCG/ML	4mcgml
+1239	4	MG	4mg
+1240	4	MG/ML	4mgml
+1241	4	O	4o
+1242	4	PCC	4pcc
+1243	4	U	4u
+1244	4	UI	4ui
+1245	5%	EMPL	5%empl
+1246	5%	SOL	5%sol
+1247	5.000.000	UI	5.000.000ui
+1248	5.000	U	5.000u
+1249	5.000	UI	5.000ui
+1250	5.00	MG	5.00mg
+1251	5.0	G	5.0g
+1252	5.0	MCG/ML	5.0mcgml
+1253	5.0	MG/	5.0mg
+1254	5.0	MG/G	5.0mgg
+1255	5.0	MG/ML	5.0mgml
+1256	5.0	MG/ML+0.0091	5.0mgml+0.0091
+1257	5.29	G/L	5.29gl
+1258	5.3	MG	5.3mg
+1259	5.45	MG	5.45mg
+1260	5.4	MG	5.4mg
+1261	5.5	MG/CM2	5.5mgcm2
+1262	5.631	G	5.631g
+1263	5.83	MG/ML	5.83mgml
+1264	50%	SOL	50%sol
+1265	50.000	UI	50.000ui
+1266	50.00	MG	50.00mg
+1267	50.0	MG/	50.0mg
+1268	500.000	UI	500.000ui
+1269	500 + 30	MG	500+30mg
+1270	500 + 65	MG	500+65mg
+1271	5000000	UI	5000000ui
+1272	50000	UI	50000ui
+1273	5000	MCG	5000mcg
+1274	5000	UI	5000ui
+1275	5000	UI/0.25	5000ui0.25
+1276	5000	UI/0.3	5000ui0.3
+1277	5000	UI/G	5000uig
+1278	5000	UI/ML	5000uiml
+1279	500	MCG	500mcg
+1280	500	MCG/ML	500mcgml
+1281	500	MG/	500mg
+1282	500	MG+	500mg+
+1283	500	MG+30MG+2MG	500mg+30mg+2mg
+1284	500	MG/5	500mg5
+1285	500	MG/5G	500mg5g
+1286	500	MG/ML	500mgml
+1287	500	U	500u
+1288	500	UI	500ui
+1289	500	UI/500UI	500ui500ui
+1290	500	UI/ML	500uiml
+1291	509	MG/ML	509mgml
+1292	50	COM	50com
+1293	50	MCG/	50mcg
+1294	50	MCG/DIA	50mcgdia
+1295	50	MCG/DOSE	50mcgdose
+1296	50	MCG/G	50mcgg
+1297	50	MCG/ML	50mcgml
+1298	50	MG/	50mg
+1299	50	MG+	50mg+
+1300	50	MG+12.5	50mg+12.5
+1301	50	MG/1.5G	50mg1.5g
+1302	50	MG/10	50mg10
+1303	50	MG/2	50mg2
+1304	50	MG/5	50mg5
+1305	50	MG/DRAG	50mgdrag
+1306	50	MG/G	50mgg
+1307	50	MG/ML	50mgml
+1308	50	MILHÕES/ML	50milhoesml
+1309	50	ML/ML	50mlml
+1310	50	PCC	50pcc
+1311	50	U	50u
+1312	50	UI/0.5	50ui0.5
+1313	50	UI/DOSE	50uidose
+1314	50	UI/ML	50uiml
+1315	51282	MBQ	51282mbq
+1316	5180	MBQ	5180mbq
+1317	52.63	MG/ML	52.63mgml
+1318	52.8	MG/ML	52.8mgml
+1319	53.2	MG/G	53.2mgg
+1320	544	MCG/ML	544mcgml
+1321	54	MG	54mg
+1322	550	MCG/ML	550mcgml
+1323	550	MG	550mg
+1324	550	MG/ML	550mgml
+1325	55500	MBQ	55500mbq
+1326	5550	MBQ	5550mbq
+1327	555	MBQ	555mbq
+1328	55627	MBQ	55627mbq
+1329	56.25	MG	56.25mg
+1330	576	MG	576mg
+1331	5	G	5g
+1332	5	GBQ	5gbq
+1333	5	MCG/0.5	5mcg0.5
+1334	5	MCG/ML	5mcgml
+1335	5	MG/	5mg
+1336	5	MG+	5mg+
+1337	5	MG/G	5mgg
+1338	5	MG/ML	5mgml
+1339	5	PCC	5pcc
+1340	5	PPC	5ppc
+1341	5	UI/ML	5uiml
+1342	6.000	UI/0.3	6.000ui0.3
+1343	6.0	MG/	6.0mg
+1344	6.0	MG/0.5	6.0mg0.5
+1345	6.0	MG/ML	6.0mgml
+1346	6.14	MG/ML	6.14mgml
+1347	6.250	MG	6.250mg
+1348	6.25	MG	6.25mg
+1349	6.43	MG/ML	6.43mgml
+1350	6.4	MG	6.4mg
+1351	6.667	MG/ML	6.667mgml
+1352	6.66	MG/ML	6.66mgml
+1353	6.67	MG/ML	6.67mgml
+1354	60.000	UI	60.000ui
+1355	600.000	U	600.000u
+1356	600.000	UI	600.000ui
+1357	600000	UI	600000ui
+1358	60000	UI	60000ui
+1359	6000	UI	6000ui
+1360	600	MCG	600mcg
+1361	600	MCG/ML	600mcgml
+1362	600	MG	600mg
+1363	600	UI	600ui
+1364	604.72	MG/ML	604.72mgml
+1365	60	KUI	60kui
+1366	60	MCG/ML	60mcgml
+1367	60	MG	60mg
+1368	60	MG/0.6	60mg0.6
+1369	60	MG/G	60mgg
+1370	60	MG/ML	60mgml
+1371	60	MU/ML	60muml
+1372	612	MG	612mg
+1373	62.5 + 4.38 + 1.25 + 2.5	MG/G	62.5+4.38+1.25+2.5mgg
+1374	62.5 + 4.380 + 1.250 + 2.5	MG	62.5+4.380+1.250+2.5mg
+1375	62.5 + 4.380 + 1.250 + 2.5	MG/G	62.5+4.380+1.250+2.5mgg
+1376	62.5	MCG	62.5mcg
+1377	62.5	MCG/DOSE	62.5mcgdose
+1378	62.5	MG	62.5mg
+1379	62.5	MG/G	62.5mgg
+1380	623.40	MG/ML	623.40mgml
+1381	6258	MBQ	6258mbq
+1382	625	MG	625mg
+1383	6290	MBQ/ML	6290mbqml
+1384	635	MG	635mg
+1385	64750	MBQ	64750mbq
+1386	64	MCG	64mcg
+1387	64	MCG/DOSE	64mcgdose
+1388	650	G	650g
+1389	650	MG	650mg
+1390	652	MG/ML	652mgml
+1391	65	MG	65mg
+1392	66.66	MG/ML	66.66mgml
+1393	66.7	PCC	66.7pcc
+1394	660	MG	660mg
+1395	6660	MBQ	6660mbq
+1396	666	U/G	666ug
+1397	666	UI/G	666uig
+1398	667	MG/ML	667mgml
+1399	66	MCG	66mcg
+1400	678	MG/ML	678mgml
+1401	67	MG	67mg
+1402	680	MG/G	680mgg
+1403	68	MG/ML	68mgml
+1404	6	CH	6ch
+1405	6	G	6g
+1406	6	KIT	6kit
+1407	6	MCG	6mcg
+1408	6	MCG/DOSE	6mcgdose
+1409	6	MCG/INAL	6mcginal
+1410	6	MCG/ML	6mcgml
+1411	6	MG	6mg
+1412	6	MG/ML	6mgml
+1413	6	PCC	6pcc
+1414	7.000	UI	7.000ui
+1415	7.0	MG	7.0mg
+1416	7.0	MG/ML	7.0mgml
+1417	7.50	MG/ML	7.50mgml
+1418	7.5	MG/	7.5mg
+1419	7.5	MG/5	7.5mg5
+1420	7.5	MG/G	7.5mgg
+1421	7.5	MG/ML	7.5mgml
+1422	7.5	MG/ML+0.0091	7.5mgml+0.0091
+1423	7.7	MG	7.7mg
+1424	7000	UI	7000ui
+1425	700	G	700g
+1426	700	MG/G	700mgg
+1427	700	MG/ML	700mgml
+1428	70	MG	70mg
+1429	70	MG/5600	70mg5600
+1430	70	MG/ML	70mgml
+1431	70	PCC	70pcc
+1432	71.50	MG/ML	71.50mgml
+1433	71.5	MG/ML	71.5mgml
+1434	7104	MBQ	7104mbq
+1435	714	MG	714mg
+1436	720	UEL	720uel
+1437	720	UEL/0.5	720uel0.5
+1438	720	UEL/ML	720uelml
+1439	72	MG	72mg
+1440	74000	MBQ	74000mbq
+1441	7400	MBQ	7400mbq
+1442	740	MBQ	740mbq
+1443	741	MG/ML	741mgml
+1444	74	MBQ	74mbq
+1445	74	MG/G	74mgg
+1446	75.0	MG	75.0mg
+1447	7500	UI	7500ui
+1448	750	MG/	750mg
+1449	750	MG/ML	750mgml
+1450	750	UI	750ui
+1451	750	UI/ML	750uiml
+1452	750	U/ML	750uml
+1453	75	MCG	75mcg
+1454	75	MCG/H	75mcgh
+1455	75	MG	75mg
+1456	75	MG/DRAG	75mgdrag
+1457	75	MG/ML	75mgml
+1458	75	UI	75ui
+1459	768.86	MG/ML	768.86mgml
+1460	770	MG	770mg
+1461	7	MG	7mg
+1462	7	MG/G	7mgg
+1463	7	MG/ML	7mgml
+1464	8.0	MG	8.0mg
+1465	8.4	MG	8.4mg
+1466	8.4	PCC	8.4pcc
+1467	8.6 + 0.3 + 0.33	MG/ML	8.6+0.3+0.33mgml
+1468	8.6	MG/ML	8.6mgml
+1469	8.6	MG/ML+0.3MG/ML+0.33MG/ML	8.6mgml+0.3mgml+0.33mgml
+1470	8.75	MG	8.75mg
+1471	8.80	MG	8.80mg
+1472	8.89	MG/G	8.89mgg
+1473	80.000	UI/ML	80.000uiml
+1474	80.0	MG/G	80.0mgg
+1475	80.0	MG/ML	80.0mgml
+1476	80:16	MG/ML	80:16mgml
+1477	80 + 12.5	MG	80+12.5mg
+1478	8000	UI	8000ui
+1479	800	MCG	800mcg
+1480	800	MG	800mg
+1481	80	MG	80mg
+1482	80	MG/0.8	80mg0.8
+1483	80	MG/G	80mgg
+1484	80	MG/ML	80mgml
+1485	81.50	MG/ML	81.50mgml
+1486	81	MG	81mg
+1487	825	MG/ML	825mgml
+1488	840	MG	840mg
+1489	8426	MBQ	8426mbq
+1490	847	MBQ	847mbq
+1491	84	G/L	84gl
+1492	84	MG/ML	84mgml
+1493	850	MG	850mg
+1494	854.4	MG/G	854.4mgg
+1495	857	MG	857mg
+1496	85	MG	85mg
+1497	875	MG	875mg
+1498	8880	MBQ	8880mbq
+1499	88	MCG	88mcg
+1500	8	GBQ	8gbq
+1501	8	MCG	8mcg
+1502	8	MG	8mg
+1503	8	MG/ML	8mgml
+1504	8	U	8u
+1505	8	UI	8ui
+1506	9.0	G	9.0g
+1507	9.0	MG/	9.0mg
+1508	9.0	MG/ML	9.0mgml
+1509	9.6	MUI	9.6mui
+1510	900 + 100	MG	900+100mg
+1511	9000	UI	9000ui
+1512	900	G	900g
+1513	900	MG	900mg
+1514	900	UI/	900ui
+1515	900	UI/800	900ui800
+1516	90	MG	90mg
+1517	90	MG/ML	90mgml
+1518	9250	MBQ	9250mbq
+1519	9250	MBQ/ML	9250mbqml
+1520	925	MBQ	925mbq
+1521	94	MG	94mg
+1522	950	G	950g
+1523	980	MG	980mg
+1524	98	PCC	98pcc
+1525	9	DH	9dh
+1526	9	G/L	9gl
+1527	9	MG/	9mg
+1528	9	MG/G	9mgg
+1529	9	MG/ML	9mgml
+1530	9	MUI/0.5	9mui0.5
+1531	ADU		adu
+1532	AER		aer
+1533	AMP		amp
+1534	APRESENTACAO		apresentacao
+1535	CAP		cap
+1536	COM		com
+1537	CREM		crem
+1538	CT		ct
+1539	CX		cx
+1540	D		d
+1541	D2		d2
+1542	DRG		drg
+1543	EMPL		empl
+1544	EMU		emu
+1545	FA		fa
+1546	FR		fr
+1547	FRAMBOESA		framboesa
+1548	FRASCO		frasco
+1549	GEL		gel
+1550	GT		gt
+1551	KIT		kit
+1552	LIMAO		limao
+1553	LIN		lin
+1554	LIQ		liq
+1555	PED		ped
+1556	PÓ		po
+1557	POM		pom
+1558	Referenciada		referenciada
+1559	SAB		sab
+1560	SHAMP		shamp
+1561	SOL		sol
+1562	SR		sr
+1563	SUS		sus
+1564	SUSP		susp
+1565	UVA		uva
+1566	XAROPE		xarope
+\.
+
+
 --
--- TOC entry 3405 (class 0 OID 17261)
--- Dependencies: 214
+-- TOC entry 2936 (class 0 OID 59944)
+-- Dependencies: 201
 -- Data for Name: medication; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.medication (id, name, searchable) FROM stdin;
+1767	Ecasil-81	ecasil81
+2055	Ferid	ferid
+2210	Foxis	foxis
+2483	Halo	halo
+2630	Hytas	hytas
+4212	Pype	pype
+4373	Riss	riss
 1	Aas	aas
 2	Aas Protect	aasprotect
 3	Abba	abba
@@ -14982,6 +16571,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 1120	Cloridrato De Erlotinibe	cloridratodeerlotinibe
 1121	Cloridrato De Fexofenadina	cloridratodefexofenadina
 1122	Cloridrato De Fexofenadina + Cloridrato De Pseudoefedrina	cloridratodefexofenadinacloridratodepseudoefedrina
+1216	Cod	cod
 1123	Cloridrato De Fingolimode	cloridratodefingolimode
 1124	Cloridrato De Fluoxetina	cloridratodefluoxetina
 1125	Cloridrato De Gencitabina	cloridratodegencitabina
@@ -15075,7 +16665,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 1213	Cobapetit	cobapetit
 1214	Cobavital	cobavital
 1215	Cocichimil	cocichimil
-1216	Cod	cod
 1217	Codaten	codaten
 1218	Codein	codein
 1219	Codex	codex
@@ -15216,7 +16805,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 1355	Cystadane	cystadane
 1356	Cystex	cystex
 1357	Cytrana	cytrana
-1358	D’Orto	d'orto
+1358	DOrto	dorto
 1359	D3caps	d3caps
 1360	Dabaz	dabaz
 1361	Dacarb	dacarb
@@ -15625,7 +17214,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 1764	Ebatz	ebatz
 1765	Ebix	ebix
 1766	Ecalta	ecalta
-1767	Ecasil-81	ecasil81
 1768	Ecd-Tec	ecdtec
 1769	Echinacea Vitalab	echinaceavitalab
 1770	Ecofilm	ecofilm
@@ -15913,7 +17501,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2052	Fentora	fentora
 2053	Ferane 35	ferane35
 2054	Fericimed	fericimed
-2055	Ferid	ferid
 2056	Ferinject	ferinject
 2057	Ferriprox	ferriprox
 2058	Ferro	ferro
@@ -16068,7 +17655,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2207	Fosmoryl	fosmoryl
 2208	Fostair	fostair
 2209	Fostimon-M	fostimonm
-2210	Foxis	foxis
 2211	Franol	franol
 2212	Frenotosse	frenotosse
 2213	Fresoflox	fresoflox
@@ -16084,6 +17670,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2223	Fulphila	fulphila
 2224	Fulvestranto	fulvestranto
 2225	Fulvy	fulvy
+2356	Gerilon	gerilon
 2226	Fumarato De Bisoprolol+ Hidroclorotiazida	fumaratodebisoprololhidroclorotiazida
 2227	Fumarato De Cetotifeno	fumaratodecetotifeno
 2228	Fumarato De Dimetila	fumaratodedimetila
@@ -16214,7 +17801,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2353	Geodon	geodon
 2354	Gerador-Ipen-Tec	geradoripentec
 2355	Geriaton	geriaton
-2356	Gerilon	gerilon
 2357	Gerovital	gerovital
 2358	Gésico	gesico
 2359	Gésico Duo	gesicoduo
@@ -16267,7 +17853,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2406	Gliconato De Cálcio	gliconatodecalcio
 2407	Gliconato De Calcio 10%	gliconatodecalcio10%
 2408	Gliconil	gliconil
-2409	Glicose 	glicose
+2409	Glicose	glicose
 2410	Glicose 75%	glicose75%
 2411	Glicose A 5% + Cloreto De Sódio A 0,9%	glicosea5%cloretodesodioa0,9%
 2412	Glicose Beker	glicosebeker
@@ -16341,7 +17927,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2480	Haldol Decanoato	haldoldecanoato
 2481	Halex Istar Solução Glicofisiológica	halexistarsolucaoglicofisiologica
 2482	Halexminophen	halexminophen
-2483	Halo	halo
 2484	Halobex	halobex
 2485	Halo Decanoato	halodecanoato
 2486	Haloper	haloper
@@ -16488,7 +18073,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 2627	Hyrimoz	hyrimoz
 2628	Hystin	hystin
 2629	Hytamicina	hytamicina
-2630	Hytas	hytas
 2631	Hytos Plus	hytosplus
 2632	Hytropin	hytropin
 2633	Hyvit K	hyvitk
@@ -17516,6 +19100,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 3655	Notuss Tss	notusstss
 3656	Nourin	nourin
 3657	Novabupi	novabupi
+3804	Oroxadin	oroxadin
 3658	Novabupi (Sem Vasoconstritor)	novabupi(semvasoconstritor)
 3659	Novacort	novacort
 3660	Novalgina	novalgina
@@ -17662,7 +19247,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 3801	Orlipid	orlipid
 3802	Orlistate	orlistate
 3803	Ornitargin	ornitargin
-3804	Oroxadin	oroxadin
 3805	Ortosamin	ortosamin
 3806	Osbant	osbant
 3807	Oscal 500	oscal500
@@ -18070,7 +19654,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 4209	Pyloripac	pyloripac
 4210	Pyloripac Retrat	pyloripacretrat
 4211	Pyloritrat	pyloritrat
-4212	Pype	pype
 4213	Pyridium	pyridium
 4214	Pyrit - Zinnober	pyritzinnober
 4215	Pyr-Pam	pyrpam
@@ -18231,7 +19814,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 4370	Risperidona	risperidona
 4371	Risperidona (Port 344/98 - Lista C1)	risperidona(port344/98listac1)
 4372	Rispxan	rispxan
-4373	Riss	riss
 4374	Ritalina	ritalina
 4375	Ritmoneuran Rtm	ritmoneuranrtm
 4376	Ritmonorm	ritmonorm
@@ -18514,6 +20096,7 @@ COPY public.medication (id, name, searchable) FROM stdin;
 4653	Soro Antibotulínico Ab	soroantibotulinicoab
 4654	Soro Antibotulinico E	soroantibotulinicoe
 4655	Soro Anticrotálico	soroanticrotalico
+4787	Systen	systen
 4656	Soro Antidifterico	soroantidifterico
 4657	Soro Antielapídico	soroantielapidico
 4658	Soro Antiescorpiônico	soroantiescorpionico
@@ -18645,7 +20228,6 @@ COPY public.medication (id, name, searchable) FROM stdin;
 4784	Synflorix	synflorix
 4785	Synthroid	synthroid
 4786	Syntocinon	syntocinon
-4787	Systen	systen
 4788	Systen Conti	systenconti
 4789	Systen Sequi	systensequi
 4790	Tabrecta	tabrecta
@@ -19440,10422 +21022,10419 @@ COPY public.medication (id, name, searchable) FROM stdin;
 \.
 
 
---
--- TOC entry 3412 (class 0 OID 17307)
--- Dependencies: 221
--- Data for Name: medication_presentation; Type: TABLE DATA; Schema: public; Owner: -
---
 
-COPY public.medication_presentation (id, dosage_amount, dosage_unit, medicationid, presentationid) FROM stdin;
-1	1000	MG	4483	51
-2	0.5	MG/G	1470	87
-3	5	MG	1375	51
-4	250	MG	1624	176
-5	(5 + 100 + 100 + 0.5)	MG	1486	51
-6	2	MG/ML	2612	175
-7	1.0	G	462	131
-8	75	MG	3861	19
-9	5.0	MG/ML	1770	179
-10	60	MG	191	51
-11	0.12	G/ML	2397	82
-12	100	MG	2038	62
-13	(100 + 20)	MG	3578	37
-14	0.25	MG	894	212
-15	25	MG	4871	37
-16	250	MG	983	51
-17	40	MG	5344	51
-18	20	MG	4792	51
-19	15	MG	1173	19
-20	500	MG	2282	62
-21	250	MCG	2193	176
-22	5	MG	680	51
-23	12.5	MG/ML	1110	176
-24	7500	UI	2543	176
-25	15	MG	1272	62
-26	250	MG	987	51
-27	3000	UI	97	135
-28	30	MG	1029	44
-29	50	MG	1706	62
-30	10	MG/ML	4165	79
-31	400	MG	3644	51
-32	1000	MG	451	51
-33	25	MG	802	62
-34	500	MG	888	156
-35	37	MG/G	2327	127
-36	3	MG	4366	51
-37	25	MG	395	62
-38	20	MG	4876	13
-39	35.6	MG+37MG+48.4MG/ML	2338	173
-40	20	MG	2324	13
-41	50	MG	2270	62
-42	2	MG	1740	62
-43	875	MG	1028	51
-44	385	MG/ML	4677	181
-45	60	MG	829	114
-46	2	MG	1522	74
-47	120	MG	1121	51
-48	6	G	4460	140
-49	100	MG	5251	51
-50	20	MG	2015	13
-51	50	MG/ML	3704	176
-52	200	MG	2133	51
-53	400	MG/	247	154
-54	DRG		4037	74
-55	50	MG	955	35
-56	70	MG	27	136
-57	2	MG/ML	2140	176
-58	10	MG	4969	51
-59	200	MG	1280	19
-60	500	MG/ML	262	176
-61	2220	MBQ	2402	176
-62	40	MG	3783	176
-63	0.5	MG	1291	62
-64	50.000	UI	4018	35
-65	84	G/L	1315	189
-66	500	U	2014	134
-67	3	MG	5475	51
-68	(40 + 12.5)	MG	3733	51
-69	500	MG	243	19
-70	1.25	MG/ML	1890	181
-71	250	UI	547	140
-72	80	MG/ML	4718	204
-73	8	MG	2290	51
-74	3	MG/ML	3720	179
-75	10	MG/ML	5128	185
-76	500	MG	2191	51
-77	50	MG/G	2536	68
-78	8	MG	1302	62
-79	1.200.000	UI	544	133
-80	1	G	4460	140
-81	50	MG/	1160	176
-82	20	MG/ML	5470	176
-83	10	G	4857	176
-84	0.5	MG	762	37
-85	5	MG/	5145	176
-86	(430 + 430 + 100)	MG/G	4707	127
-87	(80.0 + 25.0)	MG	4867	37
-88	20	MG	997	51
-89	50	MG	3859	58
-90	500	MG	935	46
-91	500	MG/ML	4598	176
-92	8	MG	706	15
-93	10	MG	5275	139
-94	3	MG/ML	4978	179
-95	20	MG	3751	16
-96	1	G	4729	47
-97	(200.0 + 6.0)	MCG/DOSE	2208	130
-98	(80 + 11.4)	MG/ML	1027	160
-99	5	MG	2145	51
-100	0.5	MG/ML	1712	111
-101	8	MG	3771	48
-102	5	MG	2267	51
-103	150	MG	4249	51
-104	10	MG	1012	51
-105	5	MG	315	51
-106	6.25	MG	4704	44
-107	50	MG/ML	2748	160
-108	50	MG/ML	2480	176
-109	1739	MBQ	2144	176
-110	5	MG	1148	37
-111	652	MG/ML	5354	176
-112	300	MG	5009	51
-113	1459	MBQ	2013	176
-114	15	MG	3986	62
-115	200	MG/G	445	68
-116	4	MG	5275	140
-117	32	MG/ML	5114	181
-118	20	MG	4083	37
-119	(0.5 + 1.0 + 10.0 + 10.0)	MG/G	5217	68
-120	50	MG	4225	15
-121	5	MG	4433	51
-122	15	MG	4986	13
-123	25	MG	4516	51
-124	300	MG	5094	62
-125	25	MG	816	62
-126	200	MG/ML	5425	176
-127	2	MG/ML	712	175
-128	10	MG	5567	51
-129	10	MG	1682	51
-130	20	MG	197	51
-131	100	MG	3927	139
-132	10	MG/G	1663	86
-133	5000	UI/0.25	2523	176
-134	0.5	MG/	432	212
-135	180	MG	1960	51
-136	10	MG/G	1206	67
-137	100	MG	1354	184
-138	10 + 0.02 + 15	MG/ML	79	181
-139	1.25	MG	4269	62
-140	(320.00+25.00)	MG	1579	51
-141	0.3	MG/	718	212
-142	5	MG	5332	62
-143	150	MG	3859	58
-144	12.5	MG/ML	1625	176
-145	13.33	MG/ML	2212	212
-146	2.5	G	2103	176
-147	0.1	MG/ML	572	75
-148	14000	UI	78	35
-149	5	MG	5051	51
-150	(0.436 + 0.367 + 0.1765 )	G/G	4449	127
-151	12	MCG/INAL	4780	130
-152	175	MCG	4205	62
-153	25	MG/ML	430	188
-154	150	MG	67	51
-155	SOL		4647	176
-156	2	MG/ML	3947	181
-157	666	U/G	2064	147
-158	7	MG/ML	2502	212
-159	100	MG/ML	5015	167
-160	0.5	MG/ML	1051	81
-161	150	MG/ML	2199	176
-162	50	MCG/DOSE	1596	171
-163	20	MG/ML	2136	176
-164	300	MG	1299	176
-165	1000	UI	1704	35
-166	200	MG	2534	62
-167	40	MG/ML	2510	204
-168	4	MG	3994	51
-169	3.5	MG	5008	135
-170	50	MG	809	62
-171	(320.00+10.00)	MG	5232	51
-172	15	MG	3628	19
-173	3	MG	5477	51
-174	250	MG	4856	62
-175	(80 + 11.5)	MG/ML	245	160
-176	50	MG	2553	62
-177	1	G	857	114
-178	40	MG/ML	4739	204
-179	160	MG	4923	51
-180	500	MG	251	19
-181	750	MG	1346	37
-182	20	GM/G	3619	114
-183	(0.006+0.0003+0.0002+0.0031)	G/ML	4353	176
-184	500	MG	5398	51
-185	0.64	MG/G	5085	68
-186	COM		3798	51
-187	25	MG	808	62
-188	150	MG	5292	15
-189	(4 + 0.5)	G	4212	159
-190	10	MG/G	4965	67
-191	500	MCG/ML	4021	176
-192	10	MG/5ML	2597	167
-193	2	G	3987	135
-194	7000	UI	1758	35
-195	100	MG/ML	2406	176
-196	50	MCG	240	207
-197	100	MG	1184	58
-198	180	MCG	3922	176
-199	20	MG	5400	176
-200	440	MG	5040	135
-201	8	MG	4278	15
-202	100	MG/ML	2407	176
-203	44.3	MG	2026	45
-204	500	MG	1288	51
-205	(20.0 + 0.64 + 2.5)	MG/G	918	147
-206	0.5	MG	5515	62
-207	160	MG	674	51
-208	200	MG	2124	152
-209	200	MG	4231	51
-210	20	MG/ML	2136	212
-211	20	MG	690	51
-212	1	MG/ML	1779	176
-213	1	MG/G	1484	68
-214	200	MG	925	62
-215	75	MCG	1952	62
-216	11.6	MG/G	1529	194
-217	10	MG	5318	32
-218	50	MG	4427	140
-219	1	G	1027	140
-220	20	MG/G	2467	69
-221	2	G	3935	101
-222	50	MG	5405	197
-223	200	UI/G	5090	86
-224	500	MG	1100	51
-225	35	MG	2027	62
-226	0.25	MG/ML	554	212
-227	0.3	MG/G	408	145
-228	0.4	MG/	1146	176
-229	150	MG	1388	51
-230	0.5	MG/G	580	68
-231	150	MG	5067	51
-232	1.0	MG/G	4797	147
-233	8	MG/ML	4000	181
-234	30	MG	4775	19
-235	50	MG/ML	1188	176
-236	25	MG	4051	51
-237	250	MG/ML	4598	176
-238	623.40	MG/ML	5132	176
-239	50	MG	329	51
-240	2000	UI	1882	176
-241	0.5	MG/G	5391	67
-242	1.25	MG	2515	51
-243	11.6	MG/G	3965	168
-244	24	MG	566	62
-245	250	MG	4130	13
-246	15	MG	1894	51
-247	900 + 100	MG	1366	51
-248	5	MG/ML	1479	179
-249	10	MG/ML	714	212
-250	10	MG/ML	4140	79
-251	40	MG	515	204
-252	500	MG	5153	156
-253	10	MG	2519	37
-254	25	MG	810	62
-255	50	MG/ML	969	204
-256	1	G	882	156
-257	5	MG	4502	58
-258	100	MG	5392	13
-259	SOL		4023	176
-260	1	MG	4795	13
-261	100	MG	3904	19
-262	15	MG	2288	51
-263	50	MCG	2113	171
-264	50	MG	1169	51
-265	200	MG	893	19
-266	250	MG	457	19
-267	10	MG	1949	62
-268	(1000.0 + 200.0)	MG	1631	156
-269	40	MG	4706	51
-270	5	MG/ML	554	181
-271	0.5	MG/ML	1474	212
-272	10	MG	1070	62
-273	100	MG	413	139
-274	SOL		1743	176
-275	2	G	1096	131
-276	1	G	5388	46
-277	900	MG	1545	51
-278	250	MG	304	139
-279	40	MG/G	2559	67
-280	450	MG	1192	51
-281	125	MG	1404	50
-282	3	MG	1721	51
-283	20	MG	4561	51
-284	100	MG	3601	50
-285	1.5	MG	1996	140
-286	0.75	MG	1510	62
-287	2	G	5387	46
-288	4625	MBQ	2144	176
-289	850	MG	2239	51
-290	50	MG	5058	19
-291	40	MG	3875	135
-292	100	UI/ML	2726	201
-293	10	MG/ML	280	212
-294	200	MG	5423	135
-295	500	MG	448	142
-296	5.3	MG	2347	140
-297	50	MG+12.5	4689	51
-298	5	MG/G	4987	86
-299	CX		4046	197
-300	35	MG	4239	58
-301	16	MG	4292	19
-302	0.04	MG/ML	5033	179
-303	40	MG	4568	51
-304	200	MG/ML	3892	181
-305	SOL		4652	176
-306	100	MG/ML	3884	200
-307	8	MG	577	62
-308	500	MG	4840	51
-309	(6.0 + 0.25)	MG/ML	65	212
-310	(0.50 + 2.15 +2.15)	G/4.90G	4707	127
-311	10	MG/ML	4289	139
-312	(20.0 + 0.64 + 2.5)	MG	964	67
-313	(80.0 + 11.4)	MG/ML	245	163
-314	10	MG	1892	51
-315	100	MG+	325	51
-316	6	MG	2290	51
-317	0.2	MG/ML	378	212
-318	(25+ 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	1515	187
-319	200	MG	5157	41
-320	10	MG/ML	4965	78
-321	500	MCG/ML	228	176
-322	PÓ		4637	127
-323	1000	UI	2476	140
-324	25	MG/ML	1706	181
-325	(320.0 + 12.5)	MG	5234	51
-326	(200.0 + 300.0)	MG	1852	51
-327	9	MG/	1078	176
-328	22.5	MG	1791	137
-329	1.5	MG	2174	58
-330	10	MG	4333	13
-331	(0.15 + 0.03)	MG	2362	51
-332	666	UI/G	2064	147
-333	5	MG	5571	48
-334	160	MG	5115	47
-335	25	MG	4989	51
-336	1000	MG	883	156
-337	450	MG	2100	51
-338	25	MG/ML	1922	204
-339	25	MG	3862	51
-340	0.5	MG	4368	48
-341	500	MG	3857	62
-342	6.25	MG	826	41
-343	37	MG/ML	2326	204
-344	80	MG	2373	13
-345	160	MG/5ML	5106	204
-346	( 3 +1)	MG/ML	1349	179
-347	6	G	251	163
-348	3.5	MG	5546	135
-349	50	MG	1611	62
-350	280	MG	278	51
-351	0.25	MG	825	62
-352	250	MG/5ML	249	154
-353	5.0	MG	5518	51
-354	10	MG/ML	3921	111
-355	0.25	MG/	695	190
-356	20	MG	3851	58
-357	5	MG/ML	6	201
-358	50000	UI	1719	51
-359	20	MG	1375	51
-360	5	MG/ML	2073	179
-361			1209	62
-362	182.93	MG	4375	19
-363	50	MG/ML	1825	176
-364	1500	MG	454	163
-365	1	MG/G	5214	145
-366	150	MG	4556	62
-367	10	MG	1517	62
-368	400	MG	4778	139
-369	62.5	MG/G	631	69
-370	1389	MG	3816	51
-371	2	MG	3674	140
-372	5	MG	4873	19
-373	125	MCG	4785	62
-374	200	MG	892	13
-375	3	MG/ML	2151	212
-376	5	MG	2273	62
-377	5.0	MCG/ML	4777	176
-378	400	MG	863	58
-379	200	MG/ML	4897	181
-380	3.0	MG/ML	2205	181
-381	500	MG/	1589	176
-382	25	MG	1150	19
-383	100	MG/200MG	5334	139
-384	5000	UI	4583	35
-385	100	MG	5223	51
-386	(150 + 10)	MG/ML	956	176
-387	10	MG	5505	62
-388	(100 + 150)	MG/G	4426	67
-389	10	MG	5310	62
-390	14810	MBQ	2013	176
-391	SOL		545	176
-392	250	MG	5428	13
-393	40	MG	530	51
-394	500	MG/ML	2266	181
-395	50	MG/ML	819	212
-396	100	MG	3648	47
-397	11	MG/G	612	194
-398	1	MG/ML	1565	173
-399	7.000	UI	5371	51
-400	3	MG/ML	2205	167
-401	200	MG/ML	971	176
-402	125	MG	1176	62
-403	(462+90+438)	MG/G	1924	96
-404	150	MG	2198	135
-405	5	MG	3700	37
-406	200	MG	304	37
-407	80	MG	2508	62
-408	(138+2.0+2.5+1.0+107.51+3.0+32+1)	MEQ/L	1311	189
-409	0.5	MG/ML	3673	178
-410	80	MG/ML	3665	160
-411	1	G	2346	139
-412	25	MG	839	62
-413	50	MG	5029	19
-414	7	MG/ML	4673	212
-415	05	MCG/ML	1995	176
-416	75	MG	1195	19
-417	0.25	MG/ML	414	176
-418	9	MG/ML	1081	176
-419	4	MG/ML	1396	176
-420	DRG		853	74
-421	100.000	UI/ML	3597	198
-422	1.50	MG	4228	44
-423	5	MG	4415	37
-424	1000	MG	5089	159
-425	(21.60 + 46.80 + 9.80 + 200.0)	MG/ML	2548	181
-426	2.22	MG/ML	1151	179
-427	(2.0 + 1.0)	G	254	129
-428	25	MG/ML	1025	103
-429	678	MG/ML	3792	176
-430	80	MG/ML	2629	176
-431	50	MG	1190	62
-432	2	MG/ML	554	6
-433	20	MG	1895	51
-434	0.25	MG	209	37
-435	500	UI	97	135
-436	500	MG	4898	62
-437	20	MG	998	51
-438	80	MG/ML	4554	163
-439	500	MG	149	51
-440	100	MG	4076	13
-441	40	MG/ML	4024	212
-442	600	MG	5577	51
-443	90	MG	2539	51
-444	3000000	UI	166	135
-445	50	MG/	2358	176
-446	1.0	MG	209	62
-447	600	MG	2344	51
-448	10	MG	5344	51
-449	20	MG/ML	4165	79
-450	150	MG	4362	51
-451	12.5	MG	1609	62
-452	40	MG	5263	51
-453	400	MG	3883	51
-454	9	G/L	4607	176
-455	1000	UI	1687	32
-456	1.25	MG	1265	51
-457	500	MG	1385	135
-458	50	MG	4986	51
-459	10	MG/ML	1565	181
-460	0.6	U/G	2765	147
-461	3000	UI/ML	1881	176
-462	120	MG/ML	4597	192
-463	60	MG	1351	24
-464	5	MG	1646	51
-465	200	MG	1851	51
-466	30	MG	1565	15
-467	14000	UI/ML	1435	181
-468	20	MG	3849	58
-469	300	MG	821	51
-470	250	MG/ML	4457	112
-471	0.5	MG	937	51
-472	20	MG	4299	71
-473	120	MG	3801	19
-474	50	MG/ML	3591	204
-475	(2.0 + 5.0)	MG	1741	13
-476	50	MG/ML	1654	181
-477	100	MG	4989	51
-478	2	MG/ML	5151	181
-479	20	MG	1765	51
-480	SOL		852	194
-481	50	MG	4720	58
-482	3	MG	4109	51
-483	10	MG	1746	51
-484	25	MG	397	62
-485	100	MG/ML	5468	194
-486	75	MCG	4205	62
-487	40	MG	4855	139
-488	1000	UI	3706	140
-489	10	MG+5MG	1650	51
-490	8	MG	5452	51
-491	SOL		1258	176
-492	925	MBQ	2165	176
-493	20	MG	5556	51
-494	10	MG/G	951	68
-495	10	MG	3629	51
-496	SUS		2134	201
-497	400	MG	542	62
-498	0.05	MG/G	2168	147
-499	100	MG/ML	4598	176
-500	50000	UI	1410	32
-501	40	MG	4884	135
-502	2.0	MG/5.0	2628	181
-503	200	MG/5ML	4891	204
-504	10	MG/ML	560	176
-505	25	MG	222	51
-506	(15+5.786+3.924+0.2573+0.1017)	MG/ML	3952	187
-507	50	MG/ML	867	204
-508	5.0	MG/ML	4096	179
-509	1000	UI	3722	35
-510	2.8	MG/ML	2582	181
-511	30	MG	1118	16
-512	50	MCG/ML	5440	179
-513	350	MG	3866	135
-514	10	MG	1384	51
-515	(50.0 + 1000.0)	MG	3586	51
-516	400	MG	5154	51
-517	1000	MG	2470	69
-518	3	MG/G	2105	147
-519	4	MG/ML	2623	181
-520	SOL		4662	176
-521	1.5	MG/ML	2320	36
-522	200	MG	3859	58
-523	(100.0 + 100.0)	MG/ML	1179	176
-524	7000	UI	4190	35
-525	200	MG	751	74
-526	0.5	MG/G	5376	67
-527	40	UI/ML	4786	178
-528	50	MG	1117	139
-529	SUS		1667	204
-530	15	MG/5ML	1083	2
-531	SOL		4661	176
-532	100	MG	5429	137
-533	10	MG	1833	62
-534	1	MG/G	3766	117
-535	20	MG/ML	2153	212
-536	5	MG	1949	62
-537	22.00	MG	3727	176
-538	50000	UI	1348	35
-539	3.54	MG/ML	2033	212
-540	80	MG	4561	51
-541	15	MG	1896	48
-542	3	MG	5487	51
-543	3	MG/G	4972	149
-544	10	MG/ML	3587	204
-545	60	MG	1118	24
-546	250	MG	47	156
-547	500	MG	882	156
-548	1	ML/ML	4518	105
-549	50	MG/ML	4498	176
-550	26.70	MG	5273	51
-551	150	MG/ML	1432	201
-552	20	MG/G	50	68
-553	2	MG/ML	2487	181
-554	400	UI	1932	32
-555	(20.0 + 30.0)	MG/G	2469	69
-556	40	MG	3744	51
-557	10	MG	668	176
-558	2.000.000	UI	1238	159
-559	10000	UI	1703	51
-560	PO		5250	140
-561	100	MCG	2052	48
-562	2	G	4764	46
-563	3000	UI	1881	139
-564	12.5	MG	4704	44
-565	2.0	MG	900	62
-566	SOL		5406	176
-567	50000	UI	1719	32
-568	900	MG	1570	99
-569	25	MG	1209	62
-570	850	MG	1137	62
-571	SOL		939	181
-572	10	MG	4738	68
-573	40	MG/ML	1627	176
-574	0.25	MG/ML	434	170
-575	1	MG	4368	51
-576	50	MCG	4493	25
-577	1	GBQ	4244	176
-578	1	G	419	62
-579	100	MG	5252	51
-580	2.0	X	5537	198
-581	50.00	MG	3963	35
-582	450	MG	5249	51
-583	100	MG	1073	74
-584	50	MG/ML	1563	201
-585	3	MG/ML	4087	181
-586	50	MG	2137	19
-587	0.02	G/G	2051	88
-588	5000	UI	5371	35
-589	500	MG	4482	51
-590	2	G+	3988	156
-591	20	MG	2131	19
-592	140	MG	4539	51
-593	5	MG	1772	51
-594	20	MG	2254	176
-595	2.5	MG	2017	51
-596	40	MG	2589	51
-597	1.0	X10E11	5191	201
-598	4	MG	5163	62
-599	2	MG/ML	2518	181
-600	250	MG	5441	19
-601	500	MG	2312	136
-602	5	MG	4300	62
-603	600	MCG/ML	2070	176
-604	25	MG/ML	2005	176
-605	850	MG	1137	51
-606	10	MG	1228	62
-607	0.7	MG	3853	2
-608	2	MG/ML	1496	176
-609	10	MG	1645	37
-610	300	MG	3685	51
-611	110	MG	4061	13
-612	500	MG	1622	19
-613	(10+2.5)	MG	21	51
-614	500	MG	4756	62
-615	5	MG	4722	51
-616	(6.0 + 0.3 + 0.2 + 3.1)	MG/ML	4602	176
-617	10000	UI	4471	51
-618	5	MG/ML	2279	176
-619	20	MG	3629	51
-620	50	MG	1072	62
-621	30	MG/G	304	149
-622	100	MG	3646	47
-623	50	MG	2516	58
-624	50	MG	1530	74
-625	500	MG/ML	181	176
-626	20	MG	3604	13
-627	20	MG	4921	19
-628	0.5	MG/G	1472	111
-629	10	MG	3611	51
-630	6660	MBQ	1345	176
-631	50	MG/ML	5130	181
-632	(20.0 + 0.64 + 2.5)	MG/G	5062	68
-633	37.5	MG	158	29
-634	20	MG	1012	51
-635	50	MG/5	2141	163
-636	200	MG	5322	135
-637	100	MG/ML	314	212
-638	40	MG	2528	176
-639	40	MG/ML	1686	177
-640	20	MG	4333	13
-641	500	MG	2377	35
-642	100	UI/ML	5432	201
-643	10	MG	3851	58
-644	50	MG	2142	173
-645	30	MG/ML	3944	181
-646	150	MCG	1796	176
-647	6.0	MG/ML	750	185
-648	9	MG/ML	4606	176
-649	10	MG	4406	51
-650	750	MG	1681	62
-651	50	MG	222	51
-652	50	MG/ML	1184	176
-653	10	MG	4262	51
-654	1	MG/ML	1024	181
-655	40	MG	3755	140
-656	160	MG	5234	51
-657	50	MG	1482	142
-658	250	MG	453	51
-659	300	MG	902	51
-660	1	MG	265	51
-661	(0.4 + 0.05)	MG/ML	1501	212
-662	2	MG	5487	51
-663	10	MG	4966	95
-664	50	MG	2026	51
-665	40	MG/ML	4718	204
-666	40	MG	3945	37
-667	50	MG	4503	19
-668	0.125	MG	1711	68
-669	30	MG	1109	62
-670	150	MG	5293	15
-671	40.0	MG/G	4622	86
-672	180	MG	213	51
-673	25	MG/ML	4428	204
-674	100	UI/ML	547	140
-675	10	MG/ML	949	179
-676	200	MG/ML	1080	176
-677	8	MG	600	48
-678	PÓ		4637	46
-679	2.5	MG	4059	147
-680	(105 + 1.5 + 2.5 + 1)	MEQ/L	1309	189
-681	100	UI/ML	2598	176
-682	1	MG	2438	135
-683	20	MG/	918	147
-684	(10.0 + 10.0)	MG	1268	37
-685	40	MG/ML	792	204
-686	50	MG/ML	3590	200
-687	100	MG	2229	51
-688	300	MG	302	51
-689	50	MG	528	51
-690	20	MG	4565	51
-691	250	MG	4899	37
-692	5	MG/G	469	147
-693	40	MG/ML	4826	194
-694	40	MG	4855	135
-695	10	MG	5549	51
-696	SOL		121	176
-697	25	MG	1296	51
-698	300	MG	3886	37
-699	2	G	1096	176
-700	400	MG	1940	51
-701	750	MG	3892	62
-702	10	MG	1024	62
-703	50000	UI	5371	35
-704	0.5	MG	1062	62
-705	400	MG	3642	51
-706	1	MG	4796	19
-707	40	MG	3671	13
-708	50	MG	5412	51
-709	40	MG	1164	62
-710	40	MG	759	177
-711	0.50%	SOL	738	176
-712	200	MG/ML	2770	176
-713	2	MG	4290	135
-714	150	MG	4741	13
-715	140	MG	4873	13
-716	500	MG	1639	51
-717	1.25	MG	1267	51
-718	50	MG	2381	51
-719	100	MG	1364	74
-720	10	MCG/ML	5299	167
-721	25	MG/ML	612	114
-722	0.075	MG	2366	51
-723	100	MG	783	13
-724	10	MG/ML	4346	194
-725	140	MG	4875	13
-726	0.4	MG/ML	4029	181
-727	7000	UI	1435	35
-728	150	MG	5463	176
-729	(52.5 + 44.4 + 20)	MG/G	182	151
-730	2	G	855	46
-731	0.5	MG	1123	13
-732	150	MG	109	62
-733	500	MG	1983	135
-734	25.000	UI/G	3597	69
-735	0.64	MG/ML	1601	194
-736	50	MCG/ML	1010	167
-737	40	MG	376	51
-738	0.5	MG/G	1600	68
-739	0.8	MG/ML	1213	212
-740	100.000	UI/ML	3576	204
-741	45	MG	5149	13
-742	SOL		2321	181
-743	30000	UI	1435	48
-744	100.000	UI/G	1448	147
-745	5	MG	512	119
-746	11217	MBQ	2013	176
-747	10	MG	4119	62
-748	100	MG	5350	51
-749	10	MG	474	62
-750	20	MG	1605	139
-751	1	UI/MG	2429	134
-752	80	MG/ML	768	111
-753	300	MG/ML	2525	176
-754	7.5	MG/ML	1168	176
-755	50	MG/ML	3973	193
-756	20	MG	1421	51
-757	6	MG/ML	3779	176
-758	100	MG	4131	197
-759	3	MG	2175	12
-760	500	UI	1999	134
-761	117.6	MG/ML	5449	212
-762	20	MG	2015	48
-763	500	MCG/ML	4021	201
-764	40	MG/ML	2286	204
-765	200	MG	4693	62
-766	500	MG	249	51
-767	20	MG	3732	51
-768	100	MG	4148	45
-769	40	MG/ML	5501	204
-770	5	MG	2781	62
-771	(300 + 300)	MG	2231	51
-772	1000	UI	630	134
-773	6	MG/ML	192	198
-774	5	MG	4323	58
-775	20	MG	1540	51
-776	20	MG	4799	51
-777	15	U	654	135
-778	50	MG	4581	62
-779	5	MG	4079	62
-780	0.5	MG	5535	62
-781	100	MG	4693	62
-782	100	MG	4148	22
-783	50	MG	1663	62
-784	SUS		5182	201
-785	500	MG	990	51
-786	150	MG	5463	135
-787	10	MG	5259	62
-788	7.5	MG/ML	3658	176
-789	(42.5+5.38+4.48+0.183+0.0508)	MG/ML	1515	187
-790	10	MG	2780	35
-791	90	MG	3863	135
-792	20	MG	1906	59
-793	2	MG	5481	51
-794	40	MG/G	38	102
-795	0.05	MG/ML	1156	176
-796	300	MG	4891	23
-797	160	MG	676	51
-798	0.300	MG/ML	418	178
-799	4.0	MG/ML	5144	176
-800	60	MG	1218	62
-801	10	MG	4565	51
-802	100	MG	1169	51
-803	SOL		230	176
-804	20	MG	3744	51
-805	(40.0 + 12.5)	MG	4870	37
-806	10	MG/ML	684	176
-807	10	MG/ML	4299	176
-808	250	MG	4873	13
-809	25	MG	4721	58
-810	37.5	MG	5293	15
-811	4.000	UI	2512	135
-812	25	MG	5256	51
-813	900	MG	452	163
-814	1000	UI	208	176
-815	0.750	MG	4394	44
-816	0.5	G/ML	2527	106
-817	150	MG	1299	142
-818	100	MG	38	102
-819	10	MG	3997	62
-820	6	MG	426	58
-821	100	MG	329	51
-822	500	MG	4485	62
-823	150	MG	5123	51
-824	2	MEQ/ML	2771	176
-825	500	MCG	4368	51
-826	(500+10+5)	MG/1.5	1673	181
-827	10 000 000	UI	167	135
-828	2	MG/ML	4962	176
-829	10000	UI	4190	35
-830	6	MG/ML	4610	176
-831	2	MG/ML	3861	181
-832	XPE		552	212
-833	150	MG	4669	19
-834	3000	UI	5371	32
-835	2.5	MG	4939	62
-836	4	MG/ML	4112	181
-837	0.04	G/G	2379	86
-838	40	MG	2369	181
-839	20.0	MG/G	917	68
-840	50	MG	4773	13
-841	300	MG	5067	62
-842	5	MG	1325	51
-843	300	MG	5380	51
-844	10	MG	1518	62
-845	500	MG	5106	62
-846	8880	MBQ	1345	176
-847	100	MG	3681	176
-848	200	MCG	3842	130
-849	(40 + 2 + 2.5 + 1 + 47.5 + 0.25)	MEQ/L	1312	189
-850	25	MG	113	51
-851	1	MG/ML	5081	185
-852	7000	UI	4583	35
-853	250	UI/G	945	147
-854	75	MG	4111	51
-855	4	MG	296	176
-856	2	MG/ML	2483	181
-857	4	MG	5533	51
-858	100	MG	4505	19
-859	0.86	G	4620	176
-860	50	MG/ML	1830	176
-861	150	MG	1237	135
-862	6	MG/ML	5333	176
-863	16	MG	5304	62
-864	10	G	4857	140
-865	80	MG	5257	51
-866	2	G	5148	131
-867	2	MG	1182	62
-868	10	MG	4700	147
-869	20	MG	5455	135
-870	32	MG/ML	5115	204
-871	5	MG	1817	62
-872	10	MG	5484	51
-873	5	MG	4285	130
-874	30	MG	1500	16
-875	3	MG	2222	51
-876	500	MG	3660	37
-877	10.000	UI	5371	51
-878	5	MG	4434	51
-879	25	MG	2229	51
-880	20	MG/ML	279	179
-881	500	MG/5G	2510	93
-882	200	MG	44	62
-883	80+ 12.5	MG	5234	51
-884	5	MG	4798	51
-885	POM		795	147
-886	(100.0 + 1000.0)	MG	3586	58
-887	1	MG/G	1335	145
-888	150	MG	1898	35
-889	75	MG	1105	56
-890	3.0	MG	3993	44
-891	62.5	MG	662	51
-892	9	MG/ML	1080	176
-893	900	MG	4481	154
-894	450 + 50	MG	1277	51
-895	50	MG	1701	58
-896	50	MG	4332	51
-897	40	MG/ML	2152	212
-898	263.16	MG/ML	3667	181
-899	1.0	MG/G	1548	86
-900	250	MG	3899	62
-901	FRASCO		1682	74
-902	SOL		77	186
-903	1	MG	1978	51
-904	15	MG	4533	19
-905	100	MG/ML	5029	181
-906	10	MG	4560	51
-907	4	MG	5326	103
-908	COM		15	51
-909	500	MG	419	62
-910	400	MG	468	62
-911	40	MG/ML	38	212
-912	SUS		5195	201
-913	400	MG	2286	62
-914	10	MG	1325	51
-915	1	G	1591	62
-916	25	MG	973	62
-917	1000	UI	2522	134
-918	20	MG/G	3600	86
-919	250	MG	1100	51
-920	100	MG	3905	51
-921	0.25	MG	2606	13
-922	0.4	MG/ML	2578	181
-923	2.5	MG	3761	51
-924	(20.0 + 0.64 + 2.5)	MG/G	3659	67
-925	100	MG	3613	19
-926	5	UI/ML	4786	176
-927	4.5	MG	2518	13
-928	500	MG	887	133
-929	4	PCC	1329	179
-930	1500	MG	371	102
-931	4	MG/ML	710	181
-932	40	MG	2627	176
-933	50	MG/ML	2521	176
-934	2	MG/	2517	176
-935	16	MG	794	62
-936	25.0	MG	3579	62
-937	5	MG/	733	176
-938	0.250	MG	4526	62
-939	500	MG	5115	62
-940	267	MG	1782	13
-941	(50 + 10)	MG	1708	51
-942	50	MG	847	74
-943	500	MG	453	51
-944	250	MG	4393	173
-945	40	MG	2287	51
-946	5	MG	293	62
-947	2.5	MG	23	51
-948	4	G	3988	129
-949	100	MG	4475	62
-950	40	MG	4884	140
-951	500.000	UI	4043	135
-952	3	MG	4436	37
-953	500	MG	5238	157
-954	2	MG	4337	51
-955	14000	UI	211	51
-956	1	MG	5163	62
-957	300	MG	2568	19
-958	25	MG	513	136
-959	(42.5+5.786+3.924+0.2573+0.1017)	MG/ML	3952	187
-960	10	MG/ML	3844	194
-961	COM		1260	51
-962	20	MG	4549	140
-963	8	MG	3780	51
-964	80	MG/ML	5278	163
-965	500	MG	2057	51
-966	SOL		4653	176
-967	10	PCC	4114	176
-968	100	MG	1991	19
-969	10	MG	4421	135
-970	500	MG	888	2
-971	150	MG	5497	13
-972	2.5	MG/ML+0.0091	739	176
-973	126	MG	3666	51
-974	1	MG/G	32	68
-975	10000	UI/ML	1881	176
-976	1	MG/G	5214	170
-977	0.0444	ML/G	2337	147
-978	10	MG	1893	51
-979	7000	UI	78	51
-980	1	G	889	131
-981	20	MG/ML	2383	179
-982	100.000	UI/G	4049	147
-983	25	MCG	4514	199
-984	7	MG/ML	12	212
-985	20	MG/ML	4429	160
-986	(0.04 + 5)	MG/ML	5032	179
-987	100	MG/ML	4635	181
-988	5	MG	3650	62
-989	60	MG	975	22
-990	25	MG	2584	62
-991	3	MG	693	62
-992	100	MG	2068	13
-993	250	UI	516	140
-994	5	MG/ML	4882	179
-995	2	MG/	2551	181
-996	50	MG	553	136
-997	750	MG	1346	62
-998	10	MG	4293	51
-999	12	U	110	153
-1000	20	MG	4419	139
-1001	50	MG	1363	139
-1002	50	MCG	1952	62
-1003	250	MG	249	47
-1004	1000	UI	1998	140
-1005	50	MCG	4785	62
-1006	0.8	MG/ML	642	212
-1007	500	MG	901	173
-1008	50	MG/ML	648	176
-1009	333.4	MG/ML	511	181
-1010	CREM		3659	68
-1011	6	MCG/ML	4497	176
-1012	200	MG	5557	135
-1013	25	MG	4985	51
-1014	10.000	UI	164	176
-1015	180	MG	829	2
-1016	2	G	254	129
-1017	250	UI	2476	140
-1018	0.5	MG	1491	62
-1019	200	MG	1027	154
-1020	250	MG	1675	51
-1021	250	MG/5	3715	163
-1022	10	MG	23	51
-1023	SOL		273	194
-1024	1.6	MG/ML	1091	212
-1025	60	MG	1368	44
-1026	75	MG	158	29
-1027	LIQ		1634	108
-1028	50	MG/ML	1820	176
-1029	500	MG	37	62
-1030	11	MG/ML	2205	167
-1031	1.0	MG/G	3749	117
-1032	30	MG	306	181
-1033	1	MG	1285	39
-1034	500	MG	245	51
-1035	10	MG/G	5405	77
-1036	0.3	MG/ML	5165	176
-1037	20	MG/ML	3608	111
-1038	25	MG	1203	62
-1039	40	MG/ML	817	181
-1040	40	MG	2254	62
-1041	0.5	MG/ML	4752	176
-1042	0.0015	G/ML	4615	176
-1043	80	MG	2081	135
-1044	25	MG	3861	19
-1045	200	MG/ML	5115	181
-1046	250	MG/5	5141	163
-1047	40	MG	14	51
-1048	SUS		5194	201
-1049	10	MG	5158	51
-1050	400	MG	3958	51
-1051	20	MG/G	1264	68
-1052	100	MG	5491	13
-1053	0.50	MG	907	62
-1054	350	MG/ML	2525	176
-1055	500	MG	4636	46
-1056	740	MBQ	2402	176
-1057	35	MG	2089	51
-1058	100	MG	4771	51
-1059	40	MG	410	51
-1060	20	MG	4075	59
-1061	50	MG	843	51
-1062	0.25	MG/ML	99	190
-1063	150	MG	5291	44
-1064	45	MG	4255	51
-1065	10	MG	1646	51
-1066	250	MG	2314	19
-1067	100	MG	4501	58
-1068	2	G	3988	156
-1069	0.1	MG/ML	1496	75
-1070	4.5	MG/ML	4216	185
-1071	0.5	MG/G	1317	68
-1072	(125.0 + 50.0 + 300.0 + 30.0)	MG	4815	62
-1073	600	MG	2001	139
-1074	0.05	MG	3627	179
-1075	5	MG	5145	62
-1076	20	MG	145	51
-1077	100	MG	2137	19
-1078	0.25	MG/G	5358	86
-1079	0.1	MG/ML	5077	167
-1080	0.02	G/G	3606	69
-1081	10	MG	5314	37
-1082	50	MG/ML	252	154
-1083	40	MG/ML	542	204
-1084	400	MG	4863	142
-1085	20	MG/ML	5152	176
-1086	250	MG	2309	62
-1087	250	MG	3794	136
-1088	150	MG	2137	19
-1089	60	MG	1029	44
-1090	150	MG	202	58
-1091	5	MG	4290	135
-1092	150	MG/ML	4595	176
-1093	SOL		5389	181
-1094	10	MG	1555	62
-1095	2	MG/ML	681	176
-1096	5	MG	4561	51
-1097	440	MG	2533	140
-1098	10.000	UI/G	4274	149
-1099	500	MG	455	136
-1100	100	MG	4500	62
-1101	200	MG	4859	44
-1102	2.0	MG/ML	203	179
-1103	3.5	MG/G	593	149
-1104	900	MG	3908	51
-1105	3	MG/ML	4095	167
-1106	25	MG/ML	2146	176
-1107	2	G	1052	131
-1108	15	MG	2016	51
-1109	15	MG/ML	1531	204
-1110	2	MG/ML	5577	186
-1111	32	MCG/	749	202
-1112	500	MG	1681	158
-1113	500	MG	7	181
-1114	50	MG/ML	4614	176
-1115	0.1	MG/ML	2156	176
-1116	150	MG	5503	19
-1117	3	G	251	163
-1118	200	MG	183	51
-1119	30	MG/ML	932	176
-1120	500	MG	1681	51
-1121	10	MG	2497	62
-1122	750	MG	5112	62
-1123	75	MG	1657	19
-1124	200	MG/ML	233	181
-1125	50	MG	1878	176
-1126	20	MG/G	1447	68
-1127	150	MG/G	494	147
-1128	500	MG	274	135
-1129	12.5	MG	847	51
-1130	800	MG	2306	176
-1131	400	MG	1809	13
-1132	210	MG	3918	51
-1133	100	MG	48	37
-1134	100	MG	325	51
-1135	1	MG	2486	62
-1136	150	MG/ML	5341	181
-1137	200	MG	4862	140
-1138	(460 + 440 + 100)	MG/G	2218	127
-1139	2	MG/	2140	176
-1140	20	MG	1124	51
-1141	(0.5+1+10+10)	MG/G	4223	68
-1142	100	MG	435	19
-1143	25	MG	3981	62
-1144	2	MG	1698	62
-1145	500	MG	1615	44
-1146	0.3	MG/G	4825	147
-1147	22.5	MG	1791	144
-1148	0.5	MG/G	1600	67
-1149	240	KUI	3674	140
-1150	20	MG	4798	51
-1151	200	UI/DOSE	4479	178
-1152	0.03	G/G	5554	149
-1153	500	MG	4428	51
-1154	260	MG	3910	51
-1155	500	MG/ML	3660	181
-1156	60	MG	2532	176
-1157	320	MG	5255	51
-1158	4	MG/ML	5275	140
-1159	160	MG	4178	32
-1160	250	MG/ML	5137	176
-1161	0.64	MG/G	5085	147
-1162	5	MG/ML	4016	167
-1163	20	MG	1240	67
-1164	500	MG	800	51
-1165	400	MG	1802	32
-1166	50	MG	601	51
-1167	100	MG/ML	3884	198
-1168	75	MG	1775	15
-1169	10	MG	4383	51
-1170	1	MG/G	39	146
-1171	6.25	MG	2519	58
-1172	5	MG	1290	62
-1173	75	MG	4800	9
-1174	1	MG	4118	51
-1175	5	MG	3687	48
-1176	8	MG	388	62
-1177	150	MG	597	44
-1178	15	MG	4672	51
-1179	10	MG/ML	685	186
-1180	2	MG/ML	3635	185
-1181	200	MCG/DOSE	1035	171
-1182	125	MG/5	249	154
-1183	(1.0 + 2.5 + 1.5)	MG	1938	142
-1184	360	UEL/0.5	2491	201
-1185	2	MEQ/ML	2201	176
-1186	16	MG	5305	62
-1187	300	UI	2443	176
-1188	0.8	MG/ML	641	212
-1189	100	MG/ML	2412	176
-1190	6.67	MG/ML	4675	212
-1191	5	MG	4696	62
-1192	5	MG	1776	51
-1193	100	MG/200MG	443	139
-1194	50	MG/ML	2056	176
-1195	100	MCG/DOSE	103	199
-1196	40	MG	4406	51
-1197	(100 + 100)	MG/ML	1006	176
-1198	50	MG	4866	51
-1199	875	MG	243	51
-1200	0.25	MG/	1019	179
-1201	7000	UI	5372	35
-1202	40	MG/ML	507	204
-1203	50	MG/ML	252	163
-1204	125	MG	3799	51
-1205	1	PCC	5468	176
-1206	150	MG	2586	19
-1207	26.70	MG	5253	51
-1208	0.5	MG	5143	62
-1209	4	MG	576	62
-1210	30	MG/G	4957	69
-1211	3.125	MG	1333	62
-1212	34891	MBQ	2144	176
-1213	5 000	UI/ML	178	194
-1214	50	MG/	252	163
-1215	3	MG/ML	3654	179
-1216	400	MG	2315	13
-1217	100	MG	5029	58
-1218	XPE		4455	212
-1219	300	MCG	4925	176
-1220	2	MG/ML	2617	176
-1221	15	MG	2488	37
-1222	1000	UI	551	135
-1223	20	MG/ML	5052	201
-1224	7	MG/ML	13	181
-1225	500	MG	447	51
-1226	150	UI	2209	139
-1227	2	MG	1926	51
-1228	250	MG	517	51
-1229	0.5	MG/G	5216	145
-1230	4	MG	1183	142
-1231	100	MG	930	142
-1232	0.25	MG	169	62
-1233	600	MG	1773	51
-1234	20%	SOL	647	176
-1235	10	MG/G	305	69
-1236	40	MG	1907	59
-1237	160	MG	1577	19
-1238	SOL		117	176
-1239	200	MG	4156	19
-1240	PO		4279	154
-1241	30	MG/ML	5091	176
-1242	0.5	MG/G	5217	68
-1243	40	MG/ML	134	204
-1244	20	MG/G	2466	69
-1245	30	MG	1161	37
-1246	11.6	MG/G	1529	88
-1247	300	MG	2758	62
-1248	20	MG/12.5	1279	62
-1249	50	MCG/DOSE	1032	202
-1250	20	MG	1777	51
-1251	191	MG	1077	176
-1252	15	MG	1986	51
-1253	1	MG/ML	103	190
-1254	100	MG	930	59
-1255	100	MG/ML	5016	181
-1256	1.5	MG/ML	2321	36
-1257	7.5	MG	1791	144
-1258	11	MG/ML	4095	167
-1259	20	MG	1381	135
-1260	500	MG	869	19
-1261	875	MG	4554	51
-1262	1	G	258	131
-1263	800	MCG	1854	32
-1264	(5 + 500)	MG	5459	58
-1265	300	MG	5267	51
-1266	140	MG	2128	19
-1267	40	MG	2255	62
-1268	45	MG	1161	37
-1269	10	MG	2479	62
-1270	80	MG	1569	51
-1271	25	MG	1811	58
-1272	10	MG/ML	2495	173
-1273	60	MG/ML	3630	181
-1274	80	MG	5231	51
-1275	2	MG/5ML	2582	212
-1276	500	MG	5226	58
-1277	7000	UI	1873	176
-1278	20	MG	3681	176
-1279	400	MG	2428	51
-1280	0.5	MG/G	4990	170
-1281	20	MG	2296	59
-1282	200	MG	1361	142
-1283	50	MG	28	62
-1284	0.4	MG/ML	103	212
-1285	10	MG	4385	51
-1286	2249	MBQ	2013	176
-1287	37.5	MG	1195	29
-1288	500	MG	1584	62
-1289	1	G	872	51
-1290	40	MG	1899	135
-1291	10	MG/ML	3768	176
-1292	10	MG	5313	62
-1293	1.5	MG	2518	19
-1294	250	MG	4810	51
-1295	5	MG/G	4919	147
-1296	1500	MG	2404	152
-1297	100	MG	4334	51
-1298	1250	UI	2303	176
-1299	50	MG	4685	51
-1300	20	MG	2782	35
-1301	1	MG/G	4697	69
-1302	CAP		2192	19
-1303	20 %	SOL	647	176
-1304	50	MG	1187	19
-1305	7	MG/ML	2503	212
-1306	90	MG	829	114
-1307	600	MG	5516	51
-1308	200	MG/	2268	156
-1309	21	MG	4952	194
-1310	500	MG	935	42
-1311	18	MG	1266	54
-1312	200	MG/ML	2281	181
-1313	(138+2.0+2.5+1.0+111.02+3.0+32+1)	MEQ/L	1311	189
-1314	25	MG	4986	13
-1315	(5.0 + 6.25)	MG	599	51
-1316	250	MG/ML	4740	176
-1317	100	MG	2409	176
-1318	20	MG/ML	1685	179
-1319	0.05	MG/ML	60	186
-1320	100	MG/ML	4709	176
-1321	20	MG	4884	142
-1322	10000	UI	5045	35
-1323	1	MG/ML	565	176
-1324	4574	MBQ	2013	176
-1325	10	MG	4443	19
-1326	80	MG/ML	4359	204
-1327	400	MG	4859	44
-1328	6.0	MG/ML	1083	212
-1329	600	MG	3840	51
-1330	0.00032	ML/ML	3931	212
-1331	200	MG	1264	62
-1332	1.5	MG/ML	958	36
-1333	8	GBQ	4244	176
-1334	20	MG	2381	51
-1335	0.25	MG	1539	62
-1336	50	MG	1184	13
-1337	500	MG	2241	62
-1338	5	MG	1821	62
-1339	20	MG	564	68
-1340	10	MG	3604	13
-1341	20	MG/ML	2149	212
-1342	100	MG	2547	62
-1343	0.5	MG/ML	4642	178
-1344	40	MG/ML	2271	181
-1345	80	MG/ML	4546	80
-1346	SOL		5121	176
-1347	1	MG	2273	62
-1348	150	MG	5175	62
-1349	400	MG	521	62
-1350	7000	UI	5372	51
-1351	100	MG	817	62
-1352	200	MG	2229	51
-1353	32	MG	5304	62
-1354	250	MG	5024	99
-1355	9250	MBQ	2354	176
-1356	10	MG/ML	4399	176
-1357	0.1	G/ML	2626	176
-1358	30	MG	4716	51
-1359	25	MG	5285	51
-1360	10	MG	1336	176
-1361	1	MG	169	62
-1362	35	MG	3818	51
-1363	1	G	881	139
-1364	20	MG	2161	13
-1365	100	MG	4134	197
-1366	20	MG/ML	3977	179
-1367	750	MG	5519	131
-1368	200	MG/ML	533	176
-1369	3	MG/G	962	149
-1370	84	MG/ML	1310	189
-1371	50	MG/ML	955	185
-1372	112	MCG	4205	62
-1373	150	MG	1358	51
-1374	0.67	MG/ML	2530	181
-1375	7.50	MG/ML	2505	212
-1376	50	MG	1411	51
-1377	1000	MG	1137	37
-1378	(200 + 6)	MCG	2208	168
-1379	300	MG	1374	13
-1380	10	MG	126	62
-1381	2.5	MG	789	13
-1382	(10.0 + 10.0)	MG	198	51
-1383	5	MG/ML	42	181
-1384	110	MG	4061	9
-1385	100	MG	4727	139
-1386	20	MG/ML	5469	176
-1387	37.5	MG	5129	51
-1388	5	MG	2077	51
-1389	500	MG/ML	2613	181
-1390	750	UI/ML	2303	176
-1391	80	MG	259	62
-1392	150	MG	2089	51
-1393	25	MG	1919	62
-1394	10000	UI	4583	35
-1395	5	MG/G	2576	147
-1396	10	MG/5ML	1128	167
-1397	20	MG/ML	2567	176
-1398	10	MG	4112	19
-1399	5	MCG/ML	4021	176
-1400	5	MG/ML	1239	176
-1401	1000	MG	4488	51
-1402	80	MG	4562	51
-1403	300	MG	1237	135
-1404	20	MG	1387	51
-1405	1155	MG	4677	98
-1406	40	MG	1800	16
-1407	100	MG	3614	19
-1408	GEL		4808	89
-1409	37.5	MG	1195	20
-1410	2	MG/ML	103	190
-1411	2.5	MG	5547	48
-1412	120	MG	2062	51
-1413	(37.5 + 325.0)	MG	2359	51
-1414	2	MG	1543	62
-1415	800	MG	4718	62
-1416	0.2	G/ML	5133	185
-1417	600000	UI	2258	132
-1418	25	MG	1105	74
-1419	3	MG	4217	51
-1420	10	MG/G	2247	68
-1421	50	MG+	325	51
-1422	4	UI	2595	139
-1423	FR		1938	19
-1424	1	MG	5307	142
-1425	15	MG/ML	4617	187
-1426	1.000.000	UI	1238	159
-1427	1000	MG	635	46
-1428	500	MG	876	140
-1429	84	MG/ML	4594	176
-1430	15	MG/ML	2399	191
-1431	400	MG	792	51
-1432	0.05	MG/ML	1751	173
-1433	0.07	ML/ML	618	181
-1434	500	MG	2427	44
-1435	(103 + 1.0 + 3.5 + 1.0)	MEQ/L	1308	189
-1436	25	MCG	4785	62
-1437	200	MG	5414	51
-1438	3000	UI	1687	32
-1439	15	MG	4691	62
-1440	20	MG	4560	51
-1441	12.5	COM	802	62
-1442	150	MCG/ML	1059	176
-1443	250	MG	1018	133
-1444	20	MG/ML	4955	179
-1445	40	MG	1562	74
-1446	(100 + 150)	MG	4781	51
-1447	100	MCG	1796	176
-1448	0.8	MG/ML	56	176
-1449	(5.0 + 5.0)	MG	1268	37
-1450	0.05	MG/ML	1501	212
-1451	200	MG	2122	19
-1452	100	MG	1411	51
-1453	500	MG/ML	1584	181
-1454	300	MG	2757	51
-1455	0.3	MG/ML	3712	179
-1456	60	MG	760	177
-1457	(125.0 + 5.0)	MG	538	51
-1458	500	MG	1885	135
-1459	30	MG	1272	62
-1460	200	G/L	142	176
-1461	185	MG	3803	51
-1462	100	MG	1872	32
-1463	150	MCG	3762	25
-1464	400	MG	3652	51
-1465	(1.0 + 0.5)	MG/G	1807	67
-1466	81	MG	1767	41
-1467	125	MG/5	249	163
-1468	200	MG	4183	51
-1469	90	MG	1960	51
-1470	1	MG	4198	51
-1471	6.67	MG/ML	2567	181
-1472	500	MG	871	19
-1473	(2.5 + 1.5)	MG	4699	51
-1474	4	MG/ML	1493	176
-1475	1	MG/G	5214	68
-1476	10	MG	4705	37
-1477	90	MG/ML	2289	140
-1478	185	MBQ	2463	176
-1479	40	MG	4170	62
-1480	20	MG/G	1131	86
-1481	50	MG	3616	140
-1482	10	MG	1194	51
-1483	2%	CREM	481	68
-1484	16	MG/ML	5450	212
-1485	250	MG	249	154
-1486	(6.67 + 333.4)	MG/ML	420	175
-1487	DRG		4767	74
-1488	100	UI/ML	2603	201
-1489	(150	MG	4148	39
-1490	75	MG	1979	62
-1491	3	MG/ML	82	176
-1492	500	MG	4724	131
-1493	5	MG	1799	51
-1494	(0.15+0.03)	MG	3636	51
-1495	10	MG	4509	37
-1496	SOL		2579	176
-1497	80	MG	1577	51
-1498	(1.00+ 20.00)	MG/G	5131	67
-1499	40	MG	4066	62
-1500	40	MG	4561	51
-1501	4	MG	5545	186
-1502	10	MG	2171	13
-1503	30	MG	1099	51
-1504	20	MG	4390	35
-1505	10	MG/G	4303	86
-1506	25.0	MG	839	62
-1507	0.4	ML/ML	4444	181
-1508	440	MG	2538	140
-1509	300	MG	1427	51
-1510	18	MG/G	139	86
-1511	4	MG	1972	139
-1512	PO		2149	154
-1513	30	MG	638	37
-1514	150	MG	734	58
-1515	0.1	MG/ML	2444	176
-1516	100	MCG	2208	130
-1517	8.75	MG	4710	122
-1518	10	MG/ML	4682	181
-1519	4	UI	1326	135
-1520	50	MG/G	2496	68
-1521	1.2	MG	5415	135
-1522	500	MG	1346	62
-1523	250	MG	4908	2
-1524	7.5	MG	1267	51
-1525	100	MG/ML	5309	2
-1526	5	MG/G	2105	147
-1527	10	MG/ML	799	167
-1528	50	MG/ML	1943	212
-1529	50	MG/ML	53	176
-1530	20	MG	4299	62
-1531	2.5	MG	1289	62
-1532	4	MG	219	2
-1533	1	MG/ML	2113	206
-1534	450	MG	5150	154
-1535	(138+2+3+1)	MEQ/L	1314	189
-1536	SOL		20	182
-1537	300	MG	2097	51
-1538	0.5	MG/ML	4461	176
-1539	1000	MG	2396	37
-1540	200	MG	4863	142
-1541	500.000	UI	3938	62
-1542	400	MG	2170	62
-1543	0.043	ML/ML	719	212
-1544	10	MG	1117	139
-1545	150	MG	2114	42
-1546	16	MG	390	62
-1547	5	MG	3674	140
-1548	25	MG	4335	51
-1549	50	MG/ML	5398	212
-1550	PO		5550	140
-1551	24	UI	3637	140
-1552	20	MG	4406	51
-1553	30	MG	4747	62
-1554	2	MG/	5144	176
-1555	200	MG	1731	19
-1556	200	MG	893	13
-1557	300	MG	2087	13
-1558	5	MG	1287	65
-1559	600	MG	775	47
-1560	600	MG	1388	51
-1561	14	MG	22	62
-1562	10	MG	4984	51
-1563	5	MG	3795	13
-1564	100	MG	1781	51
-1565	150	MG/100	2115	36
-1566	10	MG	4155	51
-1567	0.5	MG	1227	62
-1568	12.6	MG	1751	4
-1569	100	MG	5435	51
-1570	5	MG	2237	51
-1571	50	MG/ML	5306	176
-1572	5	MG/ML	1832	176
-1573	2	MG/ML	1247	176
-1574	40	MG/ML	2090	204
-1575	200	MG	5412	142
-1576	900	MG	4486	154
-1577	150	MG	4338	19
-1578	400	MG	428	51
-1579	5000	UI/ML	3898	176
-1580	200	MG/ML	1681	167
-1581	50	MCG/ML	4021	201
-1582	(15+5.786+3.924+0.184+0.1017)	MG/ML	3952	187
-1583	25	MG	8	62
-1584	40	MG	3746	51
-1585	10	MG	1068	51
-1586	37.5	MG	158	21
-1587	40	MG	4629	51
-1588	15	MG	789	13
-1589	200	MG/ML	2774	176
-1590	80	MG	1164	62
-1591	8.80	MG	3727	176
-1592	(2.0 + 5.0)	MG/ML	4959	179
-1593	3	MG/G	510	86
-1594	5	MG	4129	51
-1595	100	MG	229	62
-1596	200	MG	233	62
-1597	20350	MBQ	2492	196
-1598	3700	MBQ	2492	196
-1599	(400 + 400 + 30)	MG/5	2339	204
-1600	100	MG	4338	19
-1601	450	MG	5424	51
-1602	50	MCG/ML	281	176
-1603	(40 + 12.5)	MG	3739	51
-1604	50	MG	1217	51
-1605	3.2	MG	4788	4
-1606	0.5	MG	116	13
-1607	8	MG	4247	51
-1608	1	MG/G	5053	117
-1609	75	MG	2200	13
-1610	120	MG	4511	62
-1611	20	MG	1130	51
-1612	5	MG	5151	62
-1613	5000	UI	1719	32
-1614	10	MG	4409	32
-1615	125	MG	2251	62
-1616	250	UI	2520	134
-1617	90	MG	3863	140
-1618	4.68	MG/ML	2120	181
-1619	10	MG/ML	4386	176
-1620	2	MG/ML	1153	176
-1621	5	MG	442	62
-1622	225.75	MG	5224	51
-1623	250	MG	1614	51
-1624	10	DH	333	94
-1625	SHAMP		3921	117
-1626	(80.0+5.0)	MG	678	51
-1627	100	MG	5041	51
-1628	30	MG	829	114
-1629	7000	UI	1759	35
-1630	460	MG/G	1558	127
-1631	3	MG/ML	5570	203
-1632	500	MG	1025	139
-1633	200	MG	5272	51
-1634	AMP		4599	114
-1635	24	MG/ML	4315	176
-1636	50	MG/ML	1352	176
-1637	50	MG/ML	268	176
-1638	SOL		118	176
-1639	(3+3+3+10+25)	MG	756	51
-1640	0.1	G/ML	2406	176
-1641	40	MG	1910	59
-1642	50	MG	1707	32
-1643	11.6	MG/	780	86
-1644	200	MG/5ML	243	163
-1645	8	MG	566	62
-1646	75	MG	2776	51
-1647	2	MG/G	5336	92
-1648	500	MCG/ML	1330	176
-1649	125	MG	1636	51
-1650	10	MG	859	62
-1651	1	G	5238	129
-1652	30	MG	3986	62
-1653	250	UI	1999	134
-1654	0.1	MG/ML	606	179
-1655	20	MG	481	68
-1656	1.0	MG	4914	62
-1657	600	MG	2294	51
-1658	2	MG	502	51
-1659	70	MG	3814	62
-1660	(1.0 + 2.5 + 1.5)	MG	1938	19
-1661	PO		550	143
-1662	1	MG/G	2316	149
-1663	100	MG	395	62
-1664	800	MG	477	62
-1665	50	MG	4757	51
-1666	16	MG	577	62
-1667	5.0	MG	5578	51
-1668	(100 + 25)	MG	4148	15
-1669	XPE		306	212
-1670	120	MG	334	51
-1671	1	MG/ML	2205	181
-1672	50	MG/ML	4929	204
-1673	20	MG	975	62
-1674	500	MG/ML	1591	176
-1675	40	MG/ML	447	163
-1676	100	MG	4883	62
-1677	1	G	255	140
-1678	0.5	MG/G	4164	68
-1679	25	MG	261	62
-1680	200	MG	4790	51
-1681	5.000.000	UI	341	133
-1682	10	MG/G	1248	69
-1683	10	MG	3991	108
-1684	20.000	UI	4082	147
-1685	7.5	MG/ML	1334	181
-1686	360	MG	4887	51
-1687	20	MG	3754	15
-1688	40	MG	4563	51
-1689	10	MG	1279	62
-1690	5	MG	1194	51
-1691	5000	UI	78	51
-1692	100	MG	17	62
-1693	100	MG	663	51
-1694	(9	MG	4615	176
-1695	60	MG	1500	16
-1696	100	MG	5328	64
-1697	20	MG	4072	62
-1698	200	MG	1125	139
-1699	20	MG/G	1162	68
-1700	2	MG	1692	62
-1701	50	MCG/ML	373	179
-1702	2	MG	1041	51
-1703	10	MG	1449	32
-1704	100	MG/ML	4609	176
-1705	(50 + 2.5 + 180 + 35)	MG	5473	145
-1706	50	MG	4134	19
-1707	10	MG	5051	51
-1708	16	MG	1393	62
-1709	25	MG/ML	1397	176
-1710	50	MG	2183	135
-1711	10	MG/ML	5099	188
-1712	100	MG	2766	47
-1713	320	MG	1298	51
-1714			1314	189
-1715	10	MG/G	2028	86
-1716	20	MG	3735	51
-1717	40	MG	4829	53
-1718	50	MG/ML	1922	204
-1719	500	MG	4428	62
-1720	150	MG	732	56
-1721	50	MG/G	4936	165
-1722	10	MG/ML	2183	176
-1723	(40.0 + 10.0)	MG	5524	51
-1724	80	MG	2532	176
-1725	14	DH	333	94
-1726	SAB		4457	165
-1727	0.25	MG	907	45
-1728	(40 + 25)	MG	3739	51
-1729	700	MG/G	4002	127
-1730	0.25	ML/ML	4961	209
-1731	250	MG/5	1866	212
-1732	0.02	G/G	2051	111
-1733	2000	UI/0.3	4264	176
-1734	3.54	MG/ML	4495	212
-1735	100	MG	845	51
-1736	90	MG	2490	51
-1737	10	MG	1772	51
-1738	50000	UI	1359	35
-1739	120	MG/G	38	98
-1740	2.9	MG/5ML	150	176
-1741	509	MG/ML	3792	176
-1742	5	MG	1751	4
-1743	40	MG	975	62
-1744	100	MG/ML	4926	176
-1745	25	MG	1536	62
-1746	3000	UI	1881	140
-1747	25	MG	5211	51
-1748	(37.5 + 325.0)	MG	1189	51
-1749	100	MG	5325	51
-1750	3	MG	4372	51
-1751	200	MG/ML	2261	133
-1752	50	MG/ML	2624	176
-1753	0.05	MG/ML	4892	186
-1754	SOL		4621	179
-1755	1	MG	576	62
-1756	0.02	G/ML	4686	176
-1757	500	MG	3888	51
-1758	50	MG	1532	51
-1759	800	MG	1170	51
-1760	10	MG/ML	4700	194
-1761	0.4	MG/ML	4277	212
-1762	16	MG	1533	62
-1763	(103 + 2.0 + 3.5 + 1.0)	MEQ/L	1308	189
-1764	20	MG/G	1240	69
-1765	0.5	MG/G	5357	86
-1766	15	MG	344	37
-1767	3	MG	225	212
-1768	250	MG/5	249	163
-1769	5	MG	975	65
-1770	425	UI/ML	4654	176
-1771	1	G	2333	142
-1772	10	MG	1124	13
-1773	20	MG/G	5397	199
-1774	100	MG	2300	62
-1775	0.075	MG	4811	51
-1776	40	MG	765	51
-1777	400	MG	965	19
-1778	20	MG	5027	3
-1779	1500	MG	4827	46
-1780	1	MG	2437	62
-1781	500	MG/ML	1654	181
-1782	40	MG/ML	2326	204
-1783	25.0	MG	826	41
-1784	10.000	UI	4082	147
-1785	10	MG/ML	3701	194
-1786	100	MG/ML	1846	176
-1787	375	MG/	861	154
-1788	(138+2.0+2.5+1.0+104.56+4.0+35.44+1)	MEQ/L	1311	189
-1789	50	MG	4582	59
-1790	100	MG/ML	250	163
-1791	50	MG	2271	62
-1792	(14.2 + 27.5 + 20)	G/L	3728	79
-1793	(53.76 + 103.94 + 125.45 + 716.84)	MG/G	4279	158
-1794	(400 + 400 + 30)	MG/5ML	2339	204
-1795	(5 + 1)	MG/ML	5342	179
-1796	20	MG	3739	51
-1797	10	MG/ML	4743	176
-1798	0.75	MG	1291	62
-1799	500	MG	252	132
-1800	12.5	MG	824	62
-1801	200	MG/ML	5370	62
-1802	10	MG	4242	59
-1803	7000	UI	1703	51
-1804	500	MG	2432	51
-1805	3.2	MG	4787	4
-1806	10	MG	1776	51
-1807	1	G	262	62
-1808	230	MG	1925	47
-1809	50	MG/G	5472	145
-1810	20	MG	4051	51
-1811	500	MG	4889	51
-1812	2	MG/ML	2622	185
-1813	50	MG/ML	1397	176
-1814	20	MG/ML	1003	176
-1815	50	UI/ML	2529	176
-1816	150	MG	3781	135
-1817	25	MG/ML	1922	181
-1818	20	MG	4194	19
-1819	50	MG	5016	19
-1820	10	MG	1552	13
-1821	3700	MBQ	2463	176
-1822	5	MG	2574	62
-1823	600.000	UI	544	133
-1824	50	MG/ML	3601	204
-1825	10	MG/G	4638	67
-1826	EMPL		2341	76
-1827	150	MG	4137	140
-1828	500	MG	387	142
-1829	400	MCG/DOSE	4201	130
-1830	3	MG/G	960	149
-1831	0.25	MG	894	62
-1832	SOL		523	181
-1833	600000	UI	2258	162
-1834	25	MG/ML	2036	204
-1835	500	MG	386	51
-1836	854.4	MG/G	4230	152
-1837	2000	UI	4190	35
-1838	40	MG/ML	4826	166
-1839	1.0	MG	4368	48
-1840	600	MG	5067	51
-1841	8.4	PCC	596	176
-1842	400	MG	4702	155
-1843	800	MG	515	62
-1844	500	MG	5092	62
-1845	5	MG	1322	51
-1846	50	MG	1607	62
-1847	40	MG	4158	62
-1848	450	MG	1573	37
-1849	30	MG	5303	13
-1850	200	U/G	5090	86
-1851	3000	UI	1410	32
-1852	20	MG	2242	2
-1853	XPE		504	212
-1854	0.125	MG	4960	142
-1855	24	MG	1787	15
-1856	(320.00+10.00)	MG	1578	51
-1857	10	MG/G	1055	68
-1858	(400 + 80)	MG	507	62
-1859	1000	MG	2427	44
-1860	25	MG	404	51
-1861	150	MG	1659	62
-1862	150	MG/ML	4802	176
-1863	40	MG	4831	4
-1864	400	MG	941	51
-1865	150	MG	3717	35
-1866	12	UI	2595	134
-1867	25	MG/ML	2007	176
-1868	(29.268 + 23.400)	MG	4808	19
-1869	120	MG	3802	19
-1870	90	MG	1942	51
-1871	5	MG/ML	716	212
-1872	50	MG/ML	4980	176
-1873	100	MG	1783	62
-1874	30	MG	721	62
-1875	500	MG	3715	19
-1876	COM		2452	51
-1877	20	MG/G	3619	166
-1878	100	MG	1532	44
-1879	30	MG	1258	74
-1880	5.0	MG	4248	62
-1881	COM		5047	51
-1882	0.25	MG	319	62
-1883	10	MG	5571	48
-1884	5	MG/G	2015	86
-1885	0.15	MG	3636	62
-1886	30	MG	1350	24
-1887	24	MG/ML	229	176
-1888	1	MG/ML	2000	176
-1889	75	MG	3998	51
-1890	4	MG/ML	1552	181
-1891	1.6	MG/ML	712	212
-1892	1	MG/ML	1763	212
-1893	1.0	MG/G	1494	68
-1894	50	MG	1069	62
-1895	(10	MG	770	204
-1896	40	MG	4464	62
-1897	100.000	UI/G	3598	147
-1898	(40.0 + 5.0)	MG	3741	51
-1899	5	MG	571	19
-1900	2	MG	3995	51
-1901	6	MG	4028	72
-1902	10	MG	2441	51
-1903	1000	MG	454	51
-1904	40	MG	1899	59
-1905	(500 + 30)	MG	1669	62
-1906	50	MG/ML	1638	176
-1907	500	UI	3707	134
-1908	3	MG	4369	51
-1909	(1.0 + 0.5)	MG	1807	62
-1910	100	MG/ML	5378	176
-1911	30	MG	1406	62
-1912	300	MG	4234	51
-1913	20	MG/ML	2275	176
-1914	50	UI/DOSE	4479	178
-1915	60	KUI	3674	140
-1916	50	MG	5235	51
-1917	0.05	MG/ML	3627	179
-1918	900	UI	2443	176
-1919	20	MG	4885	62
-1920	(300.0 + 125.0 + 50.0 +30.0)	MG	4818	62
-1921	5	MG	4087	37
-1922	10	MG/	1293	68
-1923	10	MG/ML	4167	79
-1924	0.5	MG	5022	65
-1925	10	MG	5571	139
-1926	20	MG/G	996	97
-1927	(100 + 200)	MG	3970	19
-1928	500	MG	5082	135
-1929	20	MG/G	38	102
-1930	(500 + 100)	MG	246	156
-1931	250	MG	2256	19
-1932	7.5	MG/ML	5011	176
-1933	3	MG/G	4987	86
-1934	3	MG	1794	51
-1935	40	MG	1569	51
-1936	1	MG	317	51
-1937	3	MG	4368	51
-1938	500	MG	2590	154
-1939	(37.5 + 325.0)	MG	1369	51
-1940	4.5	MG	2518	19
-1941	4	MG/ML	2619	176
-1942	100	MG	4720	44
-1943	0.5	MG/ML	423	178
-1944	6	MCG/INAL	4780	130
-1945	7.5	MG/ML	1736	181
-1946	125	MG	4908	204
-1947	(150.0+150.0+15.0+50.0)	MG	1844	62
-1948	200	MG/ML	1346	181
-1949	10	MG/ML	5347	176
-1950	20	MG	2015	197
-1951	2	MG	4372	51
-1952	370	MBQ	1390	176
-1953	120	MG/ML	5417	176
-1954	15	MG	1892	51
-1955	10	MG	63	51
-1956	30	MG/ML	1993	176
-1957	50	MG	4076	19
-1958	50	MG	4721	58
-1959	(0.015 + 0.06)	MG	1936	51
-1960	50	MG/ML	255	154
-1961	100	MG	4232	51
-1962	7000	UI	1702	35
-1963	7000	UI	3722	35
-1964	0.5	G	2103	176
-1965	0.4	MG	3757	54
-1966	(80+11.4)	MG/ML	248	163
-1967	20	MG	3897	59
-1968	500	MG	5102	51
-1969	2	MG	185	51
-1970	120	MG	1562	59
-1971	100	MG/ML	3704	176
-1972	20	MG	3753	51
-1973	150	MG	628	135
-1974	COM		177	62
-1975	400	MG	967	51
-1976	1	MG/ML	4991	113
-1977	0.04	MG/ML	5538	186
-1978	SUS		5197	204
-1979	5	MG/ML	4159	176
-1980	100	MG	992	62
-1981	1	G	911	133
-1982	1500	UI	97	135
-1983	0.5	MG	4337	51
-1984	50	MG	975	28
-1985	150 + 37.5 + 200	MG	4689	51
-1986	500	MG	1588	62
-1987	1155	MG	4678	98
-1988	2.5	MG	1751	4
-1989	(0.5 + 1.0)	MG/G	1600	147
-1990	100	MG	4986	51
-1991	100	MG/G	2280	69
-1992	30	MU/ML	2450	176
-1993	15	MG	4383	51
-1994	40	MG	2372	51
-1995	SUS		5191	201
-1996	500	MG/ML	1591	181
-1997	30000	UI	1435	35
-1998	80	MG	2528	176
-1999	20	MG	3580	41
-2000	20	MG/ML	927	166
-2001	5	MG	4876	13
-2002	0.5	MG/G	4199	147
-2003	500	MG	874	51
-2004	(5+20)	MG	4552	13
-2005	20	MG/ML	925	166
-2006	(3.0 + 0.05 + 0.8)	MG/ML	2195	181
-2007	20	MG	530	51
-2008	500	MG	1404	50
-2009	40	MG	1909	135
-2010	3.000	UI	2512	135
-2011	(42.5	MG/ML+0.2573	3952	187
-2012	25	MG	4191	62
-2013	11.6	MG/G	847	86
-2014	1	MG/ML	458	178
-2015	25	MG/G	930	86
-2016	(100 + 125)	MG	3799	95
-2017	10	MG/ML	1610	176
-2018	10000	UI	1409	51
-2019	20	MG	330	51
-2020	400	MG/5ML	243	163
-2021	500	MG	5118	62
-2022	750	MG	486	197
-2023	20.0	G	2103	176
-2024	60	MG	1036	176
-2025	0.09	G/ML	4615	176
-2026	10	MG	5504	51
-2027	100	MG/ML	1937	167
-2028	20	PCC	4596	176
-2029	0.5	MG/	1459	212
-2030	50	MCG	5301	207
-2031	0.5	MG	1867	62
-2032	100	MG	4137	51
-2033	SOL		1403	181
-2034	1.6	MG/ML	642	212
-2035	2	MG/ML	3773	176
-2036	20	MG	529	51
-2037	11	MG/ML	3945	167
-2038	600	MG	4111	51
-2039	10	MG	5445	51
-2040	25	MCG	4205	62
-2041	1	MG/G	3793	117
-2042	(2.0 + 1.0)	G	254	156
-2043	500	MG	4033	51
-2044	500	MG	4908	19
-2045	750	MG	891	131
-2046	250	MG	457	51
-2047	25	MG	4333	13
-2048	100	MCG/JATO	100	199
-2049	40	MG	2532	176
-2050	50	MG/ML	3589	204
-2051	10	MG	1821	62
-2052	10	MG	346	62
-2053	0.1	MG/ML	5144	75
-2054	875	MG	247	62
-2055	25	MG	3601	197
-2056	75	MG	4061	9
-2057	50	MG/ML	260	176
-2058	20	MG	5560	19
-2059	350	MG	2142	204
-2060	180	MG	1121	51
-2061	75	MG/ML	867	204
-2062	12.5	MG	2749	62
-2063	0.1	MG/ML	586	75
-2064	0.5	MG	1496	62
-2065	1	G	1096	176
-2066	1.0	MG/ML	1492	203
-2067	750	MG	4838	51
-2068	10 + 40	MG	4056	62
-2069	15	MG	5434	51
-2070	5	MG	5225	62
-2071	1000	UI	3617	176
-2072	2	MG	2422	62
-2073	50	MG/ML	1085	176
-2074	2.0	MG/ML	990	201
-2075	200	MG	4863	139
-2076	50	MG	1509	62
-2077	20	MG	1892	51
-2078	3	MG	4370	51
-2079	500	MG	4736	135
-2080	PO		906	139
-2081	1	MG	2025	51
-2082	25	MG/ML	4810	176
-2083	500	MG	862	13
-2084	400	MG	276	51
-2085	5000	UI	4264	134
-2086	75	MG	842	19
-2087	1	G	255	62
-2088	400:80	MG	2286	62
-2089	30	MG	4051	51
-2090	10	MG/ML	753	181
-2091	500	MG	3926	139
-2092	20	MG/ML	509	204
-2093	450	MG	4481	154
-2094	4	G	3987	135
-2095	10	MG	2506	51
-2096	50	MG	1184	19
-2097	50	MG/ML	2219	176
-2098	100	MG	1362	142
-2099	20	MG	946	197
-2100	500	MG	4481	62
-2101	875	MG	3715	51
-2102	50	MG/ML	2058	181
-2103	100	UI/ML	3669	176
-2104	400000	U	3932	133
-2105	750	MG	300	51
-2106	3000	UI	1873	176
-2107	40	MG/G	1030	67
-2108	20	MG	5436	51
-2109	2.5	MG	3726	51
-2110	150	MG	3634	58
-2111	(6.0 + 5.0 + 2.0 + 0.015 + 15.0)	MG	726	74
-2112	5	MG	5485	62
-2113	10	MG	3897	59
-2114	100	MG/ML	4310	181
-2115	5	MG	5543	37
-2116	100	MG/ML	2621	176
-2117	40	MG	2475	176
-2118	20	MG	1341	176
-2119	40	MG	1610	62
-2120	25	MG/ML	280	181
-2121	200	MG	5516	163
-2122	0.4	MG/ML	4026	181
-2123	25	MG	2274	62
-2124	100	MG	199	62
-2125	45	MG	1791	137
-2126	1000	MG	342	133
-2127	50	MG	4760	51
-2128	0.75	MG	5095	176
-2129	40	MG	4188	59
-2130	7.5	MG	4129	51
-2131	20	MG	1425	51
-2132	40	MG	4879	51
-2133	(400.0 + 4.0 + 4.0)	MG	965	13
-2134	24	MG	1393	62
-2135	200	MG	4135	20
-2136	(875.0 + 125.0)	MG	245	51
-2137	720	UEL/0.5	2491	201
-2138	20	MG	1036	176
-2139	10	MG	351	51
-2140	20	MG	1416	166
-2141	22	MCG	4257	176
-2142	40	MG	4869	62
-2143	80	MG	676	51
-2144	150	MG	2635	51
-2145	200	MG	1550	32
-2146	325	MG	4376	22
-2147	90	MG/ML	4480	181
-2148	200	MG	4306	13
-2149	200	MCG/DOSE	1032	130
-2150	200	MG	4694	35
-2151	20	MG/ML	2761	185
-2152	1.5	G	4758	158
-2153	160	MG	372	15
-2154	500	MG	5227	59
-2155	25	MG	692	51
-2156	0.64	MG/G	1452	147
-2157	25	MG	4530	32
-2158	500	MG	5529	136
-2159	0.5	MG/G	1051	86
-2160	3	MG/ML	1653	212
-2161	10	MG/	5461	136
-2162	POM		83	147
-2163	80	MG	1197	51
-2164	500	MG	4912	131
-2165	0.0785	MG/ML	3583	176
-2166	100	MG/ML	49	176
-2167	100	MG/ML	711	176
-2168	20	MG/ML	5468	108
-2169	4	MG/ML	1496	176
-2170	900	MG	2099	51
-2171	2.0	MG	1494	176
-2172	10	MG	4017	197
-2173	SOL		2768	176
-2174	3	MG/ML	4094	181
-2175	0.5	MG	2262	62
-2176	1200	MG	5516	163
-2177	25	MG	1333	62
-2178	5	MG	2781	65
-2179	320	MG	675	51
-2180	50	MG/ML	440	163
-2181	5	MG/G	2116	118
-2182	315	MG	3918	51
-2183	15 + 90	MG	5093	58
-2184	(105 + 1.5 + 3.5 + 1)	MEQ/L	1309	189
-2185	SOL		2220	176
-2186	200	MG	2536	37
-2187	1	MG/ML	1070	212
-2188	35	MG	4364	51
-2189	5	PCC	2219	176
-2190	500	MG	4725	134
-2191	150	U	665	139
-2192	40	MG/G	2136	102
-2193	1	G	5148	131
-2194	(0.436 + 0.367 + 0.1765)	G/G	4449	127
-2195	75	MG	1067	51
-2196	10	MG/ML	4995	176
-2197	(20 + 12.5)	MG	3745	51
-2198	20	MG/G	3590	86
-2199	50	MG/ML	1547	176
-2200	10	MG	4530	32
-2201	100	MG	5400	176
-2202	6	MG/ML	3856	176
-2203	0.10	MG	907	45
-2204	3.5	MG/ML	1487	179
-2205	10	MG	4160	116
-2206	25	MG/ML	1017	103
-2207	100	MG	4682	19
-2208	5	MG	2075	51
-2209	0.5	MG/ML	1467	212
-2210	0.5	MG/G	1472	68
-2211	300	MG	4376	51
-2212	3.0	MG/ML	4175	181
-2213	137	MCG	4785	62
-2214	1	G	3660	62
-2215	5	MG	4430	51
-2216	30	MG/G	2554	68
-2217	0.4	MG	5415	135
-2218	37.5	MG	1195	19
-2219	(5	MG	470	145
-2220	100	MG	5353	51
-2221	(25+55)	MG	361	51
-2222	20	MG/G	1263	147
-2223	50	MG	5289	44
-2224	10	MG	4256	32
-2225	250	UI	2065	135
-2226	265	MG	3662	204
-2227	1000	MG	4510	133
-2228	1	G	887	131
-2229	50	MG/ML	2260	154
-2230	6.25	MG	839	37
-2231	25	MG	3915	54
-2232	20	MG/ML	4844	185
-2233	100	MG/ML	869	163
-2234	333.33	MG/ML	767	181
-2235	COM		1252	51
-2236	20	MG/ML	1124	181
-2237	50	MG/ML	596	176
-2238	250	MG	149	51
-2239	100	MG/ML	38	176
-2240	4	MG/ML	897	176
-2241	3	MG/ML	1717	212
-2242	5	MG	5556	51
-2243	10	MG	859	51
-2244	6	MG/ML	4144	186
-2245	4	MG	2437	62
-2246	125	MG	1428	22
-2247	0.4	MG/ML	1032	202
-2248	500	MG	5115	51
-2249	0.4	MG/ML	100	181
-2250	50	MG	385	51
-2251	8	U	110	153
-2252	250	UI	207	134
-2253	222	MBQ	3710	176
-2254	189	MG/ML	2382	176
-2255	10	MG	3629	62
-2256	300	MG	4237	58
-2257	2.5	SOL	2310	176
-2258	20	MG	62	35
-2259	500	MG	1559	51
-2260	150	MG	2276	51
-2261	100	MG	395	51
-2262	10	MG	4804	51
-2263	SUS		5202	204
-2264	PO		4590	164
-2265	50	MG/	4740	176
-2266	60	MG/ML	4147	176
-2267	20	MG/G	5397	68
-2268	5	MG	3724	51
-2269	12.5	MG	847	197
-2270	5	MG	3663	62
-2271	500	MG	455	51
-2272	5	MCG/ML	1995	176
-2273	1500	UI	94	140
-2274	750	MG	2436	44
-2275	450/50	MG	1571	51
-2276	370	MBQ	2463	176
-2277	200	MG	4306	125
-2278	1	MG/ML	1008	176
-2279	6.250	MG	826	62
-2280	1	MG	4141	19
-2281	80	MG	2375	51
-2282	100	MCG/DIA	1928	3
-2283	2.5	MG	3724	51
-2284	5	MG	358	62
-2285	30	MG/ML	4356	178
-2286	300	MG	4907	19
-2287	50	MG/ML	183	204
-2288	200	MG	2516	51
-2289	10	MG	1800	19
-2290	SUS		1251	204
-2291	550	MG/ML	5354	176
-2292	200	MG	4858	62
-2293	200	MG/ML	1581	176
-2294	75	MCG/H	2048	4
-2295	20	MG/G	3608	69
-2296	20	MG/G	475	147
-2297	5	MG/ML	1113	185
-2298	50	MG/ML	861	204
-2299	50	MG	2143	139
-2300	20	MG	1014	51
-2301	20	PCC	5324	176
-2302	0.5	MG	4302	62
-2303	0.275	MG/	2159	182
-2304	150	MG	2753	52
-2305	20	MG	4564	51
-2306	50	ML/ML	3665	160
-2307	150	MG	321	51
-2308	0.75	MG/ML	1977	155
-2309	2.5	MG	4299	2
-2310	4	MG	4292	51
-2311	25	MG	4258	135
-2312	10	MG/ML	4166	79
-2313	300	MG	555	62
-2314	20	MG	1908	59
-2315	200	MG	4860	62
-2316	20	MG	4128	51
-2317	23.2	MG/G	848	88
-2318	500	MG	3660	62
-2319	50	MG/ML	1446	84
-2320	(9 + 0.3 + 0.3)	MG/ML	4352	176
-2321	COM		836	62
-2322	50	MG/ML	3777	84
-2323	160	MG	1298	51
-2324	125	MG/G	1241	69
-2325	50	MG	369	13
-2326	(5	MG	4750	145
-2327	20	MG/ML	5397	111
-2328	500	MG	5239	131
-2329	(20  + 10)	MG	5050	51
-2330	100	MG/G	5112	154
-2331	5	MG	2177	51
-2332	30	MU	2069	176
-2333	0.125	MG/G	1712	147
-2334	5	MG	5571	51
-2335	600	MG	5520	159
-2336	400	MG	2294	13
-2337	12.5	MG	4688	74
-2338	30	MG	859	51
-2339	5	MG/ML	5343	179
-2340	10	MG/ML	2080	176
-2341	5	MG/ML	1552	176
-2342	10	MG	1367	13
-2343	500	UI	2520	134
-2344	0.5	MG/ML	1143	178
-2345	(50 + 25 + 37.5)	MG	5065	51
-2346	50	MG	5346	37
-2347	25	MG	2259	62
-2348	30	MG/ML	2111	181
-2349	10	MG	3984	111
-2350	150	MG/ML	129	176
-2351	1	G	262	46
-2352	20	MG/ML	5468	176
-2353	120	MG	4627	176
-2354	4	MG	5452	51
-2355	PO		941	154
-2356	50	MG/G	4935	147
-2357	80	MG	2371	51
-2358	1.5	MG	1980	13
-2359	20	MG	3740	51
-2360	500	MG/ML	1589	176
-2361	0.25	MG/G	5357	68
-2362	11.6	MG/G	612	86
-2363	15	MG	126	62
-2364	100	MG/ML	686	176
-2365	400	MG	46	62
-2366	(5.0 + 10.0)	MG	4015	13
-2367	0.5	MG/G	1519	68
-2368	2	MG/ML	1119	176
-2369	12950	MBQ	2492	196
-2370	150	MG	5426	58
-2371	11.6	MG/G	3965	87
-2372	300	MG	526	62
-2373	30	MG	1407	37
-2374	400	MG	2082	51
-2375	7	MG	3594	4
-2376	280	MG/ML	4965	167
-2377	10	MG/G	3607	69
-2378	XPE		310	212
-2379	150	MG	657	51
-2380	200	MG	4606	176
-2381	50	MG/G	5159	67
-2382	0.10	G/ML	2409	176
-2383	200.000	UI	1990	35
-2384	(99.65 + 2.0 + 3.0 + 1.0)	MEQ/L	1308	189
-2385	25	MG	807	37
-2386	300	MG	1809	13
-2387	40	MG/100	2550	62
-2388	400	MG	134	47
-2389	50	MG/2	4249	176
-2390	1	MG/ML	441	186
-2391	30	MG/G	46	149
-2392	6.4	MG	4787	4
-2393	100	MG/ML	1002	176
-2394	100	MG	700	51
-2395	100	MG	443	137
-2396	100	MG/ML	5014	181
-2397	100	MG	4877	51
-2398	5	MG/G	43	68
-2399	300	MG	4888	51
-2400	12.50	MG	826	62
-2401	75	MG	5149	13
-2402	16	MG	793	37
-2403	125	MG	249	47
-2404	1	MG/ML	4000	181
-2405	80	MG	4870	62
-2406	20	MG/G	5135	69
-2407	20	MG	2083	142
-2408	0.5	MG/G	1051	68
-2409	20	MG/ML	2760	185
-2410	3.5	MG/ML	593	179
-2411	(2.5+10)	MG	4552	13
-2412	(0.50 + 50.0  + 50.0 + 5.0)	MG/ML	1495	176
-2413	25	MG	2553	62
-2414	30	MG	2147	62
-2415	1.2	MG	5167	51
-2416	1	G	2343	142
-2417	300	MG	5565	62
-2418	12	MCG	2150	13
-2419	320	MG	372	15
-2420	200	MG/ML	4510	163
-2421	500	MG	4913	51
-2422	50	MG	5323	51
-2423	0.4	MG/ML	2628	181
-2424	30	MG	3863	140
-2425	5	MG	4089	62
-2426	80	MG	674	51
-2427	20	MG/ML	5511	175
-2428	20	MG/ML	915	211
-2429	0.4	MG/ML	418	171
-2430	150	MG	4061	9
-2431	1	MG/ML	4823	176
-2432	30	MG	2528	176
-2433	5	MG	4873	13
-2434	50	MG/	3591	204
-2435	80	MG/ML	4358	198
-2436	100	MG	4534	51
-2437	30	MG	224	62
-2438	32	MG/ML	5112	204
-2439	1	MG/G	73	88
-2440	50.000	UI	5371	51
-2441	75	MG	2783	51
-2442	5	MG	4553	51
-2443	1000	UI	1881	140
-2444	100	MG	5317	51
-2445	200	MG	3662	154
-2446	200	MG	46	62
-2447	250	MG	4306	13
-2448	12.5	MG	1305	51
-2449	0.9	G/100ML	4608	176
-2450	10	MG/G	4	68
-2451	20	MG	5445	51
-2452	50	MG	3601	197
-2453	5	MG	954	62
-2454	500	MCG	3682	142
-2455	20	MG	1046	51
-2456	50	MG	270	44
-2457	12.5	MG	838	62
-2458	100	MG	893	13
-2459	400	MG	4718	62
-2460	1.0	G	462	133
-2461	100	MG/ML	2044	176
-2462	(35 + 300 + 50)	MG/ML	1668	181
-2463	500	MG	1346	181
-2464	30	MG	1729	31
-2465	250	MG	366	19
-2466	8426	MBQ	2013	176
-2467	4	MG/ML	4144	186
-2468	400	UI	5374	32
-2469	150	MG	4836	19
-2470	12.5	MG	839	62
-2471	4	MG	1291	62
-2472	25	MG	840	62
-2473	0.4	MG/	161	212
-2474	1.00	MG	5021	62
-2475	1	G	2310	176
-2476	50000	UI	1703	51
-2477	18	MG	1980	3
-2478	800	MG	519	62
-2479	120	MG	2370	51
-2480	46.5	MG	612	45
-2481	60	MG	5400	176
-2482	20	MG/ML	1367	181
-2483	20	MG	2782	32
-2484	6.67	MG/ML	747	167
-2485	100	MG	2528	176
-2486	500	MG	2561	13
-2487	600	MG	1732	51
-2488	6.43	MG/ML	1739	201
-2489	100	MG	2189	62
-2490	120	MG/ML	4295	176
-2491	50	MG	612	59
-2492	500	MG	1017	51
-2493	400	MG	3643	51
-2494	8	MG	5163	62
-2495	200	MG	2051	116
-2496	1.30	MG/ML	5446	212
-2497	10	MG	5523	51
-2498	5	MG	5514	51
-2499	(400 + 4 + 4)	MG	4310	13
-2500	100	MG	5014	58
-2501	0.8	MG/ML	5409	181
-2502	10	MG	4412	51
-2503	54	MG	1138	58
-2504	500	MG	3661	135
-2505	0.150	MG	4116	62
-2506	(125.0 + 50.0 + 300.0 + 30.0)	MG	834	62
-2507	0.06	G/ML	2106	82
-2508	400	MG	663	51
-2509	(0.30 + 0.15)	MG/ML	1233	179
-2510	0.05	MG/DOSE	749	6
-2511	8	MG	5533	51
-2512	40	MG	4128	51
-2513	50	MG	2409	176
-2514	75	MG	5503	19
-2515	300	MG	3840	51
-2516	2000	UI	1687	32
-2517	9	MG	1078	176
-2518	11.6	MG/G	4041	86
-2519	10	MG	3754	22
-2520	300	MG/ML	4489	181
-2521	80	MG	2363	176
-2522	10	MG	184	62
-2523	10	MG	1957	37
-2524	200	MG	5159	62
-2525	125	MG	1615	22
-2526	23.2	MG/G	95	88
-2527	50	MG	395	62
-2528	1000	MG	1018	131
-2529	5	MG/ML	3997	176
-2530	40	MG	2371	51
-2531	200	MG/ML	817	176
-2532	250	MG	5551	37
-2533	33.3	UI/ML	2476	140
-2534	20	MG/G	1812	147
-2535	3	MG	288	122
-2536	10	MG	3754	24
-2537	200	MG	5412	139
-2538	25	MG/ML	1621	176
-2539	50	MG	1964	142
-2540	3	MG/ML	4079	2
-2541	20	MG/G	5472	86
-2542	25	MG	2233	62
-2543	50	MG/ML	4428	204
-2544	40	MG	670	62
-2545	0.4	MG/ML	4027	181
-2546	1	G	877	156
-2547	150	MG	1883	19
-2548	200	MG	915	62
-2549	320	MG	676	51
-2550	10	MG	1130	51
-2551	5	MG/ML	5566	179
-2552	40	MG/ML	477	204
-2553	10	MG/ML	3609	194
-2554	100	MG/ML	1757	163
-2555	10000	UI	1719	32
-2556	1739	MBQ	2165	176
-2557	100	MG	4439	44
-2558	500	MG	776	62
-2559	(160.00+25.00)	MG	1579	51
-2560	2	MG	219	62
-2561	5.000	UI	2185	51
-2562	(2.5 + 6.25)	MG	599	51
-2563	10	MG	1150	19
-2564	20	MG	2288	51
-2565	1	MG/G	1454	68
-2566	6	MG	693	62
-2567	30	MG	1565	62
-2568	50	MG/ML	2117	174
-2569	10	MG	1799	51
-2570	4	MG	5545	134
-2571	400	MG	2766	51
-2572	10	MG	4564	51
-2573	500	MG	4838	51
-2574	DRG		2452	74
-2575	7.5	MG/ML	1736	167
-2576	11.50	MG/ML	2149	178
-2577	100	MG/ML	737	198
-2578	100	G	4042	126
-2579	500	MG	252	13
-2580	20	MG	5410	51
-2581	50	MG	4534	51
-2582	12.5	MG	839	37
-2583	20	MG	1907	59
-2584	45	MG	3809	13
-2585	1.50	MG	4526	62
-2586	20	MG/G	915	166
-2587	100	MG	234	62
-2588	10	MG	2782	32
-2589	1.00	MG/G	5357	68
-2590	1	MG/MG	350	176
-2591	400	MG	383	46
-2592	10	MG	4568	51
-2593	0.5	MG/G	2168	68
-2594	50	MG	5041	51
-2595	70	MG	3812	62
-2596	20	MG	2324	22
-2597	100	MG	3804	62
-2598	6.67	MG/ML	698	181
-2599	100	MG	2142	173
-2600	2.5	MG/G	1916	145
-2601	500	MG	2416	2
-2602	80	MG	4040	62
-2603	20.0	MG/G	915	68
-2604	10	MG/ML	975	176
-2605	0.5	MG/ML	3796	176
-2606	25	MG	5488	51
-2607	2.5	MG	3971	51
-2608	0.084	G/ML	4594	176
-2609	50	MCG/DOSE	498	208
-2610	800	MG	2169	62
-2611	400	MG	5414	51
-2612	80	MG	1661	47
-2613	5	MG	4432	51
-2614	20	MG/G	2235	68
-2615	500	MG	249	154
-2616	1	MG	4316	51
-2617	36	MG	4453	3
-2618	1440	UEL/ML	2491	201
-2619	7000	UI	1359	35
-2620	10	MG	5339	51
-2621	150	MG	4363	51
-2622	250	MG/ML	2525	176
-2623	500	MG	249	139
-2624	200	MG	2133	62
-2625	37.5	MG	1196	62
-2626	1	MG/G	1457	145
-2627	300	U	1761	135
-2628	5	MG/ML	2510	201
-2629	500	MG	4929	62
-2630	(6.3 + 18.75 + 15)	G/L	3728	79
-2631	370	MBQ	805	9
-2632	100	UI/ML	2727	176
-2633	5	MG/ML	2487	176
-2634	100	MG	5513	62
-2635	75	MG	4012	51
-2636	2	MG	4366	51
-2637	1	G	252	173
-2638	1	MG	4369	62
-2639	10000	UI	5371	35
-2640	50	MG/G	1503	147
-2641	600	MG	84	51
-2642	10	MG	197	51
-2643	650	MG	776	62
-2644	1	G/G	1355	125
-2645	36	MG	1138	58
-2646	30	MG	4288	48
-2647	3	MG	4701	135
-2648	2.5	MG/ML	1057	181
-2649	500	MG	4486	62
-2650	35	MG	3811	51
-2651	90	MG	3864	135
-2652	5.631	G	5028	95
-2653	75	MG	4005	51
-2654	(25 + 25)	MG/G	1808	68
-2655	60	MG	3864	140
-2656	(320.00+5.00)	MG	1578	51
-2657	(50.0 + 50.0)	MG/ML	174	176
-2658	25	MG	1724	62
-2659	2	MG	899	62
-2660	20	MG	2016	51
-2661	3	MG/ML	1100	179
-2662	100	MG	2238	62
-2663	6	MG	1406	62
-2664	80	MG	2373	19
-2665	1	G	936	131
-2666	100	MG	4536	13
-2667	100	MG/ML	4114	176
-2668	40	MG	975	22
-2669	50	MG/ML	7	181
-2670	(10 + 250)	MG	1897	51
-2671	300	MG	2568	32
-2672	40	MG	87	59
-2673	7	MG/ML	4318	212
-2674	125	MG	4725	140
-2675	2	MG/ML	1152	176
-2676	1	G	609	46
-2677	0.05	G/ML	141	176
-2678	150	MG	3811	51
-2679	50	MG/ML	5015	176
-2680	100	MG	1085	62
-2681	2.5	G	4857	140
-2682	100	MG/	965	204
-2683	(10 + 1000)	MG	5459	58
-2684	100	MG	1851	51
-2685	3.0	G+0.352G+17.602G+11.735G	4042	126
-2686	100	MG	612	173
-2687	10	MG/G	492	68
-2688	50	MG	1149	13
-2689	20	MG	1272	62
-2690	500	MG/ML	1665	176
-2691	4070	MBQ	2402	176
-2692	20	MG/G	1812	68
-2693	140	MG	1527	19
-2694	(500.0+ 30.0)	MG	172	62
-2695	10	MG	4169	62
-2696	80	MG	1512	62
-2697	20	MG/G	3595	86
-2698	16	MG	1787	15
-2699	5	MG	4564	51
-2700	150	MCG	4205	62
-2701	840	MG	4848	188
-2702	100	MG	1304	13
-2703	1	MG	5127	135
-2704	4	MG/ML	4292	181
-2705	10	MG	4380	51
-2706	500	MG	1337	139
-2707	10	MG	5312	62
-2708	6	MG/ML	717	212
-2709	81	MG	4625	38
-2710	0.3	MG/ML	605	179
-2711	80	MG	4847	51
-2712	8.4	MG	1751	4
-2713	50	MG	4368	133
-2714	2	MG	5127	135
-2715	5	MG	1466	51
-2716	10	MG/G	2468	69
-2717	3.125	MG	840	62
-2718	60	MG	1099	51
-2719	10	MG	1255	62
-2720	25	U	5244	201
-2721	5	MG	5139	47
-2722	7000	UI	211	51
-2723	75	MG	4090	13
-2724	120	MG	190	51
-2725	5	MG+	1827	122
-2726	0.5	MG/G	4199	194
-2727	20	MG	4855	135
-2728	50	MG	2264	51
-2729	1	MG	1807	62
-2730	80	MG/G	2246	83
-2731	(250 + 100)	MCG	1034	199
-2732	400	MG	480	62
-2733	50	MG	4268	135
-2734	20	MG/	1031	211
-2735	25	MG/ML	1053	176
-2736	3	MG	933	140
-2737	0.5	MG/G	85	87
-2738	250	MG	2510	62
-2739	2000	MG	1018	133
-2740	500	UI	547	140
-2741	5	MG	4412	51
-2742	75	MG	4985	51
-2743	(5.00+120.00)	MG	2581	58
-2744	12	G	4460	140
-2745	(1.5 + 45)	MG/G	1342	86
-2746	200	MG/G	350	86
-2747	(10.0 + 10.0)	MG	1112	51
-2748	4	MG	5402	48
-2749	25	MG/ML	4926	176
-2750	50	MG/G	5554	68
-2751	12.5	MG	4414	43
-2752	200	MG	4229	51
-2753	5.0	MG	2226	51
-2754	50	MG/G	1429	147
-2755	9	MG/ML	2770	176
-2756	20	MG	2093	37
-2757	1.00	MG/ML	2632	176
-2758	20	MG	1278	134
-2759	(20.0 + 0.5 + 2.5)	MG/G	5086	68
-2760	4	MG	340	47
-2761	16	UI	1326	135
-2762	6	MG	1407	62
-2763	1	ML/ML	1944	115
-2764	200	MG	4708	122
-2765	150	MG	3817	51
-2766	25	MG	1611	62
-2767	5	MG/ML	4901	179
-2768	5	MG/ML	4299	176
-2769	3000	UI	1719	35
-2770	400	MG	3894	47
-2771	1000	MG	885	133
-2772	1	MG	298	62
-2773	20	MG/G	481	173
-2774	400	MG	46	37
-2775	10	MCG/ML	4261	201
-2776	0.25	G/ML	539	81
-2777	0.5	MG	1753	20
-2778	0.150	MG	4115	62
-2779	0.2	G/ML	1343	176
-2780	10	MG/ML	692	167
-2781	0.0585	ML/5	2291	212
-2782	(50 + 12.5)	MG/	1027	160
-2783	2.5	MCG	4681	190
-2784	1	MG/ML	930	212
-2785	0.009	G/ML	4608	176
-2786	50	MG/ML	1774	176
-2787	SUS		2540	201
-2788	0.4	MG	2236	181
-2789	1	MG/ML	2316	179
-2790	10	MG/ML	692	176
-2791	35	MG	1668	62
-2792	(0.4 + 0.05)	MG/ML	161	212
-2793	740	MBQ	828	176
-2794	50	MG/ML	245	163
-2795	500	MG	1593	62
-2796	40	MG	4075	59
-2797	40	MG	2781	27
-2798	3	MG	4141	15
-2799	3700	MBQ	2402	176
-2800	250	MG	1866	32
-2801	84	G/L	1307	189
-2802	25	MCG/ML	327	176
-2803	20	MG	4412	51
-2804	1000	UI	4583	35
-2805	300	MG	4249	62
-2806	10	MG/G	4738	67
-2807	4	MG	4337	51
-2808	12	MCG	2190	19
-2809	300	MG	1866	51
-2810	5	MG/ML	2479	176
-2811	1000	MG	2432	51
-2812	0.05	MG/ML	1560	75
-2813	40	MG/G	2558	67
-2814	40	MG	4532	162
-2815	6.25	MG	1333	62
-2816	20	MG/ML	1629	176
-2817	100	MG/ML	4329	176
-2818	70	MG/ML	4618	187
-2819	12	MG	4292	51
-2820	150	MG	4250	51
-2821	100	MG	4530	32
-2822	500	MG	1673	62
-2823	150	MG/ML	4092	176
-2824	20	MG/G	5397	111
-2825	500	MG	4727	139
-2826	(10  + 10)	MG	5050	51
-2827	900	MG	2344	51
-2828	500	MG	864	13
-2829	50	MCG/G	1372	147
-2830	2	MG	5220	51
-2831	9.0	MG/	4356	178
-2832	250	MG	4240	62
-2833	50	MG/ML	1593	181
-2834	0.5	MG/ML	4559	178
-2835	22	MCG	622	176
-2836	0.5	MG/G	4162	170
-2837	75	MG	1066	51
-2838	30	MG	2488	37
-2839	5	MG	2181	51
-2840	5.000	UI	5371	51
-2841	50000	UI	1435	35
-2842	30	MG	2147	102
-2843	500	MG	1614	44
-2844	(2 + 0.035)	MG	1522	51
-2845	(5.0 + 12.5)	MG	1269	51
-2846	400	MG	309	51
-2847	150	UI/75	3948	134
-2848	60	MG	1109	62
-2849	450	PPC	5340	176
-2850	10	MG	4379	51
-2851	80	MG	1198	19
-2852	200	MG/G	350	147
-2853	250	MG/5	5141	154
-2854	6	MG/ML	748	176
-2855	250	MG	985	51
-2856	3000	UI	4387	134
-2857	40	MG/ML	996	212
-2858	80	MG/ML	4034	163
-2859	80	MG	2369	51
-2860	10	MG	1105	51
-2861	0.75	MG/ML	2552	178
-2862	50000	UI	1408	35
-2863	50	MG/ML	1068	176
-2864	25	MCG/H	2048	4
-2865	25	MG	4883	62
-2866	SOL		4009	176
-2867	0.50	MG/G	4220	68
-2868	500	MG	452	51
-2869	0.1	G/G	3690	111
-2870	5000	UI	78	32
-2871	75	MG	1388	51
-2872	50	MG/ML	4036	163
-2873	1	MG	221	62
-2874	60	MG	4126	177
-2875	100	MG	930	197
-2876	250	MG	4876	13
-2877	360	MG	781	51
-2878	100	MG	803	51
-2879	20	MG/ML	2249	166
-2880	5.000.000	UI	341	131
-2881	100	MG	930	137
-2882	50	MG/ML	1017	103
-2883	50000	UI	4471	51
-2884	500	MG	250	19
-2885	200	MG	4478	62
-2886	10	MG/	2633	176
-2887	300	MG	637	62
-2888	15	MG	1677	176
-2889	1.6	MG	5167	51
-2890	750	MG	5115	51
-2891	50	MG	54	37
-2892	1	G	1125	142
-2893	1	MG/ML	4134	212
-2894	20	MG	4403	51
-2895	5.0	MG/ML	1090	179
-2896	4	MG/ML	554	171
-2897	2000	UI	4583	35
-2898	2	MG	104	62
-2899	(40.00+25.00)	MG	3739	51
-2900	60	MG/ML	5067	173
-2901	6	MCG/DOSE	4779	199
-2902	10	MG/ML	4037	176
-2903	40	MG	3879	135
-2904	0.05	MG/ML	1424	186
-2905	4	MG/ML	932	179
-2906	0.2%	SOL	205	179
-2907	DRG		504	74
-2908	0.5	MG	5218	68
-2909	10	MG/ML	2753	181
-2910	66.66	MG/ML	4864	133
-2911	20	MG/ML	931	166
-2912	40	MG/ML	2349	176
-2913	10	MG/G	1445	67
-2914	15	MG	5287	58
-2915	150	MG	2179	52
-2916	0.75	MG	1394	62
-2917	5.0	MG	557	62
-2918	100	MG	4721	58
-2919	500	MG	5369	62
-2920	3%	SOL	5157	181
-2921	1000	MG	4484	51
-2922	1000	MG	5064	133
-2923	10	MG	238	62
-2924	260	MG	777	51
-2925	5	MG	1888	51
-2926	10	MG	5152	51
-2927	50	MG/ML	367	176
-2928	(178+ 185+ 230)	MG	2325	127
-2929	600	MG	5092	154
-2930	100	MG	5373	32
-2931	1800	MG	1376	176
-2932	20	MG/G+	2245	68
-2933	200	MG	1085	62
-2934	900	MG	4482	154
-2935	5	MG	1167	135
-2936	25	MG	2441	51
-2937	60	MG	2029	51
-2938	100	MG	4117	62
-2939	3.5	MG/G	1487	149
-2940	60	MG/ML	2079	167
-2941	12	UI	1326	135
-2942	20	MG/G	4958	69
-2943	544	MCG/ML	4252	176
-2944	7.5	MG/	1168	176
-2945	5	MG/ML	4112	176
-2946	500	MG	2278	51
-2947	0.15%	SOL	205	179
-2948	100	MG/ML	2136	185
-2949	20	MG/G	3608	68
-2950	1	MG/ML	3956	181
-2951	0.5	MG/ML	1712	112
-2952	4	MG	103	62
-2953	9	MG	4606	176
-2954	100	MG/ML	934	176
-2955	5	MG/ML	4996	179
-2956	5	MG	1148	62
-2957	500	MG	872	51
-2958	3	MG/ML	2111	212
-2959	333	MBQ	3710	176
-2960	250	MG	2507	19
-2961	52.63	MG/ML	3667	181
-2962	1	MG	1539	62
-2963	(10.0 + 500.0)	MG	741	51
-2964	40	MG/ML	2336	176
-2965	10	MG	710	62
-2966	200	MCG/DOSE	103	130
-2967	50	MG	4530	35
-2968	1.5	MG	1510	37
-2969	180	MG	2047	59
-2970	10	MG/ML	4349	194
-2971	100	UI	2598	176
-2972	2	MG/5ML	899	212
-2973	SOL		4008	176
-2974	150	MG/ML	1043	176
-2975	2000	UI/ML	164	176
-2976	20	MG	5051	51
-2977	150	MG/ML	978	176
-2978	20	MG	999	51
-2979	100	MG	397	62
-2980	20	MG/ML	2618	176
-2981	120	MG	1562	41
-2982	10	MG	5157	74
-2983	10	MG	5103	51
-2984	25	MG	4530	35
-2985	100	MG/G	3884	154
-2986	15	MG/ML	4997	212
-2987	2	MG	4302	62
-2988	0.9	MG/ML	1078	176
-2989	100	MG	1376	176
-2990	12	UI	2595	176
-2991	25	MG	1532	176
-2992	500	MG	1018	133
-2993	100	MG	955	35
-2994	75	MG	5293	15
-2995	20	MG	1986	51
-2996	2	MG	1543	51
-2997	2	MG/ML	3770	176
-2998	1.0	MG/ML	203	179
-2999	100	MG	988	38
-3000	200	MG	4516	58
-3001	450	MG	357	51
-3002	15	MG/ML	652	212
-3003	0.5	MG	4141	15
-3004	6.667	MG/ML	5026	212
-3005	2	MG	3623	62
-3006	100	MG	4876	13
-3007	2	MG/ML	561	176
-3008	(500.0 + 65.0)	MG	868	51
-3009	25	MG	3862	74
-3010	250	MG	511	51
-3011	400	MG	2243	62
-3012	1200000	UI	2258	162
-3013	500	MG	799	37
-3014	11.6	MG/G	1532	171
-3015	10	MG/G	4854	68
-3016	500	MG	1193	133
-3017	20	MG	5270	51
-3018	100	MCG	4180	66
-3019	(0.015 + 0.06)	MG	189	51
-3020	20	MG/ML	3976	179
-3021	6	MG/ML	4843	176
-3022	30	MG	1284	62
-3023	35	MG	5270	58
-3024	50	MG	2274	62
-3025	10	MG/ML	3786	79
-3026	50	MG	291	62
-3027	120	MG	2374	51
-3028	900 +100	MG	1277	51
-3029	100	MG	4215	74
-3030	100	MG	2122	19
-3031	(500.0 + 30.0)	MG	172	62
-3032	20	MG	66	134
-3033	100000	UI	211	51
-3034	20	MG/G	796	147
-3035	200	MG/ML	5119	181
-3036	50	MG	400	62
-3037	0.09	G/ML	5449	212
-3038	5	MG	154	62
-3039	50	MG/G	5390	147
-3040	0.5	MG	169	62
-3041	10	MG/ML	1547	176
-3042	10	MG	3949	62
-3043	250	MG	4342	19
-3044	15	MG/ML	5447	212
-3045	250	MG	1635	51
-3046	(2.0 + 5.0)	MG/ML	4833	179
-3047	10	MG	619	19
-3048	(15	MG/ML+0.147	3952	187
-3049	30	MG	3858	135
-3050	10.0	MG/ML	3785	176
-3051	100	MG	1190	37
-3052	250	MG	5525	62
-3053	20	MG	602	37
-3054	1	MG	5167	51
-3055	100	MG	395	37
-3056	10	MG	4433	51
-3057	200	MG	4232	51
-3058	4	MG	1699	62
-3059	(30 + 20)	MG/G	2378	69
-3060	20	MG	921	147
-3061	10	MG/	16	212
-3062	200	MG	1958	19
-3063	(20.0 + 0.64 + 2.5)	MG	1013	67
-3064	44.94	MG/ML	612	204
-3065	200	MCG	749	19
-3066	0.1	MG/ML	1394	75
-3067	50000	UI	5372	35
-3068	3	MG	1378	51
-3069	(0.100 + 0.150)	G/G	484	86
-3070	150	MG	2142	19
-3071	(300.0 + 12.5)	MG	488	62
-3072	50	MG	3586	51
-3073	240	MG	5496	51
-3074	50	MG	396	62
-3075	COM		3797	51
-3076	100	MG	610	32
-3077	(400 + 4 + 4)	MG	1286	37
-3078	100	MG/ML	5106	204
-3079	35	MG	1664	62
-3080	2	MG/ML	990	186
-3081	50	MG/ML	247	163
-3082	5	MG	3637	176
-3083	10	MG	4055	62
-3084	0.5	MG	4058	62
-3085	60	MG	3681	176
-3086	1	MG	5021	62
-3087	(2.00+0.03)	MG	938	51
-3088	5	MG	184	62
-3089	70	MG	156	62
-3090	PO		3665	154
-3091	1.500.000	UI	4751	135
-3092	5	MG	2395	62
-3093	300	MG	3660	197
-3094	4	MG/ML	2631	212
-3095	2.0	MG/G	2252	147
-3096	40	MG/ML	3894	204
-3097	40	MG	4814	51
-3098	500	MG	1615	51
-3099	5	MG/G	43	7
-3100	600	MG	4931	51
-3101	20	MG	4404	51
-3102	133.33	MG/ML	4864	133
-3103	2	GBQ	4244	176
-3104	8	MG	1822	48
-3105	SOL		1742	189
-3106	850	MG	1137	44
-3107	0.05	MG/ML	896	212
-3108	10	MG	4381	51
-3109	0.12	MG/ML	1026	179
-3110	30	MG	4509	37
-3111	(10.0 + 20.0)	MG	1112	51
-3112	20	MCG	5201	201
-3113	0.25	MG/ML	1328	179
-3114	200	MG	4830	135
-3115	2.5	MG	4941	62
-3116	15	MG/G	4137	67
-3117	100.000	UI	3597	204
-3118	5	G	4857	176
-3119	10	MG	5319	51
-3120	20	MG	5344	51
-3121	150	MG	1288	51
-3122	8	MG	706	30
-3123	20	MG	1962	142
-3124	500	UI	5548	140
-3125	120	MG	5457	176
-3126	100	MG/ML	2149	176
-3127	44.3	MG	1532	45
-3128	200	MG	5140	62
-3129	40	MG	4168	62
-3130	50	MG	4146	13
-3131	2	MG/	4195	181
-3132	1	MG	4423	139
-3133	600	MG	2102	51
-3134	25	MG	1781	51
-3135	1	MG/ML	1868	176
-3136	20	MG/ML	1129	176
-3137	40	MG	3739	51
-3138	50	MCG/DOSE	1035	171
-3139	8	MG	5305	62
-3140	80.000	UI/ML	3938	155
-3141	10	MG	1267	51
-3142	30	MG/5ML	1083	2
-3143	50	MG	5482	51
-3144	1000	MG	2051	116
-3145	100	MG/ML	5243	200
-3146	40	MG	5027	3
-3147	1000	MG	4267	51
-3148	50	MG/ML	1187	176
-3149	10	MG	289	62
-3150	6	MG/ML	4336	212
-3151	450	MG	5284	51
-3152	2	MG/ML	5544	106
-3153	0.2	MG	5167	51
-3154	300	MG	4226	58
-3155	20	MG/ML	4995	167
-3156	0.8	MG/ML	5538	185
-3157	500	MG/ML	1654	176
-3158	XPE		311	212
-3159	SOL		2616	176
-3160	20	MG/ML	818	212
-3161	1	G	884	133
-3162	20	MG	4193	45
-3163	5	MG	2232	62
-3164	1	G	888	156
-3165	25	MG	1411	51
-3166	8.6	MG/ML+0.3MG/ML+0.33MG/ML	4604	176
-3167	(5.0 + 50.0)	MG	558	19
-3168	4.5	MG/ML	70	179
-3169	0.2	MG/ML	1565	176
-3170	250	UI	2065	140
-3171	1	G	4145	140
-3172	1.6	MG/ML	641	212
-3173	10	MG	4459	32
-3174	100	MG	2040	62
-3175	50	MG/ML	2225	176
-3176	20	MG	1897	176
-3177	20	MG	5254	51
-3178	20	MCG	909	201
-3179	0.5	MG/G	1051	147
-3180	40	MG	3874	51
-3181	3.125	MG	1616	62
-3182	50000	UI	1435	48
-3183	0.05	MG	1501	212
-3184	1	MG/G	5376	67
-3185	12	MG	2347	140
-3186	2	MG	3956	51
-3187	75	MG	1195	29
-3188	40000	UI/ML	164	176
-3189	9	MG	1078	201
-3190	5000	UI/ML	2526	176
-3191	(80.0 + 12.5)	MG	5234	51
-3192	25	MG/G	4134	86
-3193	10000	UI	1758	35
-3194	0.4	MG/ML	1813	181
-3195	20	MG/G	51	67
-3196	2	MG	3795	13
-3197	2.5	MG	5485	62
-3198	20	MG	4379	51
-3199	250	MG	5061	62
-3200	25	MG/ML	1532	176
-3201	46250	MBQ	2354	176
-3202	600	MG	5067	62
-3203	COM		2022	51
-3204	900	MG	632	51
-3205	100	MG	1974	139
-3206	(22.73+5.786+3.924+0.184+0.1017)	MG/ML	3952	187
-3207	300	MG/ML	2409	176
-3208	7	MG	3574	4
-3209	0.1%	SOL	205	179
-3210	3	MG/ML	3719	179
-3211	185	MBQ	1390	176
-3212	2500	U	2014	134
-3213	10	MG	1387	51
-3214	25	MG	4551	43
-3215	0.25	MG/ML	2632	176
-3216	0.05	MG/ML	446	186
-3217	10	MG	5421	62
-3218	100	MG	3651	32
-3219	440	MG	3781	135
-3220	80	MG	1036	176
-3221	100	MG	5157	51
-3222	(15+5.38+4.48+0.183+0.0508)	MG/ML	1515	187
-3223	500	MG	255	133
-3224	20	MG	2588	51
-3225	1	MG/G	1929	86
-3226	100	MG/ML	3686	176
-3227	20	MCG/ML	5186	201
-3228	300	MG	4249	51
-3229	8	MG	3772	85
-3230	1000	MG	2332	176
-3231	2	MG	4370	51
-3232	1000	UI	78	51
-3233	100	MG/ML	4308	181
-3234	100	MG/G	5074	91
-3235	32	MCG	3625	202
-3236	300	MG/ML	1133	176
-3237	30	MG/ML	4643	178
-3238	100	MG/G	539	165
-3239	SUSP		5184	201
-3240	200	MG	1125	135
-3241	2.5	MCG	4713	190
-3242	3	MG	2221	51
-3243	3	MG/ML	2147	212
-3244	4	MG/ML	1104	212
-3245	20	MG/G	3767	68
-3246	750	MG	1662	62
-3247	4	MG/ML	3675	181
-3248	(2.5 + 2.5)	MCG	4680	167
-3249	15	MG	4385	51
-3250	0.25	MG/G	5048	67
-3251	1.2	MG/ML	4078	203
-3252	45	MG	5486	51
-3253	15	MG	346	62
-3254	40	MG	4200	135
-3255	500	MG	1680	62
-3256	1000	UI	1999	134
-3257	3.0	MG/ML+1.0	960	203
-3258	1000	MG	1589	37
-3259	4	MG/ML	70	179
-3260	160	MG	5230	51
-3261	2.5	PCC	2260	154
-3262	500	MG	1025	51
-3263	10	MG	4403	51
-3264	5	MG/ML	1255	176
-3265	50	MG/G	3871	147
-3266	100	MG	233	62
-3267	(5 + 3)	MG/ML	5562	203
-3268	100	MG	1475	58
-3269	150	MG	54	37
-3270	10	MG	1896	48
-3271	3	MG/G	2105	86
-3272	1000	UI	547	140
-3273	50	MG	4459	35
-3274	100	MG/ML	955	167
-3275	SOL		4650	176
-3276	1	MG/ML	2611	175
-3277	150	MG	3696	37
-3278	(3 + 1)	MG/ML	4979	203
-3279	(5+0.55+500)	MG	1489	51
-3280	50	MG/ML	3590	204
-3281	(20 + 12.5)	MG	3739	51
-3282	50	MG/	5029	176
-3283	10	MG	715	212
-3284	200	MG	4571	135
-3285	500	MG/ML	2775	176
-3286	1	G	2191	51
-3287	7.5	MG/G	4417	86
-3288	80	MG/ML	1340	201
-3289	0.5	MG	80	51
-3290	5	MG	4283	62
-3291	30	MG/G+20MG/G	1456	69
-3292	125	MG/5ML	249	154
-3293	100	MG/G	1815	154
-3294	5	MG/ML	4927	176
-3295	3	MG/ML	1817	181
-3296	600	MG	1639	37
-3297	50	MG	397	62
-3298	40	MG	1904	59
-3299	25	MG	395	37
-3300	1.0	MG/ML	5572	181
-3301	1	MG/ML	578	111
-3302	4	MG/ML	2202	176
-3303	225	MCG	1254	201
-3304	50	MG/ML	737	204
-3305	400	MG	4830	135
-3306	45	MG	4809	13
-3307	100	MG/ML	1859	181
-3308	200	MG	2149	46
-3309	20	MG/G	5315	68
-3310	10	MG	4323	58
-3311	1.6	MG/ML	1142	186
-3312	40	MG	4405	51
-3313	5.0	MG	1111	51
-3314	25	MG	4234	51
-3315	15	MG/G	17	67
-3316	7000	UI	1435	48
-3317	5	MG	4298	51
-3318	5	MG	599	62
-3319	80:16	MG/ML	2286	176
-3320	7.5	MG/ML	721	181
-3321	100	MG/ML	5379	176
-3322	25	MG	5323	51
-3323	10	MG	4921	19
-3324	80	MG	4560	51
-3325	100	MG	1072	62
-3326	75	MG	4572	176
-3327	500	MG	4429	51
-3328	2000	MCG/ML	1330	176
-3329	200	MG/G	495	145
-3330	1000	MG	885	131
-3331	100	MG	1089	136
-3332	5	MG	1730	59
-3333	20	MG	4374	15
-3334	14	MG	424	51
-3335	20	MG	5434	51
-3336	75	MG	1521	44
-3337	5	MG	4405	51
-3338	12	DH	333	94
-3339	40	MG/ML	127	212
-3340	5	MG	5319	51
-3341	4	UI	1953	140
-3342	150	MG	2776	51
-3343	100	MG	268	51
-3344	50	MG	436	58
-3345	500	MG	1788	51
-3346	1	MG/ML	91	176
-3347	1	MG/ML	1552	181
-3348	50	MG	1195	62
-3349	100.000	UI/ML	3597	204
-3350	5	MG	5567	51
-3351	0.40	MG	1033	202
-3352	15	MCG/ML	4445	179
-3353	200	MG	1443	51
-3354	20	MG	3878	51
-3355	0.5	MG/G	1470	2
-3356	50	MG/ML	249	163
-3357	90	MG	1284	12
-3358	10	MG	472	62
-3359	400	MG	5501	47
-3360	100%	LIQ	1463	105
-3361	2	MG	4118	51
-3362	34891	MBQ	2165	176
-3363	500	UI	630	134
-3364	45	MG	3986	62
-3365	5	MG/ML	5355	179
-3366	250	MG	4254	51
-3367	10	MG	1088	51
-3368	500	MG	2436	44
-3369	14000	UI	5372	51
-3370	0.5	MG/ML	4753	176
-3371	1	MG/ML	578	194
-3372	0.5	MG/G	1598	145
-3373	50	MG/ML	2348	176
-3374	50000	UI	4583	35
-3375	8	UI	2595	176
-3376	1000	MG/G	350	181
-3377	SUS		5196	201
-3378	1.0	MG/ML	1565	176
-3379	10	MG	557	62
-3380	30	MG	4672	51
-3381	10	MG	1950	62
-3382	5	MG/ML	3960	201
-3383	(10.0 + 2.5 + 5.0)	MG	5078	51
-3384	6	MG/ML	2151	212
-3385	30	MG	4674	62
-3386	0.5	MG/G	4928	68
-3387	10	MG	1098	62
-3388	10	MG/ML	4	194
-3389	90	MG	5308	22
-3390	50	MG	1190	37
-3391	25	MG	256	51
-3392	50	MG	4883	62
-3393	1000	MG	2011	133
-3394	50	MG	1530	51
-3395	0.4	MG	5063	123
-3396	3700	MBQ	1690	176
-3397	1.0	MG/G	1548	68
-3398	50000	UI	4190	35
-3399	40	MG	4757	51
-3400	1	MG	2216	44
-3401	1	G	2477	142
-3402	3	MG/ML	2182	176
-3403	1	MG/G	5055	146
-3404	SUS		2317	201
-3405	0.05	ML/ML	1793	181
-3406	450	UI/400	5427	140
-3407	30	MG/ML	4491	181
-3408	5	MG	4631	62
-3409	400	MG	135	47
-3410	5000	UI	4472	35
-3411	1	G	4266	46
-3412	40	MG	3877	59
-3413	6	MG	5266	19
-3414	0.750	MG	1539	44
-3415	5	MCG/ML	4021	181
-3416	100	MG/ML	5115	204
-3417	100	MG	4234	51
-3418	10	MG	4415	37
-3419	4	MG	4569	62
-3420	30	MG/G	4967	69
-3421	750	MG	4810	51
-3422	10	MG/G	1206	69
-3423	10730	MBQ	2165	176
-3424	25	MG/ML	3615	176
-3425	2000	MG	4999	159
-3426	100	MG/ML	232	186
-3427	(50.0 + 50.0)	MG	90	37
-3428	125	MG/5	250	154
-3429	1.5	G	335	95
-3430	(99.65 + 2 + 3 + 1)	MEQ/L	1309	189
-3431	1	MG/G	1548	86
-3432	120	MG	2211	62
-3433	150	MG/ML	1419	201
-3434	25	MG	1640	51
-3435	250	MG	1985	50
-3436	8	MG	1223	15
-3437	20	MG	1154	58
-3438	5000	UI	3617	176
-3439	1	MG/ML	160	212
-3440	5	MG	4331	134
-3441	300	MG	779	51
-3442	20 %	SOL	3705	176
-3443	20	MG/ML	1300	179
-3444	3	MG	1784	51
-3445	75	MG	3803	176
-3446	20	MG/G	5316	68
-3447	(160.0+5.0)	MG	678	51
-3448	80	MG	427	51
-3449	20	MG/G	854	68
-3450	25	MG	4933	139
-3451	50	MG/ML	1589	181
-3452	0.250	MG	1539	62
-3453	20	MG/ML	5403	111
-3454	20	MG	1893	51
-3455	1	MG	873	62
-3456	2923	MBQ	2144	176
-3457	200	MCG/ML	327	176
-3458	500	MG	5542	51
-3459	6	MG/ML	3869	176
-3460	20	MG	289	62
-3461	0.16	MG/ML	708	212
-3462	100	MG	4570	37
-3463	100	MG	3859	58
-3464	25	MG	1011	62
-3465	200	MG/5ML	965	181
-3466	240	MG	829	18
-3467	100	MG	5559	51
-3468	50	MG	847	51
-3469	127	MG	830	51
-3470	80	MG	5229	51
-3471	50	MG/ML	3660	181
-3472	6	MG	5320	58
-3473	0.544	MG/ML	168	176
-3474	2.5	MG	1325	51
-3475	1	MG/G	93	81
-3476	0.64	MG/G	1595	147
-3477	80	MG	4563	51
-3478	15000	UI	5371	35
-3479	50	MG/ML	3587	204
-3480	LIMAO		2548	108
-3481	10	MG/ML	1455	194
-3482	1	MG	4418	142
-3483	2.5	MG	5549	51
-3484	0.4	MG/ML	106	181
-3485	0.10	ML/ML	778	181
-3486	50000	UI	5372	51
-3487	200	MG/ML	5370	181
-3488	10	MG/G	1045	86
-3489	100	MG	4593	51
-3490	0.4	MG	5167	51
-3491	50	MG	2557	62
-3492	70	MG	156	51
-3493	75	MG	1065	51
-3494	100	MG	4343	136
-3495	100	MG	2037	62
-3496	10	MG/ML	5512	212
-3497	20	MG	4433	51
-3498	1	G	888	133
-3499	3	MG	1613	51
-3500	500	MG	252	62
-3501	6.67	MG/ML	746	181
-3502	100	MCG/DOSE	1596	171
-3503	20	MG/ML	1682	176
-3504	8	MG	794	62
-3505	200	MG	127	102
-3506	40	MG/ML	3977	179
-3507	600	UI	2304	176
-3508	0.8	MG/ML	1091	212
-3509	5	MG	2263	62
-3510	50	MG	2104	62
-3511	15	MG	344	62
-3512	30	MG/5	224	212
-3513	20	MG/G	931	68
-3514	6	MG/ML	1083	212
-3515	20	MG/ML	930	181
-3516	20	MG	4461	131
-3517	8	MG	4246	51
-3518	(38.130 + 4.194 + 12.155 + 50)	MG/COM	1256	51
-3519	3	G	4460	140
-3520	300	MG	5227	59
-3521	100	MG	256	51
-3522	1	G	1193	129
-3523	CX		1682	62
-3524	400	MG	610	32
-3525	450	UI/	3948	176
-3526	10	MG/G	4700	147
-3527	(40 + 5.7)	MG/ML	245	160
-3528	30	MG/G	257	69
-3529	60	MG/ML	486	212
-3530	1000	UI	5548	140
-3531	50	MG/G	3601	86
-3532	0.5	MG/G	5217	147
-3533	100.000	UI/G	466	145
-3534	0.125	MG	4687	62
-3535	1	G	888	2
-3536	10	MG	4553	51
-3537	250	MG	4341	19
-3538	2000	UI	1435	35
-3539	500	MG	5169	51
-3540	20	MG	4628	140
-3541	50	MG	4156	19
-3542	75	MG	4004	51
-3543	30	MG/ML	306	181
-3544	2.5	MG	5259	62
-3545	60	MG	2474	51
-3546	3.125	MG	824	62
-3547	3	MG	5352	51
-3548	5	MG/ML	2050	181
-3549	6.67	MG/ML	2619	181
-3550	2.5	MG	3775	51
-3551	(100.0 + 25.0)	MG	325	51
-3552	250	MG	1626	176
-3553	600	MG	453	163
-3554	4.2	MG	1751	4
-3555	20	MG	3879	51
-3556	500	MG	179	139
-3557	0.24	MG/ML	5422	175
-3558	12.5	MG	4551	43
-3559	0.4	MG	4820	14
-3560	240	MG	1562	59
-3561	2.8	MG/ML	4028	181
-3562	0.5	MG	1015	62
-3563	0.03	MG	1935	51
-3564	175.5	MG/ML	4609	176
-3565	1	G	871	51
-3566	0.25	MCG	4527	32
-3567	6	MG	2419	62
-3568	2	MG	2053	51
-3569	20	MG/ML	788	185
-3570	1	MG/ML	4368	181
-3571	(42.50	MG/ML	3952	187
-3572	2	G	4846	129
-3573	(1 + 0.55 + 0.4 + 4 + 0.5)	MG/ML	1260	181
-3574	500	MG	1193	157
-3575	25	MG	9	62
-3576	10	MG/G	2582	68
-3577	6	MG/ML	3944	212
-3578	2000	UI	4387	134
-3579	100	MG	5495	13
-3580	2	MG/	1168	176
-3581	200	MG/ML	548	176
-3582	2000	UI	164	139
-3583	0.10	ML	1793	51
-3584	15	MG	4775	19
-3585	144	MG	4453	3
-3586	0.2	MG/ML	107	181
-3587	25	MG	4133	51
-3588	180	MG	4873	13
-3589	20	MG/G	481	147
-3590	SUS		587	201
-3591	(333.4 + 6.67)	MG/ML	1590	181
-3592	250	MG/G	339	127
-3593	40	MG/ML	2170	212
-3594	847	MBQ	2013	176
-3595	800	MCG	2052	48
-3596	30	MG/ML	2282	204
-3597	10.0	MG/ML	2255	176
-3598	50	MG/G	1780	68
-3599	100	MG/ML	723	176
-3600	18500	MBQ	2354	176
-3601	(25 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-3602	40	MG/ML	2351	176
-3603	5.0	MG/ML	1142	179
-3604	112	MCG	1952	62
-3605	10	MG/ML	3591	204
-3606	10	MG/G	1208	68
-3607	2	MG	131	62
-3608	50000	UI	211	51
-3609	50	MG	1874	13
-3610	0.05	MG/ML	4461	176
-3611	2.5	MG	1265	51
-3612	4	MG	3951	37
-3613	20	MG	4458	51
-3614	20	MG/G	799	67
-3615	20	MG/G	957	111
-3616	100	MG	1040	51
-3617	50	MG	2225	176
-3618	20	MG	1945	51
-3619	4	MG/ML	5408	181
-3620	(40.0 + 12.5 + 5.0)	MG	532	51
-3621	40	MG/ML	5444	181
-3622	2	MG/ML	2545	176
-3623	20	MG	4547	51
-3624	200	MG/ML	5112	181
-3625	10	MG	5561	51
-3626	11100	MBQ	1345	176
-3627	XPE		1403	212
-3628	2	MG/	4030	181
-3629	100	MG	5488	51
-3630	111	MBQ	3710	176
-3631	50.0	MG/	1073	212
-3632	2	MG	3623	114
-3633	5.0	MG/G	4750	147
-3634	(60.0 + 120.0)	MG	187	58
-3635	1	MG/G	5144	68
-3636	2	MG/ML	2486	181
-3637	(50 + 100)	MCG	1034	199
-3638	40	MG	588	135
-3639	4.0	MG/ML	1139	181
-3640	200	MG	798	62
-3641	(4 + 1 + 2 + 20 + 3)	MG/ML	4468	176
-3642	235	MG	2338	47
-3643	80	MG/G	1324	93
-3644	400	MG/	247	161
-3645	10	MG/ML	3921	67
-3646	20	MG	3742	51
-3647	16.2	MG/G	277	86
-3648	100	MG/ML+2	965	181
-3649	40	MG	4083	37
-3650	10	MG	1365	51
-3651	8.0	MG	3780	51
-3652	400	MG	4006	51
-3653	30	MG	1218	62
-3654	3.5	MG	660	139
-3655	3	MG/G	4973	149
-3656	2.5	MG	3900	31
-3657	100	MG	892	13
-3658	0.25	MG	4806	13
-3659	60	MG	2062	51
-3660	1.5	G	1270	152
-3661	10000	UI	78	51
-3662	400	MG/5G	4308	155
-3663	(80.0 + 12.5)	MG	4867	37
-3664	250	MG	1615	44
-3665	5	MG	1321	51
-3666	10	MG	1992	19
-3667	0.9	G	4612	176
-3668	10	MG/G	4028	68
-3669	90	MG/ML	5020	167
-3670	40	MG	3881	59
-3671	50	MG	2141	19
-3672	100	MG	1381	19
-3673	25	MG	1162	51
-3674	200	MG	45	37
-3675	2.5	MG	3900	62
-3676	20	MG/G	918	147
-3677	(100 + 25)	MG	398	51
-3678	15	MG	2182	62
-3679	5	MG/ML	720	212
-3680	500	MG	1566	19
-3681	200	MG	815	62
-3682	60	MG/0.6	1829	176
-3683	600	MG	4888	51
-3684	4.0	MG	1494	62
-3685	1.5	G	363	158
-3686	20	MG/ML	2284	204
-3687	7000	UI	1704	35
-3688	1.000	UI	1932	32
-3689	600	MG	737	51
-3690	250	MCG/DOSE	125	171
-3691	1.25	MG	643	51
-3692	1.00	MCG	4527	32
-3693	80	MG	1038	32
-3694	20	MG	4390	32
-3695	2.5	MG/ML	3657	176
-3696	30	MG	4966	95
-3697	3	MG	221	62
-3698	25	MG	802	37
-3699	3000	UI	164	139
-3700	12.5	MG/G	5060	69
-3701	100	MG/2ML	5016	176
-3702	KIT		2126	128
-3703	400 + 400	MG	4708	47
-3704	250	MG	1025	51
-3705	10	MG/ML	459	203
-3706	1	G	4898	62
-3707	3.5	MG/ML	592	179
-3708	600	MG	455	154
-3709	10	MG/ML	3721	203
-3710	40	MG	5231	51
-3711	3	MG/ML	4976	179
-3712	(4.878 + 4.719)	MG	4808	89
-3713	10	MG	5508	62
-3714	SOL		4408	181
-3715	50	MCG/ML	1995	176
-3716	25	MCG/ML	5201	201
-3717	5	MG/ML	1090	179
-3718	600.000	UI	544	131
-3719	1000	MG	3683	51
-3720	10	MG/ML	1168	176
-3721	100	MG	4161	62
-3722	5	MG	4017	51
-3723	10	MG	639	197
-3724	20	MG/G	286	69
-3725	12.5	MG	840	62
-3726	20	MG/G	1205	69
-3727	150	MG	3577	35
-3728	40	MG/ML	2041	181
-3729	40	MG	3879	59
-3730	80	MG	1000	51
-3731	4	G	251	163
-3732	(0.5+1+10+10)	MG/G	4035	68
-3733	250	MG	2260	19
-3734	20	MG	3992	13
-3735	300	MG	4229	51
-3736	250	UI	97	135
-3737	80	MG	2084	51
-3738	5	MG	1098	62
-3739	4	G	3988	135
-3740	0.5	MG/G	2605	68
-3741	25	MG/ML	4613	176
-3742	10	MG/ML	4347	194
-3743	4	MG	2606	139
-3744	0.2	MG	1392	62
-3745	600	MG	309	51
-3746	1	ML/ML	4520	105
-3747	400	MG	4667	51
-3748	POM		2367	146
-3749	7.5	MG/G	269	86
-3750	500	MG/ML	4467	176
-3751	5	MG	2600	2
-3752	(40 + 25)	MG	3745	51
-3753	2000	UI	5371	35
-3754	7.5	MG/ML	2465	181
-3755	750	MG/ML	4598	176
-3756	50	MG	1414	58
-3757	10	PCC	5468	194
-3758	100	MG/ML	4554	163
-3759	62.5+4.380+1.250+2.5	MG/G	1242	69
-3760	75	MG	4088	19
-3761	50	MG	1969	139
-3762	1250	MG	3816	51
-3763	30	MG	4176	51
-3764	50	MG	2257	62
-3765	15	MG	2010	51
-3766	7.5	MG	348	176
-3767	250	MG	2335	51
-3768	3	MG/ML	3718	179
-3769	100	MG	5288	51
-3770	1000	MG	959	133
-3771	25	MCG	4180	66
-3772	40	MG	4432	51
-3773	100.000	UI/ML	138	204
-3774	15	MG/G	17	68
-3775	600	MG	4480	51
-3776	20	MG/ML	3713	179
-3777	6000	UI	1873	176
-3778	(50 + 50 + 2.5)	MG/ML	1486	176
-3779	0.25	MG	895	37
-3780	16	UI	2595	176
-3781	100	MG	893	19
-3782	(160.00+12.50+10.00)	MG	1982	51
-3783	2	MG/ML	1630	176
-3784	10730	MBQ	2144	176
-3785	0.5	MG/ML	432	212
-3786	100	MG/ML	4459	167
-3787	2	MG	1134	62
-3788	(20.0 + 0.64 + 2.5)	MG	918	67
-3789	25	MG	291	62
-3790	1000	UI	1703	51
-3791	5000	MCG	1006	74
-3792	5.0	MG/ML	3658	176
-3793	250	MG	5159	142
-3794	4	MG	3974	47
-3795	10	MG	1322	51
-3796	5	MG	1383	51
-3797	400	MG/ML	4598	176
-3798	100	MG	1141	51
-3799	3.5	MG	658	135
-3800	50	MG	1811	58
-3801	20	MG	4293	51
-3802	0.04	MG/ML	5034	179
-3803	1	MG	1214	62
-3804	50	MG	1461	44
-3805	134	MG	2530	9
-3806	3000	UI	5548	140
-3807	500	MG	3662	51
-3808	25	MG	1616	62
-3809	1	MG/ML	1087	178
-3810	(22.70	MG/ML	3952	187
-3811	50	MG	1054	51
-3812	SOL		4187	181
-3813	680	MG/G	4003	163
-3814	20	MG	4297	62
-3815	27.0	G/1000	4208	176
-3816	480	MG	4125	51
-3817	300	MG	1748	51
-3818	10	MG	421	37
-3819	COM		522	51
-3820	450	MG	5210	51
-3821	500	MG	1985	50
-3822	10	MG	1682	197
-3823	10	MG	537	51
-3824	25	MG	329	51
-3825	160	MG/ML	1432	201
-3826	100	MG	1320	13
-3827	10	MG/ML	952	179
-3828	2000	UI/ML	1882	176
-3829	0.067	ML/ML	2530	167
-3830	2	MG	133	37
-3831	10	MG/ML	2351	176
-3832	0.02	G/G	2051	173
-3833	84	MG/ML	4594	186
-3834	250	MG	5576	40
-3835	5	MG	690	51
-3836	0.25	MG	209	62
-3837	5.29	G/L	4275	167
-3838	50	MG/ML	2005	176
-3839	20	MG	4950	51
-3840	2.50	UI	5190	201
-3841	40	MG	4560	51
-3842	10	MG/G	1765	181
-3843	250	MG	249	19
-3844	50	MG	4127	51
-3845	25	MG	4593	51
-3846	10	MG	4160	124
-3847	100	MG	2363	176
-3848	(0.50  + 2.15 + 2.15)	G/4.8	4707	127
-3849	0.35	MG/ML	4660	176
-3850	150	MG	5290	15
-3851	100.000	UI/G	1453	147
-3852	16	MG	1533	37
-3853	5	MG	1016	62
-3854	50	U	665	139
-3855	0.5	MG/ML	1316	176
-3856	5	MG	4069	51
-3857	100	MG/ML	2414	176
-3858	400	MG	4064	35
-3859	2.5	MG/ML	4626	181
-3860	6	MG	225	212
-3861	1500	UI	5548	140
-3862	50	MG	3665	154
-3863	250	MG	1513	62
-3864	(14.634+11.700)	MG	4808	19
-3865	1% + 2.2%	CREM	1439	68
-3866	150	MG	158	21
-3867	50	MG	5288	51
-3868	250	MG/ML	684	176
-3869	50	MCG/DOSE	2112	208
-3870	1.4	MG	5167	51
-3871	500	MG	5383	62
-3872	2	MG/ML	2008	176
-3873	100	MG	5256	51
-3874	(0.5 + 30)	MG/G	1598	147
-3875	50	MG	112	62
-3876	20	MG	4381	51
-3877	1	MG	209	37
-3878	20	MG	5136	51
-3879	5.0	MG/ML	1798	176
-3880	100	MG/ML	2004	176
-3881	100	MG	1380	37
-3882	75	MG	2173	62
-3883	20	MG	2488	37
-3884	50	MG	5015	19
-3885	40000	UI/ML	1881	140
-3886	5	MG	501	51
-3887	50000	UI	78	51
-3888	14000	UI	4471	51
-3889	13	GBQ	4244	176
-3890	80	MG	1577	19
-3891	100	MG/ML	4734	176
-3892	(125.0 + 50.0 + 300.0 + 30.0)	MG	4816	62
-3893	200	MG/ML	5368	176
-3894	50	MG	4877	51
-3895	(0.5 + 1.0 + 10.0 + 10.0)	MG/G	4222	68
-3896	10	MG	1969	139
-3897	0.25	MG/ML	417	176
-3898	10	MG/ML	716	212
-3899	1	G	4857	176
-3900	70	MG	656	51
-3901	(160.00+25.00+5.00)	MG	1982	51
-3902	20	MG	3747	51
-3903	1	MG/G	408	145
-3904	19	GBQ	4244	176
-3905	2.0	X10E13	5537	198
-3906	11.6	MG/G	1523	194
-3907	0.56	MG	132	13
-3908	2.0	MG	2204	176
-3909	50	MG	395	51
-3910	100	MG	5337	51
-3911	200	MG/	2268	140
-3912	10	MG	2267	51
-3913	0.5	MG	1715	32
-3914	9	MG/G	4504	89
-3915	30	MG/ML	1958	181
-3916	8.0	MG	1153	51
-3917	36	MG	3803	181
-3918	20	PCC	2149	176
-3919	30000	UI	4264	176
-3920	(10.0 + 10.0 + 50.0)	MG/G	2511	86
-3921	2.5	MG/ML	5143	181
-3922	(1.0 + 0.5)	G	254	129
-3923	(42.5+5.786+3.924+0.184+0.1017)	MG/ML	3952	187
-3924	100	MG	1541	13
-3925	50	MG/ML	5277	163
-3926	500	MG	1028	51
-3927	1000	MG	4535	51
-3928	125	MG	249	154
-3929	500	MG	5576	40
-3930	60	MG/ML	1723	204
-3931	20	MG/MG	3595	86
-3932	200	MCG/ML	4755	176
-3933	20	MG	4079	62
-3934	3.5	MG/ML	982	179
-3935	20	MG	4568	51
-3936	0.30	MG	5364	179
-3937	5.631	G	2207	98
-3938	300	MG	2614	51
-3939	(160.00+5.00)	MG	1578	51
-3940	150	MG/ML	970	176
-3941	900	MG	206	51
-3942	5	MG	1384	51
-3943	48	MU	2069	176
-3944	50	MG/ML	243	154
-3945	40	MG	2283	62
-3946	10	MG/ML	4348	194
-3947	100	MG	1209	62
-3948	3.54	MG/ML	1063	212
-3949	20	MG	1212	62
-3950	500	MG	5528	51
-3951	20	MG/ML	996	212
-3952	500	MG	1866	51
-3953	50	MG/ML	872	204
-3954	400	MG	4920	32
-3955	(300.0 + 125.0 + 50.0 + 30.0)	MG	2108	37
-3956	50	MG/	5014	176
-3957	500	MG	3890	62
-3958	6	MG/ML	4835	176
-3959	100	MG	8	62
-3960	1.0	MG/G	5214	68
-3961	500	MG/ML	2613	176
-3962	1850	MBQ	2492	196
-3963	200	MG	2234	62
-3964	30	MG	784	51
-3965	125	MG	1614	22
-3966	10	MG/	1007	176
-3967	500	MG	253	131
-3968	20	MG/ML	1857	163
-3969	10	MG/ML	1206	68
-3970	400	MG	354	51
-3971	SOL		4602	176
-3972	5	MG	42	62
-3973	1000	UI	207	134
-3974	75	MG	4076	19
-3975	0.64	MG/ML	1452	194
-3976	1000	UI	1881	139
-3977	400	MG	4516	58
-3978	500	MG	4828	51
-3979	24	MG	574	62
-3980	9.6	MUI	569	140
-3981	20	MG	5259	62
-3982	50	MG/ML	870	163
-3983	100.000	UI	1990	35
-3984	750	MG	3884	51
-3985	5	MG/ML	1107	176
-3986	500	MG	3930	139
-3987	15	MG	3637	176
-3988	500	MG	1025	136
-3989	0.75	MG	907	62
-3990	14	MG	4896	51
-3991	200	MG	2118	141
-3992	(120+20)	COM	4511	51
-3993	10	MG	1124	19
-3994	40	MG	1036	176
-3995	0.5%	SOL	205	179
-3996	25	MG/ML	1658	167
-3997	175.5	MG/ML	1078	176
-3998	50	MG	1706	51
-3999	70	MG	5303	13
-4000	20	MG	3870	59
-4001	100	MG	1830	47
-4002	(22.73	MG/ML+0.2573	3952	187
-4003	200	MG	970	51
-4004	20	MG/G	5468	86
-4005	70	MG	156	37
-4006	0.8	MG/ML	702	212
-4007	200	MG/ML	3160	176
-4008	1.500.000	UI	499	135
-4009	450	UI/0.75	2443	134
-4010	498.72	MG/ML	5132	176
-4011	500	MG/ML	419	181
-4012	750	MG	1681	51
-4013	20	MG/G	922	68
-4014	80	MG	2353	13
-4015	100000	UI	1703	51
-4016	4070	MBQ	1345	176
-4017	20	MG	921	68
-4018	4000	UI	211	51
-4019	2	MG	4367	51
-4020	20	MG/ML	1131	176
-4021	5	MG	1039	179
-4022	10	MG	5514	51
-4023	5	MG/G	4987	147
-4024	PO		5192	134
-4025	250	MG/	861	204
-4026	300	MG	54	37
-4027	400000	U	3932	131
-4028	40	MG	3875	139
-4029	150	MG	4339	44
-4030	40	MG/G	4588	68
-4031	150	MG	843	51
-4032	250	UI	94	140
-4033	370	MBQ	2402	176
-4034	30	MG/ML	689	167
-4035	100	MG/ML	4783	176
-4036	10	MG	3996	62
-4037	8	MG	1533	62
-4038	40	MG/G	1020	67
-4039	100	MCG/DOSE	1032	130
-4040	98	PCC	3790	163
-4041	11.6	MG/G	95	88
-4042	750	MG	891	129
-4043	2.000	UI/ML	2512	176
-4044	10	MG	1945	51
-4045	100	MCG/ML	1108	184
-4046	150	MG	173	44
-4047	500	MG	934	62
-4048	(200.0 + 300.0)	MG	607	51
-4049	2	MG/ML	1980	181
-4050	(60 + 60 +50 +30)	MG/ML	4578	79
-4051	50	MG	5337	51
-4052	2000	UI	1873	176
-4053	3.125	MG	839	37
-4054	100	MG	2141	19
-4055	(37.5 +325.0)	MG	3679	51
-4056	300	MG	4344	13
-4057	100	MG	4231	51
-4058	200	MG	3904	19
-4059	12.5	MG	2259	62
-4060	0.08	ML/ML	5510	180
-4061	2.3	MG	3593	13
-4062	KIT		4968	194
-4063	2	G	4266	46
-4064	70	MG	1833	62
-4065	150	MG	1319	22
-4066	1500	UI	1997	134
-4067	100	MG	988	62
-4068	50	MG	367	13
-4069	4	MG/ML	2567	176
-4070	100	MG	1190	62
-4071	600	MG	386	163
-4072	185	MBQ	805	9
-4073	24	MG	706	15
-4074	100	MG	4778	139
-4075	100	MG	382	62
-4076	3	MG/ML	4973	203
-4077	35	MG	263	62
-4078	5.0	MG/ML	581	179
-4079	25.000	U.I./G	3597	69
-4080	10.0	MG	2226	51
-4081	50	MCG/ML	4731	176
-4082	800	MG	3631	51
-4083	20	MG	3671	13
-4084	25	MG	2751	62
-4085	3.0	MG	4394	44
-4086	75	MG/ML	4545	80
-4087	20	MG	3752	16
-4088	40	MG	1911	59
-4089	100	MCG	2208	6
-4090	180	MG	4876	13
-4091	400	MG	2339	47
-4092	5	MG	1819	62
-4093	50	MG/ML	3959	111
-4094	100	MG	2467	66
-4095	(2 +1)	MG	860	51
-4096	5	MG/ML	5091	179
-4097	10	MG/ML	2223	176
-4098	2 %	CREM	836	68
-4099	32.65	MG	1258	51
-4100	500.000	UI	499	135
-4101	1350	UFP	5206	140
-4102	100	MCG/ML	4077	176
-4103	3	MG/ML	2205	181
-4104	450	MG	820	44
-4105	50	MG	4516	58
-4106	20	MG	4380	51
-4107	35	MG	4363	51
-4108	2	MG	4251	74
-4109	500	MG	1423	51
-4110	10000	UI	1704	35
-4111	10	MG	4299	71
-4112	80	MG/G	350	94
-4113	1.200.000	UI	544	131
-4114	1000	MG	4763	46
-4115	8	MG	1153	48
-4116	20	MG/G	1373	86
-4117	30	MG/ML	5327	181
-4118	25	MG	1149	13
-4119	100	MG	961	62
-4120	2000	UI	549	135
-4121	500	UI	94	140
-4122	(35.6 + 37.0 + 46.0)	MG/G	2328	127
-4123	200	MG/ML	4861	176
-4124	SOL		3920	181
-4125	250	MG	5398	35
-4126	0.5	MG	5021	62
-4127	2	G	2477	142
-4128	50000	UI	1702	35
-4129	35	MG	1901	58
-4130	5	MG	4910	62
-4131	3	MG	1785	51
-4132	300	MG	4818	62
-4133	10	MG/G	1529	86
-4134	1	G	381	46
-4135	70	MG/ML	3911	176
-4136	10	MG/G	799	67
-4137	28	MG	5552	25
-4138	200	G/L	137	176
-4139	4	MG	831	58
-4140	0.9	MG/ML	5165	176
-4141	0.1	MG/ML	2390	179
-4142	(20.00+12.50)	MG	3739	51
-4143	50	MG/ML	871	160
-4144	50	MG	280	51
-4145	100	MG	778	51
-4146	2.0	MG/ML	2252	194
-4147	25	MG	1169	51
-4148	(40 + 12.5)	MG	3736	51
-4149	500	MG	3910	51
-4150	30	MG/ML	4994	176
-4151	5	MG	4565	51
-4152	80	MG/ML	4805	176
-4153	2	PCC	5468	176
-4154	20	MG/G	3619	114
-4155	50	MG	4530	32
-4156	5	MG	4404	51
-4157	5	MG	557	62
-4158	1000	UI	78	32
-4159	500	UI	516	140
-4160	375	MG	861	53
-4161	500	MG	4019	139
-4162	20	MG/ML	2136	154
-4163	5	MG	1088	51
-4164	100	MG/ML	865	154
-4165	40	MG/G	1020	86
-4166	10	MG	710	19
-4167	600	MG	2149	46
-4168	500	UI	3706	140
-4169	0.4	MG	5176	58
-4170	25	MG	2189	62
-4171	1.0	MG	4302	62
-4172	100	UI/ML	2531	186
-4173	1	G	1975	139
-4174	250	MG	2334	51
-4175	5	MG	5564	37
-4176	10	MG	5257	51
-4177	150	MG	800	51
-4178	2	MG	2437	62
-4179	800	MG	4739	62
-4180	10	MG/G	33	68
-4181	21	MG	3594	4
-4182	300	MG	1664	62
-4183	20	MG	4242	59
-4184	5.83	MG/ML	4447	176
-4185	2	MG	1057	62
-4186	500	MG/ML	2621	176
-4187	3	MG	1879	51
-4188	10	MG/ML	1934	176
-4189	37.5	MG	1195	62
-4190	500	MG	4956	51
-4191	50	MG/ML	5016	176
-4192	15	MG	4380	51
-4193	150	MG	1211	51
-4194	56.25	MG	2148	19
-4195	50	MCG/ML	4499	176
-4196	1	MG	4367	51
-4197	1	MG	319	62
-4198	400.000	U/ML	535	201
-4199	200	MG	4270	19
-4200	200	MG/ML	855	181
-4201	71.5	MG/ML	781	167
-4202	25	MG	5474	62
-4203	2.5	MG	3724	62
-4204	6	MG	1407	37
-4205	0.1	MG/ML	1493	75
-4206	100	MG	384	51
-4207	200	MG/ML	609	46
-4208	500.000	UI	4751	135
-4209	100	MG	2124	19
-4210	25	MG	336	62
-4211	3	PCC	1005	176
-4212	40	MG/G	1030	86
-4213	44.3	MG	4041	51
-4214	100	UI/ML	2387	176
-4215	32	MG	793	62
-4216	50	MG	4719	44
-4217	0.5	MMOL/ML	1689	176
-4218	100	MG	4685	51
-4219	(3000 + 800)	UI/ML	5362	181
-4220	10	MG/ML	4345	194
-4221	10	MG	4747	62
-4222	(100.0 + 25.0)	MG	396	62
-4223	30	MG/ML	4995	176
-4224	0.25	MG/ML	1144	179
-4225	20	MG/G	915	68
-4226	50	MG/ML	200	193
-4227	10	MG/ML	4475	204
-4228	PÓ		841	164
-4229	200	MG	1714	74
-4230	0.0325	ML/ML	2460	167
-4231	SOL		4611	176
-4232	500	MG/ML	3660	176
-4233	SOL		230	201
-4234	10	MCG	5187	140
-4235	300	MG	2087	19
-4236	200	MG	5412	135
-4237	125	MG/ML	2327	204
-4238	(20.0 + 0.64)	MG/G	795	147
-4239	50	MG/ML	2485	176
-4240	40	MG/G	4622	86
-4241	75	MG	1064	51
-4242	50	MG	808	62
-4243	200	U/ML	5046	176
-4244	10	MG	3761	51
-4245	300	MG	1853	142
-4246	37.5	MG	1195	15
-4247	2	MG	103	62
-4248	0.20	MG/ML	1417	166
-4249	70	MG	154	62
-4250	50	MG	5222	51
-4251	(14.91 + 23.40 + 19.61 + 198.28)	MG/ML	2548	2
-4252	80	MG/ML	1914	80
-4253	20	MG	4188	59
-4254	20	MG	152	62
-4255	10	MG/ML	5156	176
-4256	500	MG	1027	140
-4257	0.75	MG	1494	62
-4258	0.05	MG/ML	3711	176
-4259	7.5	MG	5571	51
-4260	50	MG	4719	58
-4261	1	G	1096	156
-4262	20	MG/ML	2349	176
-4263	100	MG	4694	35
-4264	4	MG	1302	62
-4265	50	MG/ML	5029	176
-4266	150	MG	1647	51
-4267	20	MG	918	68
-4268	SOL		2341	7
-4269	5	MG/ML	2389	179
-4270	500	MG/ML	1632	175
-4271	500	MG	911	131
-4272	20	MG	1322	51
-4273	75	MG	5463	176
-4274	COM		311	62
-4275	25	MG	4414	43
-4276	2.0	MG	4368	48
-4277	1	MG	5280	142
-4278	1000	MG	1937	51
-4279	10	MG	4782	37
-4280	(3+1)	MG/G	1349	149
-4281	6	MG	693	37
-4282	150	MG	886	44
-4283	500	MG	1837	62
-4284	POM		2341	147
-4285	0.25%	SOL	738	176
-4286	75	MG	1663	197
-4287	25	MG	290	62
-4288	20	MG/G	917	68
-4289	250	MG	1242	74
-4290	550	MG	2095	51
-4291	100	MG	4875	13
-4292	15	MG/ML	2101	204
-4293	2.0	MG	4058	62
-4294	200	MG	5058	19
-4295	5	MG	2519	48
-4296	5	MG	1459	51
-4297	10000	UI	1359	35
-4298	150	MG	1163	51
-4299	30	MG	344	37
-4300	60	MG	2513	176
-4301	300	MG	1163	51
-4302	100	MG	5258	62
-4303	40	MG	5257	51
-4304	1	MG	331	1
-4305	500	MG	456	135
-4306	2.5	MG	2489	51
-4307	500	MG	1589	62
-4308	500	MG	4473	185
-4309	(22.73+5.7860+3.924+0.2573+0.1017)	MG/ML	3952	187
-4310	50	MG/ML	2415	176
-4311	10	MG	1046	51
-4312	1	MG/ML	4323	212
-4313	55627	MBQ	2013	176
-4314	0.8	MG/ML	1214	154
-4315	01	MG	875	62
-4316	50	MG	1475	58
-4317	500	MG	5092	51
-4318	600	MG	4202	98
-4319	10.0	MG/ML	1637	176
-4320	7	MG/ML	2499	181
-4321	30	MG	344	62
-4322	100	MG	5544	19
-4323	1	DOSE	5180	201
-4324	50	MG/ML	1994	176
-4325	0.075	MG	1564	51
-4326	80	MG/ML	243	163
-4327	4	MG	2419	62
-4328	500	MG	3935	44
-4329	0.5	MG/G	5048	67
-4330	20	MG/ML	1367	167
-4331	980	MG	2308	32
-4332	7.5	MG	1751	4
-4333	50000	UI	5382	51
-4334	CX		2321	122
-4335	500	MG	252	19
-4336	15	MG	5158	51
-4337	200	U	665	139
-4338	20	MG/G	854	147
-4339	5	MG	556	62
-4340	150	MG	5492	135
-4341	1	G	5557	135
-4342	50	MG	392	62
-4343	500	MG	464	51
-4344	20	MG	1950	62
-4345	200	MG/ML	2309	212
-4346	(50.0 + 500.0)	MG	3586	58
-4347	SUS		5181	201
-4348	50	MG/ML	233	176
-4349	(40 + 12.5)	MG	3745	51
-4350	10	MG	1283	62
-4351	500	MG	1922	62
-4352	10	MG	105	62
-4353	20	MG/ML	2288	181
-4354	0.64	MG/G+	4586	147
-4355	70	MG	3819	62
-4356	37.5	MG	5292	15
-4357	4	MG	4277	62
-4358	400	MG	4739	62
-4359	420	MG	3955	134
-4360	2	G	3988	131
-4361	ADU		1839	201
-4362	500	MG	4484	51
-4363	20	MG/ML	1872	176
-4364	10	MG/ML	1287	176
-4365	200	MG/ML	5106	181
-4366	250	MG	5516	51
-4367	75	MG	4090	19
-4368	1000	MG	4485	62
-4369	100	MG	912	102
-4370	100	MG	274	135
-4371	600	MG	2097	51
-4372	240	MG	829	22
-4373	40	MG	2588	51
-4374	50	MG	185	136
-4375	40	MG	3732	51
-4376	500	MG	4728	131
-4377	7104	MBQ	2144	176
-4378	45	MG	4691	62
-4379	300	MG	5426	58
-4380	50	MG/ML	2163	176
-4381	CT		2572	62
-4382	5	MG/ML	1718	179
-4383	75	MG	2776	32
-4384	SUS		5269	201
-4385	0.75%	SOL	738	176
-4386	35	MG+300MG+50MG/ML	1683	181
-4387	300	MG	175	62
-4388	400	MG	4310	152
-4389	10	MG	409	51
-4390	50	MG	4330	62
-4391	5000	MCG	582	51
-4392	1%	PO	799	126
-4393	5	MG/ML	710	176
-4394	20	MG	1157	51
-4395	250	MG	25	37
-4396	75	MG	2147	22
-4397	50	MG	1117	135
-4398	40	MG	5460	176
-4399	40	MG	3747	51
-4400	100	MG	4720	58
-4401	1000	UI	4264	140
-4402	100	MG	270	44
-4403	60	MG	4532	162
-4404	2000	UI	4472	35
-4405	1.5	G	364	95
-4406	182.93	MG	4375	13
-4407	10	MG/G	2555	145
-4408	0.25	MG	895	62
-4409	0.4	MG/ML	4028	181
-4410	40	MG	3878	59
-4411	100	MG/ML	5309	176
-4412	20	MG	5158	51
-4413	(2.05 + 0.98 + 22.75 + 2.16)	MG/ML	2549	181
-4414	2	MG	576	62
-4415	500	MG	1001	51
-4416	75	MG	612	58
-4417	10	MG/ML	5345	176
-4418	10	MG/G	4700	68
-4419	10	MG/ML	16	212
-4420	1.093	MG/ML	1395	179
-4421	2	MG/ML	4399	176
-4422	6	KIT	2126	128
-4423	100	MG	3651	51
-4424	20	MG	2589	51
-4425	0.5	MG/G	5215	147
-4426	50	MCG/ML	1751	176
-4427	380	MG	1918	19
-4428	1000	UI/ML	4656	176
-4429	900	MG	4888	51
-4430	20	MG	4405	51
-4431	40	MG	529	51
-4432	200	MG	4689	51
-4433	7.5	MG/ML	721	169
-4434	123	MG	2297	13
-4435	10	MG/ML	34	203
-4436	25	MG	1069	62
-4437	5.0	MG/ML	5013	176
-4438	0.25	MG/ML	418	190
-4439	250	UI	1997	134
-4440	1	MG/ML	4775	158
-4441	500	MG	1137	62
-4442	50	MG	5108	139
-4443	180	MG	829	22
-4444	35.6	MG	2338	204
-4445	7000	UI	1719	32
-4446	50	MG	817	62
-4447	SOL		5199	181
-4448	1.0	MG/ML	710	181
-4449	40	MG	3754	22
-4450	Referenciada		2516	51
-4451	150	MG	4090	19
-4452	700	G	594	164
-4453	4000	UI	78	35
-4454	50	MG	1477	58
-4455	0.4	MG	1175	14
-4456	50	MG	4723	51
-4457	600	MG	452	154
-4458	(138+2.0+3.0+1.0+104.56+4.0+35.44+1)	MEQ/L	1311	189
-4459	5	MG	1098	51
-4460	2	PCC	481	81
-4461	6.67	MG/ML	755	167
-4462	12.5	MG	3915	54
-4463	25	MG	612	2
-4464	6	MG/ML	4841	185
-4465	50	MG	1521	51
-4466	7	MG	3916	19
-4467	25	MG	5009	51
-4468	(160+60)	MG/ML	1834	192
-4469	3	MG/ML	4974	179
-4470	200	MG	4863	140
-4471	200	MG	4859	62
-4472	5000	UI	1758	35
-4473	25	MG	1509	62
-4474	(1000 + 200)	MG	1027	139
-4475	100	MG	4724	131
-4476	500	MG	3807	51
-4477	20	MG/ML	4791	185
-4478	0.64	MG/ML	1602	208
-4479	25	MG/ML	440	163
-4480	25	MG	3585	51
-4481	12.5	MG	4770	13
-4482	5	MG/ML	70	179
-4483	(50.0 + 9.0)	MG/ML	2481	176
-4484	0.5	MG/G+1.0MG/G+10	4221	68
-4485	0.25	MG	4337	51
-4486	50	MG	1287	33
-4487	350	MG/G	2109	68
-4488	120	MG	2228	16
-4489	10	MG	690	51
-4490	1	MG/G	1488	68
-4491	20	MG/ML	928	166
-4492	10 000	UI/ML	178	194
-4493	20	MG	4549	135
-4494	250	MG	4912	133
-4495	0.88	G/ML	694	204
-4496	2.5	MG	2515	51
-4497	40	MG	4321	59
-4498	500	MG	827	136
-4499	20	MG/ML	5097	179
-4500	20	MG	1159	51
-4501	80.0	MG/G	4589	67
-4502	50	MG/G	4938	165
-4503	200	MG/ML	5378	176
-4504	500	MG	1211	51
-4505	60	MG	1512	44
-4506	5000	UI/G	4070	147
-4507	(10 + 500)	MG	5459	58
-4508	40	MG	3754	19
-4509	3.00	MG	1721	51
-4510	0.5	MG	897	62
-4511	80	MG/ML	1405	176
-4512	16	MG	2330	15
-4513	50	MG/G	304	67
-4514	200	MG	1085	37
-4515	15	MG	2147	102
-4516	37.5	MG	5291	44
-4517	1	MG/ML	1676	176
-4518	94	MG	278	51
-4519	60	MG	1118	16
-4520	(150.00+300.00)	MG	634	51
-4521	5	MG	4458	51
-4522	2220	MBQ	4456	176
-4523	20	MG	1449	32
-4524	15	MG	5418	51
-4525	1	G	5360	152
-4526	200	MG	479	139
-4527	10	MG/ML	1499	181
-4528	10	MG	5401	51
-4529	500	MG	4490	62
-4530	15	MG	5571	51
-4531	50	MG	1663	74
-4532	1500	MG	386	163
-4533	20	MG	4087	37
-4534	5	MG	5151	37
-4535	40	MG	3878	157
-4536	(500 + 100)	MG	1027	156
-4537	5000	UI/ML	2523	176
-4538	10	MG/ML	4215	204
-4539	40	MG	409	51
-4540	600	MG	3966	176
-4541	0.5	MG/G	1470	67
-4542	10	MG/G	1532	86
-4543	900	MG	1580	51
-4544	1	G	880	133
-4545	COM		2021	51
-4546	250	MG	5064	51
-4547	40	MCG	1254	201
-4548	10	MG	2584	62
-4549	100	MG/ML	1080	176
-4550	30	MG	4210	19
-4551	16.00	MG/ML	2212	212
-4552	FA		5192	134
-4553	320	MG	5233	51
-4554	2	MG/ML	3903	201
-4555	50	MG/ML	3984	111
-4556	35	MG	4362	51
-4557	20	MG	1124	19
-4558	125	MG/ML	4757	181
-4559	400	MG	1939	51
-4560	100	MG/ML	5128	185
-4561	4.000	UI	4264	176
-4562	1.0	MG/G	4186	147
-4563	50	MG/ML	4476	200
-4564	20	PCC	1581	176
-4565	3	MG/ML	1218	181
-4566	SOL		4657	176
-4567	80	MG/ML	4613	176
-4568	120	MG	1562	52
-4569	20	MG	980	51
-4570	25	MG	146	62
-4571	200	MG	332	74
-4572	300	MG	321	51
-4573	10	MG	2519	51
-4574	375	MG/5ML	861	204
-4575	108	MG	1853	176
-4576	4	MG/ML	5308	181
-4577	4	MG	4574	51
-4578	4	MG	4050	13
-4579	2	MG	2216	62
-4580	0.25	MG	1436	122
-4581	200	MG	4891	23
-4582	900	MG	1570	51
-4583	1.5	G	4744	158
-4584	60	MG/ML	5067	204
-4585	200	MG	4237	58
-4586	600000	UI	2258	133
-4587	0.750	MG	4228	44
-4588	15	MG	638	37
-4589	10	MG/ML	4295	139
-4590	500	MG	5527	51
-4591	250	MG	2091	51
-4592	800	MG	4111	51
-4593	20	MG/G	1447	147
-4594	65	MG	13	152
-4595	50	MG	2224	176
-4596	5	MG/ML	2510	176
-4597	5	MG	1283	62
-4598	500	MG	1052	173
-4599	10	MG/ML	4592	188
-4600	(80.0 + 25.0)	MG	4870	37
-4601	1	G	2066	135
-4602	500	MG	364	32
-4603	100	MG/ML	4887	181
-4604	50	MG/ML	623	176
-4605	20	MG/ML	3619	166
-4606	105	MG	2513	176
-4607	0.2	G/G	481	81
-4608	40	MG/ML	135	204
-4609	20	MG	4470	62
-4610	140	MG/ML	4071	204
-4611	900	MG	386	163
-4612	10	MG	1400	51
-4613	105	MG	4454	4
-4614	20	MG	3879	59
-4615	50	MG	5350	51
-4616	10	MG	4298	51
-4617	500	MG	1732	51
-4618	50	MG	5478	176
-4619	1	G	4764	46
-4620	20	MG	2215	62
-4621	400	MG	1499	51
-4622	3	MG/ML	962	179
-4623	50	MG	5221	51
-4624	10	MG/G	1207	68
-4625	600	MG	486	51
-4626	0.50	MG/G	4219	68
-4627	1000	MG	1402	62
-4628	10	MG/G	1442	68
-4629	160	MG	5231	51
-4630	300	MG	4817	62
-4631	5.5	MG/CM2	4793	2
-4632	80	MG	5233	51
-4633	50	MG	398	62
-4634	50	MG/G	3591	95
-4635	0.4	MG	4813	32
-4636	0.375	MG	3993	44
-4637	5	MG	2489	51
-4638	500	UI	208	135
-4639	100	MG/ML	4311	204
-4640	4000	UI/ML	164	176
-4641	3	MG/ML	301	179
-4642	120	MG/ML	2397	82
-4643	125	MG	3939	51
-4644	10	MG/G	4127	86
-4645	10	MG	5434	51
-4646	100	MCG/DOSE	4201	130
-4647	500	MG	3884	51
-4648	SOL		3905	181
-4649	60	MG	3872	19
-4650	44.94	MG	612	181
-4651	140	MG	1727	19
-4652	191	MG/ML	4595	176
-4653	(5.0 + 1.25 + 5.0)	MG	5078	51
-4654	50	MG	791	136
-4655	75	MG	5405	58
-4656	222	MBQ	2299	176
-4657	200	U	621	139
-4658	120	MG	829	22
-4659	0.25	MG/ML	165	170
-4660	300	MG	2516	58
-4661	0.6	G/G	2527	98
-4662	200	MCG/DOSE	1596	171
-4663	100	MG/	3884	204
-4664	(33.0 + 22.0 + 22.0 + 5.5)	MG/ML	3931	167
-4665	500	MG	1177	19
-4666	25	MG	4231	51
-4667	20	MG	2528	176
-4668	10	MG	4434	51
-4669	(1 + 0.5)	G	5502	159
-4670	6	CH	2194	62
-4671	240	MG	1562	51
-4672	0.25	MG/G	5357	86
-4673	80	MG	4566	51
-4674	3	MG/ML	1709	176
-4675	100	MG	2028	51
-4676	2.5	MG	5504	51
-4677	300	MG	2085	51
-4678	10	MG	2196	51
-4679	125	MG	4726	156
-4680	100	MG	5323	51
-4681	35	MG	5264	58
-4682	25	MG	1105	51
-4683	5	MG/ML	707	181
-4684	100	MG/ML	4733	176
-4685	0.15	MG/ML	1234	179
-4686	500	MG	163	51
-4687	1	G	4828	46
-4688	0.5	MG/G	1471	68
-4689	11.6	MG/G	614	173
-4690	200	MG	2097	51
-4691	500	MG/ML	2409	176
-4692	200	MG	589	51
-4693	200	MG/ML	1662	181
-4694	5	MG	3900	31
-4695	10	MG	1173	19
-4696	1	G	262	37
-4697	7.0	MG/ML	2504	212
-4698	2	MG	194	37
-4699	PO		2548	154
-4700	10	MG	2010	51
-4701	50	MCG/DOSE	3756	202
-4702	25	MG/ML	2160	176
-4703	150	MG	2031	44
-4704	750	MG	5106	62
-4705	100	MG	4451	62
-4706	(100 + 20)	MG	3618	37
-4707	150	MG	4411	13
-4708	150	MG	902	51
-4709	125	MG/5	3715	163
-4710	100	MG	1476	44
-4711	667	MG/ML	1745	212
-4712	SOL		3694	176
-4713	300	MG	5094	181
-4714	100	MG/ML	5360	181
-4715	15	MG/G	18	68
-4716	16	MG	389	63
-4717	100	MG	2036	62
-4718	SOL		4601	176
-4719	10	MG	3724	51
-4720	0.05	MG/ML	3860	176
-4721	100.000	UI/G	467	147
-4722	15000	UI	3722	35
-4723	50	MG	4351	51
-4724	50	MG/ML	4766	176
-4725	10.0	MG	4542	203
-4726	10000	UI	4264	140
-4727	500	MG	1662	62
-4728	120	MG/ML	2398	192
-4729	206	MG/ML	1858	181
-4730	40	MG	4566	51
-4731	SAB		3921	165
-4732	10	MG	1806	62
-4733	100	MG	1532	58
-4734	1	G	1665	46
-4735	10	MG/ML	4852	176
-4736	100	MG	2044	62
-4737	10	MG	3795	13
-4738	1	G/G	1075	152
-4739	30	MG/G+20MG/G	285	69
-4740	3	MG	4198	51
-4741	40	MG	4087	51
-4742	900	MG	5150	154
-4743	40	MG	3738	51
-4744	200	MG	5478	176
-4745	850	MG	1137	37
-4746	50	MG	4761	51
-4747	40	MG	4743	173
-4748	0.075	MG	4425	51
-4749	50	MG	1476	44
-4750	300	MG	143	19
-4751	40	MG	4563	62
-4752	20	MG/ML	3619	114
-4753	300	MG	486	51
-4754	(0.15 + 0.03)	MG	3622	37
-4755	50	MG	4090	13
-4756	500	MG	1270	19
-4757	27.0	G	782	160
-4758	200	MG	143	62
-4759	1.5	MG/ML	2111	212
-4760	400	MG	304	62
-4761	100	MG	4156	19
-4762	100	MG	2098	51
-4763	50	MG	66	134
-4764	2	MG	4198	51
-4765	9.0	MG/ML	4356	178
-4766	5	MG/ML	3675	176
-4767	15	MG	4382	51
-4768	0.4	MG/ML	98	181
-4769	5.0	MG	315	51
-4770	850	MG	2416	51
-4771	CAP		1379	35
-4772	1	MG/G	5213	68
-4773	200	MG	234	62
-4774	(6.0 + 5.0 + 2.0 +0.015 + 15.0)	MG	726	74
-4775	10	MG	3725	37
-4776	80	MG/ML	468	204
-4777	10	MCG	1839	201
-4778	200	MG	4862	139
-4779	80	MG	1562	51
-4780	10	MG	3650	62
-4781	50	MG/G	5468	151
-4782	714	MG	1836	167
-4783	100	MG	513	136
-4784	100	MG	4871	37
-4785	5	MG/ML	5151	176
-4786	5550	MBQ	2492	196
-4787	50	MG	284	137
-4788	20	MG/ML	2348	176
-4789	500	MG	5056	156
-4790	0.5	MG	2216	62
-4791	300	MCG	3762	25
-4792	200	MG	4625	38
-4793	25	MG	5157	74
-4794	50	MG/G	3925	147
-4795	320	MG	1569	51
-4796	300	UI	4206	176
-4797	90	MG	4193	22
-4798	175	MG/ML	1747	176
-4799	100	MG	328	51
-4800	0.75	MG	1496	62
-4801	160	MG	1174	62
-4802	5.000	UI	2572	147
-4803	(60 + 60 + 50 + 30)	MG/ML	4578	79
-4804	140	MG	4685	51
-4805	250	MG/ML	2773	176
-4806	500	MG	243	13
-4807	0.2	MG/ML	4461	176
-4808	125	MG	5024	99
-4809	80	MG	2368	51
-4810	40	MG	3878	51
-4811	12.5	MG	612	2
-4812	18.05	MG/ML	830	204
-4813	8	MG	793	37
-4814	(160 + 60)	MG/ML	3968	82
-4815	15	MG	2497	62
-4816	20	MG	4087	51
-4817	1	G	1665	62
-4818	500	MG	5236	51
-4819	0.2	G/G	481	68
-4820	5	MCG/ML	4731	176
-4821	7104	MBQ	2165	176
-4822	50	MG/ML	262	181
-4823	250	MG	1615	51
-4824	2.5	MG	3900	34
-4825	10	MG/ML	1830	212
-4826	20	MG	1896	48
-4827	20	MG	1194	51
-4828	7000	UI	4472	35
-4829	48	MG	567	44
-4830	100	MG/ML	4732	176
-4831	10	MG/ML	416	179
-4832	100	MG	28	62
-4833	7.5	MG	2147	176
-4834	7.5	MG/ML	1934	181
-4835	14	MG/ML	1856	181
-4836	2590	MBQ	2402	176
-4837	400	MG	2453	19
-4838	1	MG/ML	1140	176
-4839	150	MG	2434	13
-4840	3	MG/ML	4492	212
-4841	100	MG/ML	4036	163
-4842	40	MG	3870	135
-4843	5	MG/ML	1979	204
-4844	10	MG	4466	62
-4845	200	MG/ML	3891	167
-4846	800	MG	4519	51
-4847	60	MG	1350	24
-4848	0.5	MG/ML	417	176
-4849	3700	MBQ	1345	176
-4850	(500+125)	MG	245	51
-4851	10	MG	4776	176
-4852	1	MG/ML	380	181
-4853	50	MG	1790	54
-4854	(10 + 50 + 100)	MG/ML	5	181
-4855	50	MG	5489	51
-4856	5.0	MG/ML	497	201
-4857	500	UI	207	134
-4858	50	MG	1563	62
-4859	200	MG	4236	51
-4860	50	MG/ML	5243	204
-4861	30	MG	1118	31
-4862	40	MG/ML	136	204
-4863	5	MG/ML	4954	86
-4864	132	MG	1830	51
-4865	100	MG/ML	1944	212
-4866	(0.2 + 0.1)	MG/ML	1807	204
-4867	10	MG/ML	3684	176
-4868	2.5	MG/ML	1867	181
-4869	3.5	MG	667	142
-4870	0.5	MG/G	4530	2
-4871	(1.49 + 2.34 + 1.96 + 19.83)	MG/ML	2548	181
-4872	1500	UI	207	134
-4873	6	MG	4328	62
-4874	100	MG/G	2280	91
-4875	100	MG	4225	15
-4876	5	MG/ML	5578	181
-4877	5	MG/G	974	149
-4878	SUS		4273	201
-4879	15000	UI	1687	35
-4880	1000	MG	511	197
-4881	10	MG/ML	5512	176
-4882	9	MG	1980	3
-4883	500	MG	981	51
-4884	400	MG	4862	140
-4885	CAP		2356	32
-4886	5	MG	5549	51
-4887	2	MG	1057	37
-4888	240	MG	4847	58
-4889	10.000	U	4676	135
-4890	(40 + 5.7)	MG/ML	1027	160
-4891	10	MG/ML	1900	176
-4892	25	MG	1072	62
-4893	500	MG/5	3715	163
-4894	150	MG	4111	51
-4895	150	MG/ML	2607	176
-4896	25	MG	261	51
-4897	0.5	MG	2216	44
-4898	10	MG	4193	19
-4899	191	MG/ML	2769	176
-4900	500	MG	855	43
-4901	0.1	MG	2125	62
-4902	9	MG	1281	57
-4903	2	MG/ML	4400	186
-4904	5	MG/ML	4141	176
-4905	10	MG	2215	62
-4906	600	MG	5530	160
-4907	103	MG/ML	1858	181
-4908	60.000	UI	4264	140
-4909	20	MG	4566	51
-4910	3000	UI	549	135
-4911	350	MG	1385	135
-4912	1	MG/G	1457	68
-4913	15	MG	704	58
-4914	5	MG	5257	51
-4915	100	MG	2358	58
-4916	500	MG	5530	51
-4917	0.5	MG/ML	4323	176
-4918	2.50	MG	643	51
-4919	40	MG	3876	59
-4920	200	MG	4148	62
-4921	5	MG	108	62
-4922	20	MG/G	3601	86
-4923	100	MG	377	62
-4924	10	MG	4430	51
-4925	20	MG/ML	1892	181
-4926	2	MG/ML	984	186
-4927	20	MG	1124	2
-4928	300	MG	4338	19
-4929	1	MG/G	578	147
-4930	300	MG	1954	58
-4931	1	G	876	133
-4932	263.2	MG	5296	59
-4933	3.75	MG	1267	51
-4934	1	MG/G	1485	68
-4935	1	ML/ML	4521	190
-4936	50	MG	3585	51
-4937	(99.65 + 1.5 + 3.0 + 1.0)	MEQ/L	1308	189
-4938	5	MG/ML	4810	176
-4939	0.5	MG/ML	4277	176
-4940	50	MG/ML	1757	163
-4941	9250	MBQ	2492	196
-4942	100 000	UI/ML	3597	204
-4943	1	MG/ML	1316	176
-4944	100	MG/ML	4457	112
-4945	6	MG/ML	721	212
-4946	75	MG	1149	13
-4947	35	MG	4365	51
-4948	2	MG	1694	62
-4949	50	MG/ML	823	212
-4950	40	MG/G	2559	86
-4951	10	MG	1164	62
-4952	500	MG	5370	62
-4953	2.5	MG/ML	2007	176
-4954	2000	UI	4471	51
-4955	50	MG/ML	2773	176
-4956	50	MG/ML	2413	176
-4957	75	MG	2434	13
-4958	10	MG	1117	142
-4959	750	MG	3891	51
-4960	10	MG	1819	62
-4961	88	MCG	4785	62
-4962	2	MG/ML	2584	181
-4963	100	MG	2565	62
-4964	150	MG	2277	51
-4965	2	MG/ML	4804	212
-4966	20	MG	1904	59
-4967	1.0	MG/ML	3996	181
-4968	65	MG	349	127
-4969	2	MG	5143	62
-4970	100	MG	1898	35
-4971	1	MG	1620	142
-4972	(18.6+1.30)	MG/ML	425	182
-4973	50	MG	810	62
-4974	300	MG	4284	62
-4975	100	MG	3590	37
-4976	1.5	G	366	158
-4977	5	MG/ML	575	201
-4978	0.5	MG	319	62
-4979	400	MG	4858	62
-4980	500	MG	887	131
-4981	5	MG/ML	1367	181
-4982	120	MG/ML	4544	204
-4983	0.075	MG	3782	51
-4984	300	MG	202	58
-4985	50	MG/10	4675	212
-4986	50	MG	2101	51
-4987	400	MCG	749	19
-4988	3 000 000	UI	167	135
-4989	5	PCC	2409	176
-4990	2.5	MG	3725	37
-4991	150	MG	1775	15
-4992	16.8	MG/ML	4249	212
-4993	50	MG/ML	243	160
-4994	500	MG	4054	62
-4995	250	MG	2748	19
-4996	0.5	MG	1057	37
-4997	75	MG	644	51
-4998	5	MG	3761	51
-4999	4	MG	5275	135
-5000	100	MG	4022	51
-5001	100	MG/ML	2601	176
-5002	5	MG	4083	62
-5003	500	MG/ML	2266	176
-5004	3.0	MG	1539	44
-5005	400	MG	1862	32
-5006	50	MG	1011	51
-5007	50	MG	5335	62
-5008	200	MG	1963	139
-5009	250	MG	1027	154
-5010	10	MG/G	4032	68
-5011	1	MG	2076	51
-5012	25	MG	3915	43
-5013	400	MG	589	58
-5014	100	MG	3928	135
-5015	2960	MBQ	2402	176
-5016	5	MG	4014	51
-5017	1	MG/ML	995	176
-5018	240	MG	2228	16
-5019	15	MG	1161	62
-5020	7.5	MG/ML+0.0091	739	176
-5021	2	MG	3594	121
-5022	7	MG/ML	5100	212
-5023	10	MG/ML	4747	176
-5024	SUSP		5183	201
-5025	50	MG	1196	62
-5026	40	MG/ML	4310	181
-5027	0.6	UI/G	2764	148
-5028	0.5	MG/G	1317	147
-5029	(105 + 1.5 + 2.5 + 1.0)	MEQ/L	1308	189
-5030	10	MG	2279	62
-5031	5	MG	2076	51
-5032	320	MG	5231	51
-5033	25	MG	1663	197
-5034	45	MG	1161	62
-5035	10	MG	3972	158
-5036	0.25	MG	2265	62
-5037	80	MG	1341	176
-5038	6.0	MG	1980	13
-5039	25	MG	2556	62
-5040	10	MG/ML	4395	176
-5041	20	MG	1336	176
-5042	120	MG	533	139
-5043	50	MG	76	135
-5044	200	MCG	2052	48
-5045	500	MG	1462	140
-5046	10	MG+15MG	1650	51
-5047	150	MG	4090	13
-5048	20	MG	3699	51
-5049	SUS		4272	201
-5050	150	MG	1166	51
-5051	7	MG/ML	2501	181
-5052	1000	UI	5045	35
-5053	20	MG	2010	51
-5054	4.0	MG/ML	3996	181
-5055	7.0	MG	713	19
-5056	2	MG	3994	51
-5057	0.1	MG/ML	2158	176
-5058	15	MG/ML	1166	212
-5059	30	MG	2473	26
-5060	50000	UI	1687	32
-5061	20	MG/ML	4819	163
-5062	0.02	G/G	926	68
-5063	150	MG	1804	136
-5064	75	MG	1149	19
-5065	0.64	MG/G	1598	147
-5066	400	MG	3665	154
-5067	25	MG	4438	35
-5068	5	MG	590	51
-5069	40	MG	3787	133
-5070	5	MG	1726	37
-5071	250	MG	2251	62
-5072	20	MG	4401	51
-5073	0.125	MG	1539	62
-5074	10	MG	2781	62
-5075	100	MG/ML	871	204
-5076	80	MG	2081	140
-5077	500	MG	3889	62
-5078	5	MG	4297	62
-5079	50	MG	397	51
-5080	1.0	MG/ML	1637	176
-5081	10	MG/ML	2255	176
-5082	20	MG/ML	1278	176
-5083	20	MG/ML	127	212
-5084	500	MG	2754	62
-5085	1	G	5384	46
-5086	100	MG	1116	51
-5087	400	MG	2294	19
-5088	7.5	MG/ML	2465	167
-5089	200	MG/	4600	176
-5090	25	MG	2034	51
-5091	500	MG	1937	51
-5092	1000	MG	452	51
-5093	200	MG/ML	3884	181
-5094	66	MCG	4257	176
-5095	100	MG	5276	136
-5096	0.3	MG/G	1335	145
-5097	40	MG/ML	451	163
-5098	10	MG	5005	51
-5099	5	MG	2180	62
-5100	200	MG	2045	13
-5101	(52.5 + 44.4 + 20.0)	MG/G	1666	147
-5102	875	MG	59	51
-5103	20	MG	3795	13
-5104	100	MG/G	2061	158
-5105	50000	UI	1409	51
-5106	370	MBQ	2299	176
-5107	30	MG	958	86
-5108	50	MG	290	62
-5109	600	MG	457	154
-5110	SOL		3905	108
-5111	30	MG	353	51
-5112	250	MG	2759	51
-5113	150	MG	370	59
-5114	10	MG/ML	4192	79
-5115	0.75	MG	4526	44
-5116	10	MG	1098	51
-5117	SOL		3693	176
-5118	200	MG	2046	19
-5119	100 000	UI/ML	3597	198
-5120	137	MCG	1760	205
-5121	(100 + 2 + 2)	MG/ML	965	181
-5122	2	MG/ML	2517	176
-5123	1	MG/ML	2227	181
-5124	25	MG	5392	13
-5125	10	MG	5225	62
-5126	75	MG	1150	19
-5127	100	MG/ML	4760	178
-5128	60	MG	1942	51
-5129	1000	UI	4387	134
-5130	24	MG	2330	15
-5131	0.2	MG/ML	1465	176
-5132	50	MG	2319	62
-5133	0.02	G/G	915	68
-5134	3	MG	4701	140
-5135	100	MG	112	62
-5136	0.5	MG/ML	4630	5
-5137	10	MG	2483	62
-5138	25	MG	1068	51
-5139	25	MG/ML	4152	176
-5140	5	MG/ML	1877	176
-5141	500	MG	2424	135
-5142	5	MCG/0.5	4261	201
-5143	10	MG	4547	51
-5144	400	MG	2323	13
-5145	5	MG/ML	976	176
-5146	20	MG/ML	356	200
-5147	10	MG	4014	51
-5148	0.35	MG	3640	37
-5149	4440	MBQ	805	9
-5150	2000	UI	516	140
-5151	6	MG/ML	65	212
-5152	20	MG	5494	51
-5153	6.0	MG	5430	10
-5154	150	MG	4090	9
-5155	25	MG	4824	51
-5156	25	MG	826	62
-5157	5.000	U	1319	100
-5158	20	MG	4563	51
-5159	0.05	MG/ML	2048	176
-5160	120	MG	4847	51
-5161	2.5	MG	80	51
-5162	1000	UI	1997	134
-5163	187	MG/5ML	861	154
-5164	0.25	PCC	2389	179
-5165	50	MG/1.5G	4338	155
-5166	16	MG	706	15
-5167	150	MG	312	13
-5168	10	MG	4322	4
-5169	100	MG/ML	314	181
-5170	5	MG	942	51
-5171	2	MG	5163	62
-5172	25	MG/ML	2287	181
-5173	10	MG	4401	51
-5174	100	MG	275	62
-5175	100	MG	988	37
-5176	3.5	PCC	2579	176
-5177	60000	UI	78	35
-5178	40	MG	2296	59
-5179	50	MG/G	44	68
-5180	100	MG/	857	102
-5181	1000	MCG	406	37
-5182	50	MG/ML	683	176
-5183	216	MG/ML	2435	186
-5184	60	MG	11	31
-5185	3.0	MG/ML	898	201
-5186	1	G	4912	131
-5187	0.5	MG/ML	1459	212
-5188	6	MG/ML	1971	176
-5189	1000	MG	5150	51
-5190	3	MG	1721	2
-5191	5000	UI	2543	176
-5192	5	MG/ML	2483	176
-5193	3	MG/ML	4086	181
-5194	50	MG	1526	50
-5195	1	MG/ML	2316	182
-5196	1.5	G	1566	158
-5197	20	MG/G	1443	68
-5198	10	MG	2753	181
-5199	100	MG/ML	5277	163
-5200	0.5	MG/G	1604	147
-5201	25	MG	4132	37
-5202	54	MG	1266	58
-5203	100	MG+25	4689	51
-5204	(5.0 + 1.25 + 10.0)	MG	5078	51
-5205	180	MG	4873	19
-5206	600	MCG	2052	48
-5207	500	MG/ML	1586	176
-5208	20	MG/G	5397	69
-5209	0.5	MG	546	62
-5210	40	MG	2374	51
-5211	7000	UI	5338	51
-5212	2	MG	4159	62
-5213	10.0	MG/ML	1565	176
-5214	120	MG	1284	12
-5215	1	MG/ML	2117	174
-5216	500	MG	878	19
-5217	1.6	MG	428	176
-5218	10	MG	4382	51
-5219	COM		2321	62
-5220	0.005	G	1261	62
-5221	20	MG	5484	51
-5222	150	UI	2443	140
-5223	0.1	MG/ML	3784	176
-5224	20	MG/ML	5509	181
-5225	15	MG	4381	51
-5226	(0.625	ML	374	181
-5227	350	MG	3758	176
-5228	1000	MG	5024	99
-5229	600	MG	821	51
-5230	0.5	MG/ML	1888	212
-5231	120	MG	2081	135
-5232	10	MG/ML	283	179
-5233	160	MG	677	51
-5234	15	MG	690	51
-5235	50	MG/ML	1586	181
-5236	2000	UI	1881	140
-5237	7000	UI	5045	35
-5238	30	MG	1407	62
-5239	612	MG	4544	47
-5240	100	MG	4134	59
-5241	16	MG	706	30
-5242	(0.50 + 2.15 + 2.15)	G/4.90G	4707	127
-5243	12	UI	2595	139
-5244	40.000	UI/ML	1881	176
-5245	68	MG/ML	4757	181
-5246	2.1	MG	1751	4
-5247	100	MG+	4625	51
-5248	500	MCG/ML	4021	181
-5249	100	MCG/DOSES	3625	202
-5250	10	MG	5271	19
-5251	1000	UI/ML	1881	176
-5252	40	MG	3737	51
-5253	200	MG	5243	51
-5254	250	MG	1176	37
-5255	SUS		487	204
-5256	0.64	MG/G	1595	68
-5257	50	MG	9	62
-5258	1	G	255	2
-5259	(60 + 6 + 0.40 + 0.134 + 0.20 + 3.70)	MG/ML	2785	176
-5260	50	MG	4969	51
-5261	40	MG	3868	135
-5262	10000	UI	2543	176
-5263	200	MG	2249	62
-5264	5	MG	2196	51
-5265	2.0	MG	4914	62
-5266	(99.65 + 2.0 + 2.5 + 1.0)	MEQ/L	1308	189
-5267	5	MG	646	62
-5268	4	MG	56	142
-5269	15	MG	5271	19
-5270	(0.3 + 5.0)	MG/ML	2313	179
-5271	10	MG	5572	51
-5272	440	MG	5492	140
-5273	(2.0 + 5.0)	MG	2592	19
-5274	(40.0 + 1.8)	MG/ML	2481	176
-5275	20	MG	4014	51
-5276	1	G	1096	133
-5277	50	MG	1357	51
-5278	100	MG	4719	58
-5279	5	MG	4970	50
-5280	5	MG	4750	147
-5281	60	MG	687	51
-5282	25	MG	1086	62
-5283	50	MG	4800	9
-5284	DRG		797	74
-5285	3.5	MG/ML	591	179
-5286	20	MG	4263	48
-5287	100	MG	1696	51
-5288	400	MG	477	62
-5289	500	MG	2188	51
-5290	5	MG	5038	51
-5291	250	MG/ML	2409	176
-5292	20	MG/ML	1132	176
-5293	25	MG	2026	176
-5294	150	MG/ML	148	176
-5295	40	MG/G	1450	68
-5296	50	MG/ML	4459	185
-5297	100	MG	5443	51
-5298	0.5	MG	4463	181
-5299	360	MG	2047	59
-5300	5	MG	4565	62
-5301	600	MG	1027	154
-5302	500	MG	4138	51
-5303	40	MG/ML	4709	176
-5304	400	MG	143	51
-5305	0.08	ML/ML	3923	212
-5306	40	MG/ML+	4308	181
-5307	11.6	MG/G	1529	86
-5308	(10 + 50)	MG/G	484	168
-5309	3	G	252	163
-5310	(500.0 + 100.0)	MG	1631	156
-5311	6290	MBQ/ML	2493	176
-5312	4	MG	3772	85
-5313	200	MG/ML	5114	181
-5314	250	MCG/ML	2193	176
-5315	500	MG	5522	51
-5316	825	MG/ML	5134	181
-5317	10	MG/G	2251	67
-5318	200	MG/ML	366	176
-5319	15000	UI	1410	35
-5320	9	MG/ML	4596	176
-5321	SOL		4280	6
-5322	0.1	PCC	2262	68
-5323	100	MG/ML	215	200
-5324	20	MCG	1839	201
-5325	20	MG	4875	13
-5326	500	MG	440	51
-5327	100	MG	4719	44
-5328	(178+185+230)	MG	2338	47
-5329	10	MG/ML	743	181
-5330	35	MG	585	13
-5331	250	MG	1176	62
-5332	(20 + 0.64 + 2.5)	MG/G	918	147
-5333	40	MG	3754	16
-5334	100	MILHÕES/ML	2379	208
-5335	50	MG	4593	51
-5336	2.5	MG	4440	51
-5337	9250	MBQ/ML	2493	176
-5338	10	MG	1535	62
-5339	2	G	251	163
-5340	2960	MBQ/ML	2493	176
-5341	40	MG	2324	13
-5342	50	MCG	4514	130
-5343	6	MG	2175	12
-5344	300	MG	5366	51
-5345	15	MG	4443	19
-5346	9000	UI	1873	176
-5347	50	MCG/ML	5438	179
-5348	(1.49+2.34+1.96+19.83)	MG/ML	2548	181
-5349	2	MG	29	51
-5350	1.0	MG/ML	2541	36
-5351	500	MG	1428	44
-5352	200	MG	1823	51
-5353	50	U	666	139
-5354	15	MG	5178	51
-5355	1.0	MG/ML	4277	190
-5356	20	MG	5419	51
-5357	5	MG	4360	37
-5358	250	MG	5018	37
-5359	250	MG	5522	51
-5360	2	MG	4765	51
-5361	1000	MG	1137	44
-5362	60	MG	190	51
-5363	40	MG/ML	515	204
-5364	50	MG/ML	227	176
-5365	3	MG/ML	5566	179
-5366	100	MCG/DOSE	749	202
-5367	2	MG	953	51
-5368	1.466	MG	4463	122
-5369	40	MG	4095	37
-5370	6	MG	4626	62
-5371	250	UI	4387	134
-5372	5	MG	4081	62
-5373	250	MG	983	55
-5374	15	MG/ML	4127	204
-5375	2.5	MG	4299	62
-5376	10	MG	4792	51
-5377	0.010	G	1033	171
-5378	(40 + 25)	MG	3733	51
-5379	12.5	MG	808	62
-5380	DRG		534	74
-5381	SOL		612	171
-5382	2.5	MG	1792	51
-5383	50	MCG/ML	5019	176
-5384	5000	MCG	1004	51
-5385	20	MG	344	62
-5386	500	MG	4467	62
-5387	40	MG	5136	51
-5388	100	MG	3590	62
-5389	20	MG	4413	51
-5390	250	MG	1458	50
-5391	(100.0 + 100.0)	MG/ML	1483	176
-5392	150	MG	2783	51
-5393	40	MG	4775	19
-5394	50	MG/ML	1933	176
-5395	300	MG	1042	19
-5396	(400 + 4 + 4)	MG	5330	13
-5397	(	CANCELAR	5355	179
-5398	500	MG	4839	51
-5399	160	MG	427	51
-5400	200	MG	5071	35
-5401	2	MG	4373	51
-5402	50	MG	2428	19
-5403	200	MG/COM	45	62
-5404	1000	UI	3708	134
-5405	1	MG/ML	5405	179
-5406	40	MG	980	51
-5407	10	MG	3726	51
-5408	500	MG	249	19
-5409	0.25	MCG	4527	35
-5410	SOL		4658	176
-5411	10	MG	3974	51
-5412	10	MG	4000	62
-5413	20	MG	5161	37
-5414	100	MG	846	51
-5415	40	MG	5464	51
-5416	29	MG	4504	51
-5417	650	MG	766	62
-5418	600	MG	2051	116
-5419	(178+185+230)	MG	2338	127
-5420	SUS		3921	208
-5421	2	MG/ML	2140	186
-5422	100	MCG/DOSE	1032	202
-5423	100	MG	5058	19
-5424	20	MG/G	1444	68
-5425	150	MG	4365	51
-5426	15	MG+250MG+20MG+15MG	1356	74
-5427	50	MCG	1921	4
-5428	50	MG	4989	51
-5429	25	MG/ML	249	198
-5430	1	G	1886	135
-5431	0.2	MG/ML	2227	212
-5432	0.4	MG/ML	162	181
-5433	1000	MG	1125	139
-5434	100	MG	407	62
-5435	(10+10+10+30)	MG	3979	51
-5436	0.1	MG/ML	2154	176
-5437	60	MG	758	183
-5438	100	MG	2428	19
-5439	0.25	MG	5021	62
-5440	0.3	MG/G	4796	145
-5441	3	MG/ML	4972	179
-5442	150	MG	2533	140
-5443	20	MG	4327	51
-5444	20	MG	4196	62
-5445	0.1	MG/ML	1565	176
-5446	300	MG/ML	1664	181
-5447	0.25	MG/ML	201	170
-5448	1200	MG	3966	176
-5449	10	MG	264	74
-5450	3.5	MG	660	135
-5451	20	MG	3873	59
-5452	5	MG	2423	51
-5453	150	MCG	1952	62
-5454	20	MG	5264	51
-5455	875	MG	391	51
-5456	(153 + 200 + 25)	MG	2326	47
-5457	0.5	MG	4914	62
-5458	0.25	MG/ML	896	181
-5459	120	MG	2375	51
-5460	125	MCG	1952	62
-5461	5	MG/ML	1599	201
-5462	1	ML/ML	4521	108
-5463	770	MG	4677	98
-5464	1.5	MG	5307	142
-5465	1000	MG	4361	58
-5466	(98 + 35 + 63)	MEQ/L	1313	164
-5467	400	MCG/DOSE	1032	130
-5468	50	MG/ML	2601	176
-5469	500	MG	1193	131
-5470	(20.0 + 0.64 + 2.5)	MG/G	3659	145
-5471	20	MG/	1240	111
-5472	250	UI	1998	140
-5473	2.0	MG	1737	51
-5474	500	MG	1193	139
-5475	50	MG/	1184	176
-5476	40	MG/ML	2280	204
-5477	5	MG	5401	51
-5478	0.25	MCG	4392	35
-5479	5	MG/ML	3657	176
-5480	25	MG	4232	51
-5481	50	MG	5322	51
-5482	4	MCG	1712	70
-5483	500	MG	1354	184
-5484	10	MG	4446	142
-5485	10	MG	5563	51
-5486	500	MG	5117	51
-5487	75	UI	2209	139
-5488	(100 + 100 + 5)	MG	1331	51
-5489	30	MG	1118	24
-5490	5	MG	5521	51
-5491	500	MG	1587	62
-5492	50	MG	1185	19
-5493	2	MG	4397	51
-5494	400	MG	5363	62
-5495	50	MG	8	62
-5496	50	U	5244	201
-5497	5	MG	4799	51
-5498	160	MG/5ML	1681	181
-5499	1	MG/G	1496	68
-5500	50	MG	4720	44
-5501	300	MG/5ML	4981	190
-5502	10	MG	4189	62
-5503	160	MG	675	51
-5504	700	MG/ML	2409	176
-5505	5	MG	639	59
-5506	20	MG	4884	135
-5507	200	MG	4836	19
-5508	200	MG	5322	51
-5509	1480	MBQ	2402	176
-5510	250	MG	2090	62
-5511	25	MG/ML	5064	163
-5512	0.5	MG	1688	62
-5513	(0.5 + 0.4)	MG	1253	13
-5514	10	MG	2488	37
-5515	20	MCG/ML	1955	201
-5516	10	MG	220	35
-5517	25	MG/ML	245	163
-5518	50	MG	806	62
-5519	6.0	MG/	1083	212
-5520	20	MG	346	62
-5521	900 + 100	MG	1277	51
-5522	100	MG	1036	176
-5523	10	MG/ML	4698	203
-5524	75	MG	261	51
-5525	(0.1 + 17)	MG/ML	2563	179
-5526	250	MG	2122	152
-5527	40	MG	2369	2
-5528	425	UI	4654	176
-5529	5	MG	5418	51
-5530	0.05	MG/ML	56	186
-5531	5	MG	23	51
-5532	250	MG	1614	44
-5533	5	MG	4795	13
-5534	250	MG	4130	19
-5535	1000	MG	2011	131
-5536	1.5	MG	5262	58
-5537	2.5	MG	4333	13
-5538	100	MG	4149	51
-5539	30	MG	1336	176
-5540	90	MG	4627	176
-5541	11.6	MG/G	847	194
-5542	35	MG/ML	4375	167
-5543	300	MG/ML	2610	176
-5544	10	MG/ML	1204	194
-5545	100	MG/ML	3884	204
-5546	100	U/ML	3672	176
-5547	35	MG	2537	58
-5548	500	MG/ML	7	181
-5549	7000	UI	1348	35
-5550	50	MG	275	62
-5551	5000	UI/ML	2531	176
-5552	30	MG	5486	51
-5553	60	MG	765	51
-5554	(153+200+25)	MG	2329	47
-5555	0.003	G/ML	4615	176
-5556	150	MG	2753	51
-5557	25	MG	4343	136
-5558	1	MG	4337	51
-5559	20	MG/ML	5341	75
-5560	0.3	MG/ML	4753	212
-5561	500	MG	4943	131
-5562	48	MG/ML	2631	181
-5563	7	MG	4436	37
-5564	54	MG	1266	54
-5565	250	MCG	2113	171
-5566	25	MG	1801	51
-5567	50	MG/ML	2409	176
-5568	20	MG/G	920	166
-5569	3.5	MG	22	62
-5570	2.5	MG/ML	5013	176
-5571	400	MG	5373	32
-5572	25	MG	847	74
-5573	25	MG	847	197
-5574	250	MG	46	142
-5575	125	MG	1027	154
-5576	(9.95 + 0.334 + 0.6686)	MG/ML	617	181
-5577	1%	SOL	4241	176
-5578	250	MG	4197	51
-5579	225	MG	4376	22
-5580	1.5	G	3805	155
-5581	11.6	MG/G	780	7
-5582	4070	MBQ	805	9
-5583	0.25	MG/ML	5142	179
-5584	768.86	MG/ML	5132	176
-5585	1.200.000	U	535	201
-5586	2.5	MG	4269	62
-5587	30	MG	4491	51
-5588	10	MG	5263	51
-5589	300	MG	5123	51
-5590	400	MG	970	51
-5591	100	MG/ML	247	163
-5592	1.5	MG	5266	19
-5593	1.6	MG/ML	702	212
-5594	50000	UI	5371	32
-5595	37.5	MG	4368	133
-5596	(98 + 35 + 63)	MEQ/L	1312	189
-5597	4	MG/ML	2279	181
-5598	1	MG	343	51
-5599	20	MG	3874	59
-5600	182.93	MG	4375	51
-5601	1	MG	2420	37
-5602	0.4	MG/ML	4487	212
-5603	5	MG	4563	62
-5604	100	MG	3590	50
-5605	2	MG/ML	2204	176
-5606	150	MG	5040	135
-5607	25%	SOL	2412	176
-5608	10	MG/ML	439	135
-5609	10	MG	348	176
-5610	250	MG	4291	51
-5611	(1+ 5)	MG	2025	51
-5612	200	MG	2043	19
-5613	40	MG	3849	58
-5614	40	MG	1906	59
-5615	2.5	MG	393	37
-5616	5	MG	2023	51
-5617	100	MG	400	62
-5618	50	MG	612	114
-5619	5.0	MG/ML	2391	179
-5620	0.5	MG/G	1598	147
-5621	10	MG	5350	176
-5622	(1.00 + 10.00)	MG/G	1437	88
-5623	25	MG	4233	51
-5624	30	MG	4809	13
-5625	400	MG	4062	51
-5626	(20 + 0.64 + 2.5)	MG/G	914	68
-5627	0.4	MG/ML	908	182
-5628	20	MG	1365	51
-5629	325	MG	4625	51
-5630	20	MG	1894	51
-5631	250	MG	25	51
-5632	750	MG	4138	51
-5633	20	MG	1800	16
-5634	6.14	MG/ML	2524	189
-5635	2.5	MG	2781	65
-5636	(80.0 + 12.5)	MG	671	37
-5637	10	MG	402	51
-5638	10	MG	1139	62
-5639	450	MG	1545	51
-5640	10.0	MG/ML	1168	176
-5641	20	MG	703	51
-5642	1.0	MG/G	1496	68
-5643	3.6	MG	5534	104
-5644	1	MG/ML	4369	181
-5645	0.06	MG	2361	51
-5646	SOL		120	2
-5647	20 %	SOL	141	176
-5648	50	MG	4335	51
-5649	25	MG	4760	51
-5650	20	MG	2255	176
-5651	8	MG/ML	1738	201
-5652	550	MG	5458	51
-5653	37.5	MG	4770	13
-5654	150	MG	2494	19
-5655	1	G	5387	46
-5656	300	U/ML	5006	176
-5657	1	MG/G	2253	67
-5658	100	MG	1695	64
-5659	3	MG	2518	19
-5660	5	MG/ML	2071	212
-5661	8	MG	5304	62
-5662	2	MG/ML	1941	176
-5663	(500.0 + 30.0)	MG	3889	37
-5664	100	MG/G	2091	86
-5665	0.5	G	4932	131
-5666	15	MG/ML	2400	191
-5667	20	MG	1212	45
-5668	25	MG/ML	4033	163
-5669	250	MG	2278	51
-5670	50	MG	1202	62
-5671	25	MG	786	19
-5672	0.25	MG	2216	62
-5673	40	MG	2368	19
-5674	2	MG	897	62
-5675	10	MG	1016	62
-5676	20	MG/G	481	68
-5677	20	MG/ML	2483	181
-5678	125	MG	1635	51
-5679	100.000	U/G	180	147
-5680	1.170	MG	1928	4
-5681	50	MG	5283	58
-5682	2.00	MG	5021	62
-5683	5.0	MG	4253	74
-5684	50	MCG	2113	130
-5685	100	MG/5	2469	69
-5686	24	MG	4292	19
-5687	150	MG	1200	62
-5688	2	MG	2582	62
-5689	12	MG	426	58
-5690	200	MG	4911	62
-5691	200	MG	2152	95
-5692	(1.5 + 1.2)	G	1270	155
-5693	(13.30 + 0.33 + 0.13)	MG/ML	518	181
-5694	100	MG	367	140
-5695	500	MG	455	142
-5696	20	MG	5260	62
-5697	150	MG	4146	13
-5698	400	MG	1732	51
-5699	100	MG/ML	1347	200
-5700	20	MG	1279	62
-5701	370	MBQ	2013	176
-5702	500	MG	1672	62
-5703	10	MG	218	51
-5704	10	MG	710	13
-5705	PO		5179	134
-5706	10	MG/ML	3977	179
-5707	400	MG	2418	51
-5708	10	MG/G	4963	68
-5709	2	G	880	2
-5710	0.10	MG/ML	1494	75
-5711	3.5	MG/ML	4139	179
-5712	(50 + 12.5)	MG/ML	245	160
-5713	1	MG/ML	1643	204
-5714	400	MG	2132	51
-5715	100	MG/ML	5368	176
-5716	20	MG	3870	51
-5717	15	MG	619	19
-5718	(50.84 + 66.82 + 59.77 + 822.64)	MG/G	4279	158
-5719	450	MG	2099	51
-5720	(103 + 2 + 3 + 1)	MEQ/L	1309	189
-5721	100	MG/ML	4595	176
-5722	4	MCG/ML	1498	186
-5723	0.5	MG	1493	62
-5724	(37.5 + 325)	MG	3895	37
-5725	1	G	1965	142
-5726	(37.5 + 325.0)	MG	4326	51
-5727	250	UI	5548	140
-5728	5	MG/	16	212
-5729	10	MG	4722	51
-5730	FRASCO		4594	176
-5731	2.5	MG	105	62
-5732	500	UI	551	135
-5733	SOL		3919	181
-5734	4	MG/ML	5091	179
-5735	120	MG	2368	51
-5736	11.6	MG/G	1528	86
-5737	40	MG	4412	51
-5738	950	G	594	164
-5739	1	MG/ML	1352	176
-5740	50	MG/ML	1003	176
-5741	50	MG	669	13
-5742	500	MG	871	62
-5743	(35 + 300 +50)	MG	1668	37
-5744	7000	UI	212	35
-5745	850	MG	2191	51
-5746	100	MG/ML	176	200
-5747	20	MG/ML	924	181
-5748	250	MG	867	19
-5749	200	MG/ML	2585	176
-5750	2	G	1096	156
-5751	100	MCG/ML	1108	176
-5752	750	UI	97	135
-5753	2.5	MG	5547	51
-5754	25	MG	5337	51
-5755	0.5	MG/ML	196	212
-5756	20	MG	3945	37
-5757	(0.15 + 0.03)	MG	2362	62
-5758	5.0	MG/ML	282	179
-5759	3	MG/ML	3655	212
-5760	150	MG/ML	4065	176
-5761	500	MG	4448	62
-5762	20	MG	2497	62
-5763	10	MG/ML	950	179
-5764	20	MG/ML	1129	185
-5765	0.5	MMOL/ML	1023	176
-5766	10	MG	3849	58
-5767	(27+5.4)	MG/ML	4208	176
-5768	0.0018	G/ML	4615	176
-5769	20	MG/0.2	1829	176
-5770	33.3	MCG/ML	4282	176
-5771	30	MG	1377	51
-5772	250	MG	249	139
-5773	200	MG/ML	4266	181
-5774	20	MG	1240	126
-5775	SUS		836	204
-5776	160	U/ML	431	201
-5777	10%	SOL	4746	176
-5778	20	MG	4563	62
-5779	25	MG/ML	4762	176
-5780	10	MG/G	3961	111
-5781	10	MG	4432	51
-5782	(20 + 12.5)	MG	3733	51
-5783	100.0	MG	4633	51
-5784	100	MG	5465	137
-5785	20	MG	5005	51
-5786	0.067	ML/ML	2530	181
-5787	0.64	MG/G	1602	68
-5788	300	MG	584	51
-5789	100	MG	379	62
-5790	3000	UI	78	35
-5791	10	MG/ML	1206	194
-5792	40	MG	1947	22
-5793	PO		4122	140
-5794	200	MG	2124	19
-5795	40	MG	1903	59
-5796	5	MG	1879	51
-5797	50	MG	1825	176
-5798	1	G	4692	46
-5799	15	MG/ML	2094	204
-5800	400	MG	304	37
-5801	200	MG	2763	32
-5802	750	MG	2426	44
-5803	500	MG	262	62
-5804	7.5	MG	1406	62
-5805	1000	MG	4481	51
-5806	0.1	PCC	4462	88
-5807	300	MG	262	197
-5808	1	MG	2216	62
-5809	3700	MBQ	805	9
-5810	75	MG	264	56
-5811	25	MG	839	51
-5812	100	MG/ML	1805	176
-5813	250	MG	3665	163
-5814	100	MG	4624	58
-5815	7.5	MG	1818	58
-5816	(100 +  50  + 75)	MG	5065	51
-5817	7000	UI	1409	51
-5818	50	MG	1305	51
-5819	10	MG	1009	19
-5820	(3 + 25)	MG/G	1864	86
-5821	2	G	1462	138
-5822	250	MCG/DOSE	1032	171
-5823	1	MG	343	2
-5824	(50000 + 10000)	UI/ML	96	181
-5825	750	MG	4840	51
-5826	50	MG/ML	5146	176
-5827	25	MG	4236	51
-5828	450	MG	1580	51
-5829	100	MCG/ML	1108	185
-5830	10	MG	4374	15
-5831	30000	UI	78	51
-5832	75	MG	669	13
-5833	SOL		4659	176
-5834	50	MG	4459	32
-5835	0.25	MG	896	62
-5836	44.3	MG	612	45
-5837	1	G	2416	51
-5838	5	MG/ML	3575	176
-5839	(42.5+ 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	1515	187
-5840	2	MG	4369	62
-5841	500	MG	345	131
-5842	250	MG	5568	156
-5843	22.75	MG/ML	1406	204
-5844	50	MG	2413	176
-5845	0.02	G/G	2051	69
-5846	10	MG	5260	62
-5847	4	MG	56	136
-5848	40	MG	4565	51
-5849	EMU		4576	79
-5850	50	MG/ML	869	163
-5851	5	MG/G	3992	88
-5852	100	MCG	4785	62
-5853	CREM		795	68
-5854	20	MG	3754	19
-5855	11.6	MG/G	1529	87
-5856	50	PCC	4598	176
-5857	250	MG/1.25	2122	152
-5858	4	MG/ML	710	175
-5859	160	MG	1579	51
-5860	200	MG	930	59
-5861	10	MG	2587	51
-5862	250	MG	3859	58
-5863	100	MCG	4205	62
-5864	1.50	MG	4394	44
-5865	20	MG/ML	4730	176
-5866	2000	UI	4264	173
-5867	PÓ		4690	134
-5868	100	MG	3587	62
-5869	100	MG	17	2
-5870	35	MG	4489	62
-5871	1	G	3661	135
-5872	900	MG	779	51
-5873	400	MG	4859	62
-5874	2	MG	976	62
-5875	25	MG/ML	1525	176
-5876	100	MILHÕES/ML	2123	204
-5877	150	MG	4668	19
-5878	1.60	MG/ML	4062	186
-5879	(500.0 + 30.0)	MG	3889	62
-5880	21	MG	3574	4
-5881	10	MG	1763	51
-5882	(15+5.6+5+0.20+0.15)	MG/ML	4617	187
-5883	12.5	MG	4917	62
-5884	10	MG	764	135
-5885	300	MG	355	59
-5886	130	MG	4695	176
-5887	500	MG	5329	154
-5888	150	MCG/ML	4340	176
-5889	10	MG	5511	51
-5890	3	MG	2320	122
-5891	1	G	1096	157
-5892	8	MG	4292	19
-5893	21	MG/ML	303	194
-5894	500	MG	867	19
-5895	(100 + 25)	MG	4148	62
-5896	500	MG/ML	1593	181
-5897	30	MG	11	31
-5898	500	MG	1586	62
-5899	30	MG	4255	51
-5900	500	MG	3885	51
-5901	80	MG	4801	51
-5902	15984	MBQ	2144	176
-5903	50	MG/ML	1635	176
-5904	50	MCG/DOSE	1032	5
-5905	5	MG	2519	37
-5906	1000	MG	1591	62
-5907	900	MG	455	154
-5908	1	MG/G	5391	67
-5909	720	UEL/ML	2491	201
-5910	500	MG	901	51
-5911	200	MG	377	62
-5912	400	MG	3937	53
-5913	250	MG	4138	51
-5914	1000	KBQ/ML	5462	176
-5915	20	MG/ML	753	176
-5916	5	MG	1876	51
-5917	160	MG	1661	47
-5918	5	MG	1265	51
-5919	1	MG/G	2253	68
-5920	10000	UI/ML	1882	176
-5921	9.0	G	539	165
-5922	5	MG/ML	2157	181
-5923	1.0	G	444	131
-5924	100	MG	4891	24
-5925	50	MG	5532	60
-5926	0.25	MG/G	5391	67
-5927	200	MCG	4785	62
-5928	2	MG	1516	62
-5929	50	MG	3586	58
-5930	80	MG	4169	62
-5931	300	MG	4516	51
-5932	1000	UI	5338	51
-5933	40	MG/ML	4202	167
-5934	100	MG	2122	13
-5935	1	ML/ML	2778	109
-5936	1500	UI/ML	164	176
-5937	20	MG	2532	176
-5938	50	MG/G	4936	147
-5939	500	MG	1191	51
-5940	5.0	MCG/ML	3896	176
-5941	0.8	MG	5167	51
-5942	2	MG	2419	62
-5943	500	MG	4241	51
-5944	10	MG	745	74
-5945	5	MG/ML	3584	176
-5946	7.5	MG	1791	137
-5947	0.3	MG/ML	2313	179
-5948	10	MG	5517	62
-5949	(15 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-5950	180	MG	2029	51
-5951	15984	MBQ	2165	176
-5952	4	MG/ML	1554	181
-5953	72	MG	362	176
-5954	25	MG	1011	51
-5955	2.0	MG/ML	3912	179
-5956	100	MG	4233	51
-5957	2	G	5381	46
-5958	10.000	UI	2512	135
-5959	300	SPY	1055	194
-5960	10	MG/ML	2482	186
-5961	20	MG	4945	51
-5962	0.04	MG/ML	1744	179
-5963	PO		4044	173
-5964	5.0	MG/ML+0.0091	739	176
-5965	20	MG/G	482	147
-5966	50	MG	4237	58
-5967	62.5	MCG	5241	125
-5968	SOL		4352	176
-5969	0.25	MCG	4531	32
-5970	PO		5189	140
-5971	1	G	1097	176
-5972	5	MG/ML	500	176
-5973	10	MG	5543	37
-5974	200	MG	5302	19
-5975	100	U	5456	139
-5976	1	MG/G	4991	68
-5977	2	MG	4050	13
-5978	500	MG	48	37
-5979	25	MCG/DIA	1928	3
-5980	500	MG	941	44
-5981	50	MCG	3625	202
-5982	(150 + 10)	MG/ML	5162	176
-5983	100	MG	4134	139
-5984	(160.00+25.00+10.00)	MG	1982	51
-5985	500	MG	246	139
-5986	4	MG/ML	3843	179
-5987	10	MG	1157	51
-5988	250	UI	568	140
-5989	1.0	MG/ML	4658	176
-5990	200	MG	1975	139
-5991	0.80	MG	4880	51
-5992	(50 + 9)	MG	2403	176
-5993	1	MG/G	4703	149
-5994	3	PCC	5468	176
-5995	5	MG/ML	1139	176
-5996	120	MG/G	996	2
-5997	250	MG	5530	19
-5998	(10.0 + 25.0)	MG	1269	51
-5999	200	MG/ML	2041	176
-6000	325	MG	4637	46
-6001	180	MG	829	20
-6002	40	MG/G	996	2
-6003	741	MG/ML	3792	176
-6004	500	MG	5555	51
-6005	32	MCG/DOSE	3625	202
-6006	32	MG/ML	1661	204
-6007	23680	MBQ	2165	176
-6008	5	MG	1984	37
-6009	50	MG	124	51
-6010	20	MG/ML	4686	176
-6011	50	MCG/ML	1010	176
-6012	1000	UI	164	139
-6013	2	G	3988	129
-6014	3.125	MG	3579	62
-6015	9	MG/ML	1082	169
-6016	1.0	MG	1227	62
-6017	4	MG/ML	4901	179
-6018	12.5	MG	839	51
-6019	6.67	MG/ML	1682	181
-6020	28.2	MG/G	5331	210
-6021	300	MG	2230	51
-6022	5000	UI	1719	51
-6023	70	MG	553	136
-6024	250	MG	5522	163
-6025	0.250	MG/ML	695	190
-6026	100	MG/ML	3678	181
-6027	576	MG	1866	51
-6028	40	MG	1000	51
-6029	SOL		4619	176
-6030	50	MG	223	139
-6031	5	MG	432	51
-6032	(2 +1000)	MG	2421	51
-6033	40	MG/ML	480	204
-6034	5.0	MG/ML	5312	181
-6035	500	MG	2256	19
-6036	500	MG	5061	116
-6037	50	MG	367	19
-6038	20	MG/ML	4134	181
-6039	100	MG	1606	62
-6040	1000	MG	4481	62
-6041	5	MG	5365	51
-6042	100	U/ML	5046	176
-6043	160	MG/ML	1918	204
-6044	10	MG	3724	62
-6045	500	MG	511	176
-6046	100	MG/ML	2409	176
-6047	1	UI/ML	3845	176
-6048	600	MG	655	51
-6049	(1000 + 200)	MG	246	156
-6050	150000	UI/ML	1705	175
-6051	2	G	609	46
-6052	900	MG	454	163
-6053	0.5	MG/ML	4286	179
-6054	10	MG/G	2365	69
-6055	500	MG	1221	62
-6056	1.0	MG/ML	1352	176
-6057	12.5	MG	1663	197
-6058	10	MG/ML	2550	176
-6059	10	MG/	2255	176
-6060	7	MG/ML	349	212
-6061	200	MG/ML	4764	181
-6062	60	MG	1959	51
-6063	1	G	1125	135
-6064	20	MG	87	59
-6065	10	MG	1367	19
-6066	CAP		5385	32
-6067	20	MG/G	2149	102
-6068	(50.0 + 500.0)	MG	3586	51
-6069	SUS		5096	201
-6070	40	MG	4851	59
-6071	2.0	X10E13	5537	201
-6072	(5 + 1000)	MG	5459	58
-6073	25	MG/0.5ML	1344	201
-6074	350	MG	4437	185
-6075	3.5	MG/ML	1102	179
-6076	500	MG	2416	51
-6077	100	MG	1073	51
-6078	100	MG	4760	51
-6079	1	MG/G	93	68
-6080	27	MG	1266	54
-6081	15	MG/ML	2179	181
-6082	2.5	MG	4850	62
-6083	2	PCC	1329	179
-6084	2	G	903	46
-6085	8	MG	5409	48
-6086	50	MG	2233	62
-6087	4	MG	4993	142
-6088	0.1	MG/ML	1491	75
-6089	40	MG	4702	181
-6090	200	MCG	4205	62
-6091	0.48	MG/ML	102	212
-6092	280	MG/ML	4760	178
-6093	(3+1)	MG/ML	1349	179
-6094	0.1	MG	1392	62
-6095	(150.0 + 12.5)	MG	488	62
-6096	80	MG/ML	476	176
-6097	60	MG	1118	31
-6098	32	MG/ML	965	204
-6099	13.333	MG/ML	2440	212
-6100	100	MG	612	2
-6101	150	MG	4572	176
-6102	900	MG	3953	51
-6103	5.0	MCG/ML	5500	176
-6104	200	MG	1320	135
-6105	3	MG/G	2576	86
-6106	0.6	U/G	2764	147
-6107	(5.0 + 10.0)	MG	1268	37
-6108	50	MG/ML	2411	176
-6109	450 + 50	MG	1366	51
-6110	250	MG	2122	19
-6111	11.6	MG	847	86
-6112	0.5	MG/G	1440	68
-6113	32	MG	567	44
-6114	5000	UI	4190	35
-6115	1	G	1586	37
-6116	10	MG	5171	51
-6117	160	MG	1569	51
-6118	10	MG	1553	13
-6119	1	X	633	204
-6120	100	MG	4535	51
-6121	(138 + 2 + 3.5 + 1 + 109.5 + 3 + 32)	MEQ/L	1306	189
-6122	1	G	253	129
-6123	6.25	MG	1616	51
-6124	3	MG/G	1548	88
-6125	3.5	MG	713	19
-6126	3330	MBQ	2402	176
-6127	LIQ		4522	105
-6128	2.5	MG/ML	5515	181
-6129	(0.02 + 0.075)	MG	189	51
-6130	500	MG	1656	62
-6131	20	MG	2780	35
-6132	4	MG	3950	62
-6133	1.00	MG/G	32	68
-6134	100	MG	4490	62
-6135	325	MG	4625	38
-6136	50	MG/ML	1563	176
-6137	100	MG	5009	51
-6138	300	MG	1095	58
-6139	140	MG	4873	19
-6140	20	MG/ML	4202	167
-6141	25	MG/ML	640	204
-6142	2.0	MG	1303	62
-6143	100	MG	1120	51
-6144	500	MG	258	131
-6145	600	UI	4206	176
-6146	(0.5 + 1.0 + 10.0 + 10.0)	MG/G	5217	147
-6147	100	MG	2783	51
-6148	250	MG	1866	35
-6149	20	MG/ML	4859	204
-6150	(25.0 + 5.0)	MG	1607	62
-6151	1000	UI/1000UI	5427	134
-6152	(1.00+20.00)	MG/G	5131	67
-6153	20	MG	3754	22
-6154	300	MG	526	51
-6155	20	MG	4685	51
-6156	1.5	MG/ML	411	212
-6157	20	MG/ML	2384	176
-6158	40	MG	4072	62
-6159	100	MG	5295	13
-6160	10	MG	5308	51
-6161	180	MG	1473	51
-6162	500	UI	3708	134
-6163	6.25	MG	3579	62
-6164	50	MG/G	46	67
-6165	10000	UI	211	51
-6166	25	MG	1127	62
-6167	1	MG/ML	4203	190
-6168	7	MG/ML	2498	212
-6169	10	MG/ML	460	203
-6170	100	MG	4872	62
-6171	111	MBQ	2299	176
-6172	1000	MG	4486	62
-6173	100	MG	4243	19
-6174	44.3	MG	847	45
-6175	60	MG/ML	4011	176
-6176	0.4	MG/ML	752	212
-6177	60	MU/ML	2450	176
-6178	10	PCC	4598	176
-6179	100	MG/ML	4064	200
-6180	60	MG	5282	19
-6181	20	MG/G	957	68
-6182	SOL		236	176
-6183	5000000	UI	166	135
-6184	10	MG	4567	62
-6185	1850	MBQ	1345	176
-6186	2	MG/ML	3780	176
-6187	0.2	G/ML	141	176
-6188	80	MG	4878	62
-6189	0.075	MG	189	74
-6190	750	MG	1137	44
-6191	2	MG/ML	1117	176
-6192	16	MG	793	62
-6193	37.5	MG	5298	15
-6194	20	MG	4842	51
-6195	SOL		545	181
-6196	200	MG	4774	2
-6197	10	MG	237	62
-6198	200	MG/ML	268	204
-6199	50	MG	1401	135
-6200	1	MG/G	1438	88
-6201	10	MG/ML	3959	111
-6202	250	MG	1943	19
-6203	20	MG/ML	204	176
-6204	100	MG/G	88	146
-6205	20	MG	942	51
-6206	0.25	MG/ML	1021	179
-6207	9	MG/ML	1080	178
-6208	400	MG	1319	19
-6209	50	MG	4332	62
-6210	100	MG	1305	51
-6211	20	MG/ML	3645	166
-6212	(400 + 800)	MCG/ML	1033	198
-6213	(1.0 + 2.0)	MG	287	51
-6214	50	MG	5157	51
-6215	5	MG/ML	705	181
-6216	20	MG/ML	915	166
-6217	(800 + 160)	MG	507	62
-6218	10	MG/ML	715	212
-6219	10	MG	4853	37
-6220	4	MG/ML	1139	181
-6221	CREM		5361	68
-6222	5000	UI/G	2572	147
-6223	(103 + 2 + 3.5 + 1)	MEQ/L	1309	189
-6224	(10.0 + 20.0)	MG	198	51
-6225	10	MG	259	62
-6226	0.5	MG/G	4928	147
-6227	15	MG/ML	2028	201
-6228	600	UI	3617	176
-6229	10	MCG/1.0	4261	201
-6230	500	MG/ML	1665	181
-6231	5 000 000	UI	167	135
-6232	50	MG/ML	5014	176
-6233	50	MG	284	140
-6234	1	G	5383	46
-6235	750	MG	2454	62
-6236	1	G	616	46
-6237	5	MG	4323	62
-6238	(400+80)	MG	2286	62
-6239	(5.0 + 25.0)	MG	558	19
-6240	400	MG	415	32
-6241	10000	UI	1873	176
-6242	(25 + 6.25)	MG/ML	1027	160
-6243	50	MG	2749	62
-6244	SOL		4649	176
-6245	4	O	4350	178
-6246	140	MG/ML	4304	176
-6247	50	MG/ML	2479	176
-6248	300	MG	322	51
-6249	50	MG/ML	811	193
-6250	100	MG/	4595	176
-6251	15	MG	1840	38
-6252	5000	UI	1703	51
-6253	4	MG	1394	62
-6254	(10.0 + 5.0)	MG	1268	37
-6255	450	MG	1271	51
-6256	0.05	MG	2048	176
-6257	0.5	MG/ML	4895	176
-6258	200	MG/5ML+	4308	181
-6259	2	MG/ML	1786	176
-6260	5	MG/ML	5063	176
-6261	20	MG/G	1263	68
-6262	10	MG	1751	4
-6263	10	MG/ML	326	176
-6264	50	MG/G	4131	150
-6265	(0.60 + 6.00)	MG	1976	3
-6266	100	MG	1542	51
-6267	25	MG	4391	51
-6268	37000	MBQ	2354	176
-6269	100	MG	4824	51
-6270	250	MG	2164	62
-6271	5	MG	5104	37
-6272	100	MG	2418	51
-6273	20	MG/	915	68
-6274	100	UI/ML	313	176
-6275	14	MG	3574	4
-6276	360	MG	130	51
-6277	200	MG	38	102
-6278	10	MG+10MG	1650	51
-6279	200	MG	404	51
-6280	40	MG	3870	139
-6281	(160.00+10.00)	MG	1578	51
-6282	6	MG/ML	186	204
-6283	5	PCC	4114	176
-6284	4	UI	627	135
-6285	0.25	MG	4687	62
-6286	100	UI/ML	4479	176
-6287	1000	MG	249	62
-6288	90	MG/ML	1956	176
-6289	20	MG/ML	4024	212
-6290	1	MG/	5351	176
-6291	9250	MBQ	1345	176
-6292	15	UI	1953	140
-6293	1	MG	1225	62
-6294	(20.0 + 10.0)	MG	4015	13
-6295	0.5	PCC	2389	179
-6296	100	MG/ML	1184	181
-6297	200	UI/ML	4479	176
-6298	0.4	MG/ML	900	212
-6299	25	MG	4969	51
-6300	37.5	UI	2443	140
-6301	10	MG/ML	1145	176
-6302	0.6	MG/G	3716	86
-6303	1	MG/ML	1151	179
-6304	320	MG	5229	51
-6305	40	MG/ML	5529	160
-6306	100	MG/ML	4259	176
-6307	0.04	MG/ML	5035	179
-6308	50	MG/ML	5227	212
-6309	100	MG	2140	19
-6310	50	MG/ML	3646	181
-6311	100	MG	1842	135
-6312	(1 + 25)	MG	4759	13
-6313	1	G	4932	133
-6314	100	MG/ML	249	163
-6315	20	G	4857	176
-6316	150	MG	1195	19
-6317	50	MG/ML	4117	204
-6318	62.5	MCG	4205	62
-6319	(37.5 + 325.0)	MG	412	51
-6320	10	MG	557	37
-6321	500	MG	52	62
-6322	100.000	UI/ML	3596	198
-6323	10	MG	5451	39
-6324	6	MG	4569	62
-6325	7400	MBQ	1345	176
-6326	20	MG	3611	51
-6327	(100  + 25)	MG	4148	62
-6328	50	MG	963	176
-6329	(200.0 + 500.0)	MG	3689	51
-6330	125	MG	662	51
-6331	1.25	MG/2	554	105
-6332	500	MG	3906	51
-6333	0.20	MG/ML	1417	111
-6334	2	MG/ML	1722	181
-6335	(42.5+5.38+4.48+0.257+0.0508)	MG/ML	1515	187
-6336	5	MG	1111	51
-6337	3	MG	4526	62
-6338	100	MG	3601	62
-6339	100	MG	9	62
-6340	0.25	MG/ML	3907	176
-6341	1000	MG	2436	44
-6342	5	MG	1966	139
-6343	250	MG	4889	51
-6344	50	MG/ML	4134	176
-6345	200	MG	1541	13
-6346	25	MG	4182	51
-6347	250	MG	1427	35
-6348	600	MG	3937	53
-6349	400	MG	183	32
-6350	5	MG	557	37
-6351	(8.2 + 28.75 + 20)	G/L	3728	79
-6352	400	MG	1376	176
-6353	200	MG	751	51
-6354	1110	MBQ	2402	176
-6355	40	MG/G	2560	68
-6356	50	MG/2	4136	176
-6357	XPE		1762	212
-6358	500	MG	3928	136
-6359	75	MCG	4785	62
-6360	10000	UI	4472	35
-6361	2.5	MG	559	9
-6362	0.02	G/G	2051	126
-6363	40	MG	2172	51
-6364	4	G	3988	156
-6365	50	MG	1532	59
-6366	(9.532 + 1.049 + 3.039 + 12.5)	MG/COM	1256	51
-6367	2	MG/G	852	147
-6368	335	MG	144	51
-6369	0.67	ML/ML	2446	175
-6370	120	MG	213	51
-6371	(1.0 + 100.0 + 100.0 + 100.0)	MG	174	59
-6372	(160.00+10.00)	MG	5232	51
-6373	900	MG	2307	32
-6374	PO		5188	137
-6375	20	MG/G	3620	88
-6376	0.04	MG/ML	5036	179
-6377	3	MG/ML	4982	179
-6378	20	MG/ML	4262	167
-6379	4	MG	239	51
-6380	50	MG/ML	248	163
-6381	11	MG/G	612	171
-6382	10	MG	4297	62
-6383	500	MG/ML	4746	176
-6384	50	MG	4226	58
-6385	3	MG	693	37
-6386	1	G	2417	44
-6387	75	MG	1633	51
-6388	20	MG	3875	59
-6389	50	MG/G	1869	92
-6390	20	MG	1947	16
-6391	400	MG	2090	62
-6392	30	MG	4357	58
-6393	0.1	G/ML	4460	176
-6394	150	MG/ML	231	176
-6395	100	MG+	4689	51
-6396	10	MG	2784	51
-6397	3000	UI/ML	1882	176
-6398	0.4	MG	1175	44
-6399	10	MG	2157	15
-6400	6.667	MG/ML	2462	212
-6401	500	UI	4387	134
-6402	150	MG	731	13
-6403	(50.0 + 1000.0)	MG	3586	58
-6404	20	MG	344	37
-6405	50	MG	4776	176
-6406	40	MG	1549	62
-6407	320	MG	5230	51
-6408	(40 + 2 + 3.5 + 1 + 48.5 + 0.35)	MEQ/L	1312	189
-6409	0.08	ML/ML	3923	167
-6410	30	MG	1520	44
-6411	(2 + 0.035)	MG	29	51
-6412	500	MG/ML	1589	181
-6413	500	MG	247	19
-6414	20	MG	4884	140
-6415	80	MG	5005	51
-6416	500	UI	1998	140
-6417	40	MG/ML	3680	204
-6418	(0.125	MG+0.030	2447	62
-6419	7000	UI	5371	35
-6420	0.060	MG	4812	51
-6421	75	MG	5292	15
-6422	30	MG	4691	62
-6423	500	UI	568	140
-6424	0.02	G/G	2376	69
-6425	1.5	MG	4060	51
-6426	250	MG	1180	51
-6427	2590	MBQ	4456	176
-6428	20	MG	3902	51
-6429	16	GBQ	4244	176
-6430	80	MG	4814	51
-6431	2.5	MG	1147	51
-6432	10	MG/ML	4085	203
-6433	SUS		4646	176
-6434	100	UI/ML	2599	201
-6435	450	MG	3908	51
-6436	250	MG	2432	51
-6437	(0.02 + 0.075)	MG	1936	51
-6438	150	MG/ML	1370	176
-6439	15	MG/ML	2026	204
-6440	450	UI	2443	176
-6441	50	MG	611	136
-6442	0.12	G/ML	490	82
-6443	1	G	254	129
-6444	500	MG	2510	62
-6445	10	MG	5178	51
-6446	100	UI/ML	2604	176
-6447	150	MG	1120	51
-6448	200	MCG/DOSE	1596	168
-6449	(178+185+230)	MG	2338	2
-6450	5	MG	348	176
-6451	5	MG	5437	51
-6452	10	MG/ML	226	186
-6453	1000	MG	4484	62
-6454	30	MG	2513	176
-6455	6	MG/ML	225	212
-6456	(150 +70)	MG/G	4452	86
-6457	20	MG/ML	5140	204
-6458	100	MG	4019	139
-6459	75.0	MG	847	197
-6460	400	MG	2323	19
-6461	20	MG/	2349	176
-6462	20	MG	4829	53
-6463	200	MG	1847	51
-6464	50	MG/ML	2036	176
-6465	900	MG	452	158
-6466	20	MG	4300	62
-6467	40	MG	5005	51
-6468	10	MG	410	51
-6469	20	MG/G	4964	67
-6470	500	MG/ML	181	181
-6471	6	MG/ML	4492	212
-6472	120	MG/ML	1805	176
-6473	6.25	MG	824	62
-6474	50	MCG/DOSE	1596	168
-6475	5	MG/ML	4277	190
-6476	1.5	MG/ML	536	36
-6477	1	G	5381	46
-6478	200	MG/ML	5360	181
-6479	37.5	MG	5290	15
-6480	10	MG	3752	16
-6481	4625	MBQ	2165	176
-6482	25	MG	1202	62
-6483	100	MG	2271	62
-6484	555	MBQ	805	9
-6485	300	MG	4516	58
-6486	1	G	935	46
-6487	100	MG/ML	2772	176
-6488	50	MG	5317	51
-6489	3.0	MG/ML	4975	203
-6490	25	MCG	1952	62
-6491	6	MG/ML	1121	198
-6492	500	MG	455	159
-6493	0.2%	SOL	983	176
-6494	1.5 + 1.2	G	1270	152
-6495	250	MG	440	51
-6496	500	MG	335	32
-6497	30	MG/G	3931	147
-6498	(40.0 + 150.0 +30.0 + 50.0  + 0.5 )	MG/ML	273	167
-6499	250	MG	5049	37
-6500	10	MG	2016	51
-6501	50	MCG/G	1371	147
-6502	5	MG	3760	176
-6503	50000	UI	4472	35
-6504	80	MG	5230	51
-6505	10	MG	3901	51
-6506	300	MG	4489	62
-6507	200	MG	5383	181
-6508	400	MG	4312	158
-6509	0.05	G/ML	2409	176
-6510	20	MG/G	922	147
-6511	385	MG	4677	102
-6512	30	MG	1157	51
-6513	250	MG	3	37
-6514	200	MG/G	5170	68
-6515	8	MG	296	176
-6516	6.66	MG/ML	4891	212
-6517	50	UI/0.5	4479	176
-6518	300	MG	1319	22
-6519	200	MG	1362	142
-6520	1000	UI	5371	35
-6521	100	MG/ML	242	163
-6522	150	MG	151	13
-6523	300	MG	2516	51
-6524	3	MG	4369	62
-6525	100	MG/5ML	4891	204
-6526	5	MG/ML	1140	176
-6527	1	G	876	131
-6528	100	MG/ML	2773	176
-6529	33055	MBQ	2013	176
-6530	(3+3+3+10+25)	MG/ML	756	181
-6531	50	MG/ML	1665	181
-6532	10	MG	4495	212
-6533	5	MG	1382	62
-6534	80	MG/ML	391	163
-6535	1	MG/ML	4113	176
-6536	175	MCG	1952	62
-6537	100	MG	4723	51
-6538	40	MG/G	2558	86
-6539	100	MG	396	62
-6540	0.5	MG/ML	3841	178
-6541	25	MG	2173	62
-6542	50	MG/ML	819	181
-6543	20	MG/G	1206	69
-6544	66.7	PCC	3790	204
-6545	1	G	1589	37
-6546	20	MG/ML	1443	166
-6547	15	MG	2012	32
-6548	25	MG/ML	2264	176
-6549	100	MG	2428	51
-6550	20	MG	3734	51
-6551	100	MG	4834	51
-6552	2	MG/ML	554	171
-6553	(100 + 25)	MG	4148	50
-6554	5	MG	4568	51
-6555	(20.0 + 12.5 + 5.0)	MG	532	51
-6556	500	MG	3602	51
-6557	40	MG/G	2594	68
-6558	15	MG	1365	51
-6559	2	MG/ML	642	181
-6560	40	MG	3742	51
-6561	4	MG	4368	51
-6562	30	MG	1161	62
-6563	7000	UI	1410	32
-6564	200	MG	2352	129
-6565	0.1	G/ML	4961	209
-6566	300	MG	1166	51
-6567	5	MG/ML	4900	179
-6568	250	MG	4894	51
-6569	15	MG	1818	58
-6570	0.5	G	444	133
-6571	25	MG	728	62
-6572	7	MG/ML	5007	212
-6573	2.0	MG/ML	2213	176
-6574	100	MG	5482	51
-6575	32	MG/ML	3884	198
-6576	20	MG	375	51
-6577	1	MG/	32	68
-6578	1	G	1052	131
-6579	5	PPC	2409	176
-6580	10	MG	599	51
-6581	10	MG	340	51
-6582	15	MG	4525	19
-6583	7.5	MG	368	62
-6584	50	MG	1297	51
-6585	14.3	MG/ML	4183	167
-6586	30	MG/G	2536	149
-6587	500	MG	253	129
-6588	10	MG	2002	176
-6589	10	MG/ML	5350	181
-6590	40	MG/ML	1823	212
-6591	10	MG/ML	2006	176
-6592	500	MG	4393	138
-6593	0.5	MG/G	1047	147
-6594	(300.0 + 300.0)	MG	1749	51
-6595	8000	UI	1873	176
-6596	40	MG	5494	51
-6597	7	MG/ML	4317	212
-6598	90	MG	334	51
-6599	2	MG/ML	994	176
-6600	1.0	MG	2606	13
-6601	SOL		4655	176
-6602	20	MG	4265	51
-6603	35	MG	1540	58
-6604	4	MG	4553	47
-6605	3	MG	4373	51
-6606	0.125	MG	1713	68
-6607	1000	UI	212	35
-6608	6.25	MG	839	51
-6609	6	MCG/DOSE	5242	199
-6610	15000	UI/ML	1705	175
-6611	(30 +20)	MG/G	4957	69
-6612	3	PCC	4639	191
-6613	1	MG/G	910	68
-6614	200	MG	4536	13
-6615	0.10	MG/ML	3711	176
-6616	2000	UI	1704	35
-6617	20	MG	5308	62
-6618	5.00	MG	643	51
-6619	3.5	MG	713	102
-6620	40	MG/ML	2319	181
-6621	875	MG	3662	51
-6622	20% + 0.5% + 5%	POM	4047	147
-6623	100	MG	5516	163
-6624	320	MG	1577	51
-6625	5	GBQ	4244	176
-6626	2	MG/ML	691	179
-6627	81.50	MG/ML	2458	181
-6628	200	MG	5411	51
-6629	(2.5 + 120.0)	MG	1889	43
-6630	25	MG	57	13
-6631	COM		4711	51
-6632	5180	MBQ	805	9
-6633	925	MBQ	805	9
-6634	10	MG/G	4537	68
-6635	0.64	MG/ML	1601	173
-6636	(35.6+37+48.4)	MG/ML	2338	198
-6637	500	MG	989	51
-6638	50	MG	324	51
-6639	0.4	MG	1403	212
-6640	185	MG	2327	122
-6641	3.0	MG/G	4975	149
-6642	50	MCG/	3625	202
-6643	5	MG	4322	4
-6644	100	MG	392	62
-6645	10	MG/ML	3924	176
-6646	2	MG/	5266	181
-6647	450	MG	4486	154
-6648	5	MG/G	2054	147
-6649	30	MG/ML	183	204
-6650	25	MG	1981	51
-6651	300	MG	309	51
-6652	10	MG	4769	62
-6653	2	MG	100	62
-6654	360	U.EL	5105	201
-6655	5	MG	1467	51
-6656	150	MG/ML	4093	176
-6657	10	MG/ML	4181	176
-6658	10	MG/	33	68
-6659	12.5	MG	2519	58
-6660	1	MG/ML	93	194
-6661	3	MG	4674	212
-6662	200	MG	338	12
-6663	8	MG	390	62
-6664	10	MG	4390	32
-6665	(400 + 4 + 4)	MG	4309	155
-6666	1	MG	4526	62
-6667	300	MG	384	51
-6668	300	MG	1856	19
-6669	140	MG	4876	13
-6670	25	MG	4152	51
-6671	250	MG	2521	62
-6672	25	MG	320	74
-6673	200	MG	5009	51
-6674	5	MG/ML	4000	176
-6675	20	MG/G	4136	68
-6676	(0.50 + 50.0 + 50.0 + 5.0)	MG/ML	1495	176
-6677	10	MG	57	13
-6678	2.000	UI	2512	135
-6679	2.00	MG	4307	51
-6680	10	MG	3769	139
-6681	(4 + 500)	MG/ML	754	176
-6682	500	MG	4448	51
-6683	60	MG	1284	62
-6684	2	G	1096	157
-6685	1	MG/ML	4305	176
-6686	18	MCG	4681	19
-6687	0.02	G/G	2051	68
-6688	100	MG	19	51
-6689	500	MG	2762	51
-6690	1	MG/G	39	117
-6691	100	MG	37	62
-6692	50	MG/G	46	68
-6693	3	MG/ML	4674	212
-6694	2	MG	3748	51
-6695	500	MG	1462	134
-6696	4	G+	3988	156
-6697	50	MG/ML	3880	193
-6698	50	MG/DRAG	801	74
-6699	1	MG/ML	3997	181
-6700	20	MG/ML	1830	176
-6701	150	MG	4134	44
-6702	D		724	181
-6703	327	MG	773	46
-6704	150	MG	2179	51
-6705	100	MG	2058	47
-6706	3	MG	5266	19
-6707	80	MG	4868	62
-6708	0.6	MG/ML	5165	176
-6709	1	MG/G	4991	147
-6710	5	MG	4333	13
-6711	(0.5 + 1.0)	MG/G	1604	68
-6712	150	MG	2139	19
-6713	80	MG	4168	62
-6714	20	MG	1903	59
-6715	50	MG/ML	181	181
-6716	370	MBQ	2165	176
-6717	7000	UI	1420	51
-6718	0.5	MG/ML	5357	112
-6719	50	MG	4439	44
-6720	0.5%	SOL	554	173
-6721	(25 + 5)	MG/ML	1708	175
-6722	100	MG	5177	35
-6723	50	MG/ML	1591	181
-6724	PO		5192	133
-6725	20	MG/ML	3602	163
-6726	4	MG	1491	37
-6727	1	G	258	133
-6728	CX		3803	74
-6729	300	MG	2284	19
-6730	0.5	MG/ML	4928	194
-6731	5%	EMPL	4988	76
-6732	0.64	MG/G	1601	147
-6733	100	MG	146	62
-6734	11	MG/ML	4094	181
-6735	75	MG	4061	13
-6736	250	MG	5023	62
-6737	850	MG	2417	44
-6738	25	MG/ML	2028	176
-6739	(4.0 + 0.5)	G	3988	159
-6740	15	MG	3982	62
-6741	4440	MBQ/ML	2493	176
-6742	10	MG	4563	51
-6743	250	UI	2522	134
-6744	2	MG	209	62
-6745	6	MG	774	62
-6746	(0.10 + 0.0012 + 45)	MG/ML	769	204
-6747	1	MG	209	62
-6748	200	MG	4501	58
-6749	2000	UI	5045	35
-6750	(4 +1000)	MG	2421	51
-6751	11.6	MG/G	2110	87
-6752	60	MG	759	177
-6753	10	MG/ML	2214	79
-6754	50	MG/ML	5064	163
-6755	0.075	MG	904	51
-6756	100	UI/ML	5433	176
-6757	1	MG/ML	913	181
-6758	60	MU/ML	2078	176
-6759	200	MG	135	47
-6760	0.1	MG/ML	1496	62
-6761	1.5	MG	2518	13
-6762	1	MG/ML	2449	176
-6763	25	MG/ML	649	176
-6764	200	MG	912	102
-6765	120	MG	1174	62
-6766	10	MG/G	2246	67
-6767	10	MG/ML	4435	185
-6768	500	MG/ML	1586	181
-6769	5000	UI	4663	176
-6770	50	MG/G	2534	68
-6771	500	MG	371	19
-6772	120	MG	1473	51
-6773	50	MG	5573	51
-6774	2	MG	1127	181
-6775	200	MG/	2268	133
-6776	(80.00+5.00)	MG	5232	51
-6777	(100 + 50 + 10)	MG/ML	1859	181
-6778	2.5	MG/ML	1867	62
-6779	500	MG/ML	1592	181
-6780	2	MG	4368	51
-6781	500	UI	1997	134
-6782	900	MG	5321	51
-6783	100	MG	2044	37
-6784	200	MG	4581	62
-6785	(37.5 + 325)	MG	1189	51
-6786	200	MG	931	62
-6787	5	MG/ML	1561	212
-6788	5000	UI	1873	176
-6789	40.00	MG/ML	256	181
-6790	200	MG	2210	19
-6791	4000	UI	164	139
-6792	1250	MG	3813	51
-6793	20	MG	5526	51
-6794	100	U/ML	5467	176
-6795	0.1	MG/ML	605	179
-6796	20	MG/ML	1594	79
-6797	5	MG	5348	176
-6798	20	MG/ML	4194	181
-6799	2.5	MG	442	62
-6800	SOL		120	176
-6801	(2.0 + 0.035)	MG	29	51
-6802	500	MG	4893	13
-6803	4	U	110	153
-6804	150	MG	5014	51
-6805	100	MG	3600	62
-6806	10	MG/G	508	86
-6807	(5+1.25)	MG	21	51
-6808	8.89	MG/G	4508	89
-6809	64	MCG	729	207
-6810	250	MG	981	51
-6811	625	MG	525	51
-6812	44	MCG	4257	176
-6813	1.5	MG/ML	1653	212
-6814	20	MG	4885	51
-6815	0.5	MG	1849	51
-6816	80	MG	677	51
-6817	1	MG	2419	62
-6818	400	MG	4911	37
-6819	100	MG	2	51
-6820	50	MG/G	944	147
-6821	20	MG/G	3608	111
-6822	900	MG	457	154
-6823	2.5	MG	554	62
-6824	500	MG	345	133
-6825	100.000	UI/ML	797	204
-6826	50	MG	2300	62
-6827	0.5	MG	1394	62
-6828	29600	MBQ	2492	196
-6829	125	MG/5ML	243	163
-6830	20	MG	1947	22
-6831	750	MG	4670	51
-6832	10	MG	4431	62
-6833	100	MG	1707	62
-6834	5	MG/G	2116	117
-6835	25	MG/ML	3862	176
-6836	500	MG	440	62
-6837	400	MG	4702	19
-6838	85	MG	4761	51
-6839	2	MG	1699	62
-6840	3	MG	3956	51
-6841	400	MG	2091	51
-6842	(5.0+ 50.0)	MG	558	19
-6843	PO		4123	134
-6844	1	G	253	131
-6845	500	MG	48	62
-6846	(50.0 + 12.5)	MG	325	51
-6847	1% + 0.4%	CREM	1439	68
-6848	(320.0+10.0)	MG	678	51
-6849	4	MG	3780	51
-6850	50	MG/ML	2571	179
-6851	200	MG	5554	37
-6852	40	MG	5173	137
-6853	4	MG/ML	2171	181
-6854	100	MG	612	58
-6855	100	MG	1361	142
-6856	200	MG	268	51
-6857	2	MG/ML	2479	175
-6858	450	MG	821	44
-6859	50000	UI	212	35
-6860	4	MG	5409	48
-6861	1	G	4932	131
-6862	1000	UI	1873	176
-6863	750	MG	874	51
-6864	30	MG	2497	62
-6865	500	MG	5141	13
-6866	75	MG	1195	15
-6867	10	MG	4461	131
-6868	0.5	MG/G	4162	68
-6869	20	MG/ML	2629	176
-6870	200	MG	5413	139
-6871	20	MG	5257	51
-6872	500	MG+	4692	46
-6873	50	MG/ML	3595	204
-6874	160 + 25	MG	5234	51
-6875	4	MG	1496	62
-6876	50	MG	4249	176
-6877	300	MG	821	62
-6878	SOL		4603	176
-6879	1.8	MG/ML	847	204
-6880	500	MG	456	142
-6881	0.5	MG	762	62
-6882	200	MG	4424	27
-6883	50	MG	3678	13
-6884	40	MCG/1.0	4261	201
-6885	25	MG	4634	140
-6886	500	MG	2281	62
-6887	74	MBQ	1390	176
-6888	100	MG	18	51
-6889	100	MG	930	51
-6890	500	MG	865	2
-6891	80	MG	2374	51
-6892	100.000	UI/G	1451	147
-6893	150	MG	2141	13
-6894	20	MG	3877	59
-6895	4810	MBQ	805	9
-6896	20	MG	376	51
-6897	20	MG	4873	19
-6898	(99.65 + 1.5 + 3.5 + 1.0)	MEQ/L	1308	189
-6899	4.0	MG/ML	710	181
-6900	20	MG/ML	2509	204
-6901	2	MG	680	51
-6902	15	MG	1676	51
-6903	1	MG/G	1295	68
-6904	20	MG	1949	62
-6905	2	MG	169	62
-6906	24	MG	2302	15
-6907	130	MCG	1254	201
-6908	80	MG	402	51
-6909	3	MG	4626	62
-6910	35	MG+1	365	147
-6911	10	MG	1231	51
-6912	50	MG	1542	51
-6913	20	MG	4803	69
-6914	APRESENTACAO		875	114
-6915	(	PO	2192	155
-6916	287	MG	3759	176
-6917	100	MG	2250	13
-6918	10	MG/ML	1445	173
-6919	SOL		612	194
-6920	450	MG	835	44
-6921	20	MG	4775	19
-6922	100	MG	1413	44
-6923	11.6	MG/G	528	86
-6924	20	MG/G	4964	69
-6925	10000	UI	1882	176
-6926	30	MG	1351	24
-6927	0.5	MG/G	1047	67
-6928	50	MG	328	51
-6929	2000	UI	1703	51
-6930	3	MG	3593	13
-6931	20	MG/G	920	68
-6932	300	MG/5ML	4891	204
-6933	15	MG	1387	51
-6934	100	MG	4330	62
-6935	17.60	MG/ML	5160	167
-6936	100	UI/ML	2603	176
-6937	(25.0 + 12.5)	MG/G	2248	69
-6938	240	MG/ML	377	181
-6939	300	MG	1810	139
-6940	36	MG	1266	58
-6941	25	MG	838	62
-6942	16	MG	2302	15
-6943	1.5	MG/ML	5327	212
-6944	(1.0 + 0.5)	G	254	156
-6945	(0.075+ 0.03)	MG	2361	51
-6946	5	MG/ML	1489	176
-6947	600	MG	804	35
-6948	4000	UI	1881	139
-6949	10	MG/ML	626	185
-6950	2	MG/ML	1865	185
-6951	1	MG	1692	62
-6952	10	MG	3760	176
-6953	100	MG	961	37
-6954	300	MG	1939	51
-6955	(462 + 438 + 90)	MG/G	2218	127
-6956	24	MG	1533	62
-6957	300	MG	603	62
-6958	5	MG	4141	19
-6959	25	MG	5325	51
-6960	90	MG	687	51
-6961	40	MG	1617	59
-6962	50	MG	146	62
-6963	0.25	MG/5ML	895	212
-6964	25	MG	3859	58
-6965	5	MG	1934	62
-6966	10	MG/G	4537	69
-6967	10	DOSES	5180	201
-6968	1	MG/ML	4703	179
-6969	600	MG	2293	51
-6970	200	MG	332	51
-6971	10	MG	1986	51
-6972	1	MG	2009	176
-6973	40	MG	3735	51
-6974	320	MG	677	51
-6975	40000	UI/ML	1881	176
-6976	10000	UI/ML	1719	181
-6977	50	MG	4378	51
-6978	1.00	MG	907	62
-6979	5.631	G	2206	98
-6980	25.000	UI/G	138	69
-6981	30	MG	4211	11
-6982	55500	MBQ	2354	176
-6983	9	MG	426	58
-6984	20	MG/G	4150	68
-6985	50	MG/ML	1679	176
-6986	300	MG	2514	51
-6987	20	MG	2171	13
-6988	1	MG/G	2253	145
-6989	1000	UI	1719	51
-6990	5	MG	1677	176
-6991	2	MG	1576	51
-6992	50	MG	4334	51
-6993	2000	UI	1435	48
-6994	2.5	MG	184	62
-6995	25	MG/ML	2034	176
-6996	40	MG	674	51
-6997	25	MG	124	51
-6998	100	MG	4183	51
-6999	120	MG/G	38	102
-7000	38.5	MCG	650	142
-7001	50	MCG/DOSE	4020	208
-7002	(100+150)	MG/G	4426	67
-7003	150	MG/ML	170	176
-7004	125	MCG	4205	62
-7005	50	MG	2261	62
-7006	10	MG/ML	951	194
-7007	1	MG	4397	51
-7008	10	MG	1154	58
-7009	100	MG	2118	19
-7010	120	KUI	3674	140
-7011	10000	UI	1702	35
-7012	800	MG	941	51
-7013	10	MG/ML	5393	185
-7014	125	MG/ML	4740	176
-7015	5	MG	4084	62
-7016	500	MG	856	46
-7017	0.150	MG	1469	62
-7018	0.25	MG	5535	62
-7019	254	MG	830	19
-7020	50	MCG/ML	5439	179
-7021	(300.0 + 125.0 + 50.0 + 30.0)	MG	3887	37
-7022	360	MG	4067	51
-7023	2.0	MG/ML	990	176
-7024	160	MG	5255	51
-7025	30	MG	1960	51
-7026	250	MG	4428	51
-7027	1	ML/ML	2779	109
-7028	20	MG	4409	32
-7029	30	MG/ML	1136	176
-7030	5	MG/ML	416	179
-7031	50	MG/ML	2153	181
-7032	4	MG/ML	171	176
-7033	500	MG	5115	61
-7034	2	MG	216	51
-7035	8	MG	1222	15
-7036	1.60	MG/ML	1142	186
-7037	30	MG	4532	162
-7038	4	MG	1764	51
-7039	12.5	MG	802	62
-7040	100	MG	4459	35
-7041	500	MG	983	51
-7042	40	MCG/ML	327	176
-7043	500	MG	986	51
-7044	200	MG	2496	62
-7045	22.25	MG	2107	51
-7046	30	MG	5149	13
-7047	10	G	2103	176
-7048	25	MG/ML	847	176
-7049	500	MG	4442	51
-7050	5.0	MG	1537	51
-7051	PO		4123	140
-7052	200	MG	5177	35
-7053	150	MG/ML	2608	176
-7054	0.250	MG/2	418	105
-7055	(20 + 0.64 + 2.5)	MG/G	914	147
-7056	600	MG	4557	51
-7057	30	MG	463	44
-7058	5	MG	2393	37
-7059	71.50	MG/ML	130	181
-7060	20	MCG/DOSE	418	171
-7061	200	MG	5281	139
-7062	74000	MBQ	2354	176
-7063	60	MG	1122	51
-7064	20	MG/ML	4185	185
-7065	2.5	MG	2226	51
-7066	300	MG	5507	58
-7067	40	MG	3681	176
-7068	140	MG	2114	19
-7069	200	MG	5350	51
-7070	500	MG	262	37
-7071	0.250	MG/	2159	182
-7072	0.5	MG/G	5357	68
-7073	8	MG	2330	15
-7074	5	MG	4875	13
-7075	100	MG	2453	181
-7076	500	MG/ML	1583	176
-7077	50	MG	1647	51
-7078	1.5	MG/	5327	212
-7079	3	MG/ML	1274	167
-7080	5	MG	3610	62
-7081	25	MG	809	62
-7082	(15	MG/ML+0.2573	3952	187
-7083	(2 + 0.03)	MG	30	51
-7084	20	MG/ML	5042	185
-7085	20	MG	1287	62
-7086	300	MG	4998	37
-7087	200	MG/ML	4946	181
-7088	20	MG/G	583	147
-7089	20	MG	4804	51
-7090	1.11	MG/ML	1151	179
-7091	2	MG	1867	62
-7092	857	MG	4635	51
-7093	60	MG	2363	176
-7094	12.5	MG/ML	1623	176
-7095	6258	MBQ	2013	176
-7096	50	MG/ML	871	163
-7097	25	MG	264	74
-7098	SUS		5268	201
-7099	80	MG	5263	51
-7100	50	MG	4548	176
-7101	50	MG	2189	62
-7102	200	MG	229	62
-7103	3.0	MG	2116	120
-7104	50	MG/G	543	147
-7105	PO		3588	140
-7106	4.5	MG	4526	58
-7107	50	MG/ML	4073	176
-7108	SOL		2548	181
-7109	(160.0+10.0)	MG	678	51
-7110	50	MG	624	176
-7111	40	MG	3875	59
-7112	40	MG/ML	483	204
-7113	0.3	MG/G	4186	147
-7114	0.1	MG/ML	1392	178
-7115	2	MG/ML	3584	176
-7116	(0.25 + 0.33 +0.05)	G/G	297	62
-7117	0.5	MG	2364	19
-7118	50	MG	4771	51
-7119	320	MG	674	51
-7120	100	MG	2041	62
-7121	4.0	MG	1153	51
-7122	2.0	MG	29	51
-7123	DRG		2360	74
-7124	75	MG	1086	51
-7125	50	MG/ML	2160	176
-7126	0.5	MG	1389	32
-7127	5	MG	299	62
-7128	3.5	MG	5280	142
-7129	(3 + 0.03)	MG	1721	51
-7130	(6.00+0.30+0.20+3.20)	MG/ML	4353	176
-7131	25	MG	2749	62
-7132	10.8	MG	5534	104
-7133	600	MG	183	62
-7134	1	MG/G	32	67
-7135	3	MG/ML	1083	212
-7136	100	MG	857	102
-7137	9	MG/ML	1079	176
-7138	300	MG	820	62
-7139	320	MG	427	51
-7140	100	MG	4538	51
-7141	400	MG	4313	62
-7142	100	MG	5480	51
-7143	(2.0 + 5.0)	MG/ML	1250	179
-7144	4.0	MG	3780	51
-7145	180	MG	2062	51
-7146	100	MG/G	966	154
-7147	5	MG	393	37
-7148	20	MG/G	5403	68
-7149	(20.0 + 10.0)	MG	5524	51
-7150	4	MG	3974	98
-7151	(5 + 100 + 100)	MG	1006	51
-7152	250	MCG/DOSE	1596	171
-7153	25	MG/ML	1563	181
-7154	10.000	UI	2185	51
-7155	5	MG/ML	1652	176
-7156	5	MG/ML	1676	176
-7157	(3 + 0.02)	MG	1721	51
-7158	150	MG	158	29
-7159	30	MG	1655	74
-7160	4.5	MG	5266	19
-7161	100	MG	4736	135
-7162	20	MG	4532	162
-7163	2	MG	1951	62
-7164	10	MG/G	3983	165
-7165	0.060	MG+0.015MG	89	51
-7166	100	UI/ML	3668	201
-7167	138		1315	189
-7168	100	MG	1481	142
-7169	80	MG	670	62
-7170	SOL		4010	176
-7171	(10 + 5)	MG	1229	13
-7172	10	G	2310	176
-7173	0.3	MG/ML	2390	179
-7174	(10.0 + 10.0)	MG	4015	13
-7175	1	MG	378	62
-7176	500	MG	5064	51
-7177	100	MG	124	51
-7178	10	MG	1777	51
-7179	125	MG	1858	51
-7180	100	MG	1885	135
-7181	(80 + 11.4)	MG/ML	245	160
-7182	10	MG/G	1204	68
-7183	12.5	MG	806	62
-7184	5	MG/ML	573	201
-7185	500	MCG	1391	51
-7186	4000	UI	164	176
-7187	11	DH	333	94
-7188	25	MG/ML	4768	110
-7189	50	MG	1053	51
-7190	150	MG	735	58
-7191	1000	UI	1759	35
-7192	80	MG	5255	51
-7193	10	MG	5541	51
-7194	180	MG	1562	51
-7195	15	MG	4379	51
-7196	7.5	MG/ML	2147	181
-7197	3	G	4845	139
-7198	10	MG/G	3607	68
-7199	400	MG	1915	62
-7200	100	MG	3601	197
-7201	1	G	903	46
-7202	50	MG/ML	1025	103
-7203	100	MG/ML	1499	181
-7204	2.5	MG	3663	62
-7205	7.5	MG/ML	4253	181
-7206	80.0	MG/ML	4589	111
-7207	3.125	MG	826	62
-7208	1000	MG	1674	37
-7209	50	MG	528	74
-7210	150	MG	4338	13
-7211	35	MG	1668	37
-7212	3.5	MG/G	1102	149
-7213	40000	UI	1873	176
-7214	60	MG	4627	176
-7215	100	MG	4477	62
-7216	10	MG	4525	19
-7217	5	MG	3724	62
-7218	5	MG	1474	51
-7219	150	MG	1870	51
-7220	10	MG	1282	62
-7221	50	MG	858	62
-7222	5	MG	340	47
-7223	3	MG	958	122
-7224	1000	UI	97	135
-7225	25	MG	2565	62
-7226	18	MG	4245	58
-7227	20	MG/G	964	147
-7228	50	MG	5258	62
-7229	3	MG	2321	122
-7230	200	MG	2045	9
-7231	5	MG/ML	3791	179
-7232	10	MCG	5187	201
-7233	0.4	MG/ML	1987	212
-7234	5	MG/ML	4954	167
-7235	30	MG	1637	62
-7236	20	MG/G	3767	147
-7237	500	MG	5349	51
-7238	50	MG	5540	51
-7239	200	MG	4338	13
-7240	6	MG	5498	62
-7241	112	MCG	4785	62
-7242	(99.65 + 1.5 + 3.5 + 1)	MEQ/L	1309	189
-7243	2	MG	2483	62
-7244	0.50	MG/G	4906	68
-7245	500	MG	242	19
-7246	10	MG/ML	4262	167
-7247	1	MG/G	75	86
-7248	0.060	MG	4821	51
-7249	GT		1511	181
-7250	CX		1682	74
-7251	12	MCG	157	25
-7252	1000	UI	1435	35
-7253	SUS		837	204
-7254	0.125	MG	4227	37
-7255	1000	MCG	1700	37
-7256	(30 + 60 + 100 + 60)	MG	1750	176
-7257	50	MG	395	37
-7258	LIN		2341	107
-7259	25390	MBQ	2013	176
-7260	45	MG	4288	48
-7261	1	G	4912	133
-7262	8	MG	1787	15
-7263	1.0	MG/ML	2767	36
-7264	4.500.000	UI	1238	156
-7265	40	MG	5526	51
-7266	DRG		2355	74
-7267	30	MUI	5490	176
-7268	10	MG/G	1529	87
-7269	80	MG	4564	51
-7270	300	MG	4983	51
-7271	3.5	MG/G	4139	149
-7272	5000	UI/G	2575	147
-7273	30	MG/ML	4557	181
-7274	250	MG	4636	46
-7275	SUS		4407	204
-7276	50	MG	4985	51
-7277	40	MG	4878	37
-7278	10	MG	5436	51
-7279	100	MG	4966	13
-7280	100	MG	3581	62
-7281	1000	MG	249	139
-7282	40	MG	3870	140
-7283	25	MG	4917	62
-7284	15	MG	4357	58
-7285	60	MCG/ML	438	176
-7286	10	MG	261	51
-7287	200	MG	542	62
-7288	10	MG	4051	51
-7289	160	MG	5228	51
-7290	25	MG	385	51
-7291	2	MG	4028	51
-7292	10	MG	3580	32
-7293	125	MG	1458	50
-7294	20	MG	3874	51
-7295	PO		5204	140
-7296	10	MG/G	1442	69
-7297	500	MG	1352	140
-7298	20	MG/ML	1628	176
-7299	20	MG/G	928	67
-7300	25	MG	1701	58
-7301	20	MG	4855	51
-7302	1	G	877	129
-7303	15	MG	4628	140
-7304	12.5	MG	3579	62
-7305	10	MG	442	62
-7306	COM		4637	46
-7307	100	MG	4625	38
-7308	500	MG	871	51
-7309	2	MG	3604	13
-7310	500	MG	1614	51
-7311	0.25	MG	1501	62
-7312	120	MG	3802	13
-7313	60	MG	2528	176
-7314	500	MG	3808	51
-7315	5	MG/ML	347	176
-7316	(20.0 + 5.0)	MG	3741	51
-7317	1	G	887	133
-7318	5	MG	3971	51
-7319	5	MG	5127	135
-7320	10	MG	590	51
-7321	300	MG	3893	37
-7322	30	MG	346	62
-7323	0.5	MG/G	429	207
-7324	150	MG	5058	19
-7325	300	MG	5398	51
-7326	(875+125)	MG	245	51
-7327	1	G	1654	37
-7328	300	MG	2294	19
-7329	500	MG	959	133
-7330	(100.0 + 25.0)	MG	394	62
-7331	0.4	MG/ML	4752	212
-7332	SUS		2162	201
-7333	10	MG/ML	822	176
-7334	20	MG/G	5539	68
-7335	7000	UI	5371	32
-7336	20	PCC	4598	176
-7337	5	MG	4825	19
-7338	25	MG+	1344	201
-7339	600	MG	2533	176
-7340	10000	UI	78	32
-7341	2	MG/ML	1536	181
-7342	50.000	UI	2185	51
-7343	5	MG/ML	4645	176
-7344	250	MG	5110	51
-7345	40	MG	4564	51
-7346	100	MG	3930	139
-7347	200	MG	5317	51
-7348	1	MG/ML	4834	176
-7349	15	MG	4262	51
-7350	100	MCG/ML	327	176
-7351	(48.93 + 64.30 + 57.50 + 791.55)	MG/G	4279	158
-7352	400	MG	1142	2
-7353	100	MG	292	139
-7354	50	MG	5083	51
-7355	5	MG	5171	51
-7356	400	MG	4324	51
-7357	5000	UI	940	134
-7358	279.3	MG/ML	4143	176
-7359	4.0	MG	388	62
-7360	(125.0 + 50.0 + 300.0 + 30.0)	MG	5072	62
-7361	500	MG	1654	62
-7362	10	MG/6.25	599	62
-7363	50	MG	320	74
-7364	100	MG	2569	19
-7365	1.6	MG/ML	645	212
-7366	250	UI	3706	140
-7367	5	MG/ML	1641	198
-7368	400	MG	248	154
-7369	0.4	MG	4837	19
-7370	2	MG/ML	2605	194
-7371	24	MG	577	62
-7372	40	MG	3870	59
-7373	2	MG/ML	1967	176
-7374	0.4	MG	4714	20
-7375	1	MG/G	527	147
-7376	10	PCC	2409	176
-7377	80	MG	5172	51
-7378	XPE		2452	212
-7379	SUS		2318	201
-7380	100	UI/ML	2598	201
-7381	740	MBQ	2299	176
-7382	150	MG	322	51
-7383	300	MG	206	51
-7384	50	MG/ML	5468	176
-7385	(30 +20)	MG/G	1323	69
-7386	1	MG	2615	62
-7387	1500	MG	2431	158
-7388	16	MG	1223	15
-7389	2.5	MG	562	37
-7390	7	MG/ML	688	212
-7391	20	MG/ML	2004	176
-7392	10	MG/G	1176	68
-7393	0.5	MG/G	2484	68
-7394	50	MG	807	37
-7395	0.8	MG/G	3931	122
-7396	1.0	MG/ML	2121	203
-7397	(103 + 1.0 + 2.5 + 1.0)	MEQ/L	1308	189
-7398	500	MG	2535	51
-7399	1	MG	4369	51
-7400	1.33	MG	4447	140
-7401	20	MG	4262	51
-7402	181.43	MG/ML	4121	176
-7403	25	MG/ML	1054	176
-7404	15	MG	4509	37
-7405	50	MG	1203	62
-7406	90	MG/ML	4852	176
-7407	500	MG	1025	142
-7408	0.6	G	4354	176
-7409	2	MG/ML	2388	179
-7410	1	MG	4251	74
-7411	4.0	MG	1303	62
-7412	1	G	3660	46
-7413	2	MG	2420	37
-7414	(100 + 50 + 10)	MG/ML	1871	181
-7415	80	MG/ML	4080	201
-7416	0.375	MG	1539	44
-7417	8.6 + 0.3 + 0.33	MG/ML	4352	176
-7418	10	MG	1000	51
-7419	3266	MBQ	2013	176
-7420	40	MG	2550	62
-7421	3	GBQ	4244	176
-7422	2	MG	128	51
-7423	2	MG/ML	2562	176
-7424	75	MG	973	62
-7425	1	G	911	131
-7426	50000	UI	1758	35
-7427	5	MG/ML	1517	176
-7428	100	MG	509	62
-7429	0.1	G/ML	1828	176
-7430	400	MG	742	35
-7431	50	MG	802	62
-7432	100.000	UI/G	3598	145
-7433	40	MG	5051	51
-7434	0.5	MG	1754	32
-7435	1	MG	380	62
-7436	120	MG	2084	51
-7437	50	MG	1296	51
-7438	CREM		1242	69
-7439	1	MG/ML	2167	203
-7440	600.000	U	535	2
-7441	(520	MG/G	111	102
-7442	5	MG	3725	37
-7443	100	MG	4516	51
-7444	(80.00+5.00)	MG	1578	51
-7445	10	MG	3675	62
-7446	10	MG/ML	4924	176
-7447	3000	UI/ML	164	176
-7448	2	G	4845	139
-7449	40	MG	4169	62
-7450	(500.0 + 125.0)	MG	245	51
-7451	7.5	MG	1678	51
-7452	50	MG/ML	2414	176
-7453	0.1	MG/ML	4461	176
-7454	150	MG	4907	19
-7455	25	MG	2557	62
-7456	13.33	MG/ML	5025	212
-7457	0.5	MG	1755	20
-7458	50	MCG/G	1371	86
-7459	(103 + 2.0 + 3.0 + 1.0)	MEQ/L	1308	189
-7460	7.5	MG/ML	3785	176
-7461	2.0	MG	1134	62
-7462	250	MG	1110	176
-7463	100	MG	290	62
-7464	20	MG	4298	51
-7465	25	MG	1086	51
-7466	5	MG	1289	62
-7467	1	MG	3623	114
-7468	SUS		71	201
-7469	50	MG	3769	139
-7470	80	MG	3681	176
-7471	2	MG/ML	1663	204
-7472	PÓ		3936	137
-7473	3.5	MG/ML	4376	176
-7474	50	MG	802	37
-7475	5	MG	2486	62
-7476	(160.00+5.00)	MG	5232	51
-7477	185	MBQ	828	176
-7478	80	MG	4547	51
-7479	(200 + 50)	MG	4148	62
-7480	(1.0 + 2.5 + 1.5)	MG	1938	140
-7481	1	MG/ML	1024	212
-7482	15	MG/ML	4618	187
-7483	10	MG	5139	51
-7484	CAP		2357	32
-7485	10	MG	171	74
-7486	100	MG	4236	51
-7487	5	MG	3726	51
-7488	2.5	MG	4940	62
-7489	50	MG	3861	19
-7490	750	MG	1661	62
-7491	10	MG	5288	51
-7492	2.5	MG	682	51
-7493	10	MG	1464	51
-7494	120	MG/ML	1048	192
-7495	850	MG	2405	62
-7496	10	MG	2515	51
-7497	1000	UI	2304	176
-7498	100	MG	3577	35
-7499	6.25	MG	840	62
-7500	5	MG	4406	51
-7501	20	MG	1400	51
-7502	500 + 30	MG	123	62
-7503	5	MG/ML	2072	86
-7504	11.6	MG/G	848	173
-7505	(35.6+37+48.4)	MG/ML	2338	204
-7506	1	MG	307	51
-7507	15	MG	1840	2
-7508	2.5	G	4857	176
-7509	12.5	MG	324	51
-7510	125	MG	1060	51
-7511	7.5	MG/ML	2147	190
-7512	12	MG	2290	51
-7513	50	MG/ML	818	181
-7514	1	MG/G	5214	147
-7515	200	MG	4865	133
-7516	6.25	MG	838	62
-7517	200	MG	4338	19
-7518	3300	UI/ML	78	181
-7519	18	MG	1266	58
-7520	3.5	MG	659	135
-7521	(400.0 + 4.0 + 4.0)	MG	3774	13
-7522	500	MG	889	142
-7523	30	MG/ML	2445	181
-7524	20	MG	4086	62
-7525	5	MG	3605	62
-7526	10	MG	4072	62
-7527	20	MG	1321	51
-7528	100	UI	2603	201
-7529	40	MG/ML	468	204
-7530	80	MG	5265	15
-7531	5	MG/ML	714	212
-7532	5.4	MG	5479	62
-7533	1	G	3935	101
-7534	20	MG	3738	51
-7535	1	G	881	156
-7536	100	MG	17	51
-7537	0.25	MG/ML	1155	178
-7538	80	MG/0.8	1829	176
-7539	500	MG	987	51
-7540	30	MG	4515	51
-7541	5.0	MG	1792	51
-7542	1	MG/ML	2388	179
-7543	(46.3+46.3+46.3+46.3)	MG/COM	81	62
-7544	10	MG/ML	3639	176
-7545	20	MG	1910	59
-7546	5	MG/ML	103	190
-7547	850	MG	4918	37
-7548	(50000 + 10000)	UI/ML	92	181
-7549	150	MG	740	58
-7550	1000	U	2014	134
-7551	20	MG	946	46
-7552	7.5	MG	613	62
-7553	5	MG	195	51
-7554	500	MG	1591	62
-7555	40	MG	2781	12
-7556	150	MG	668	139
-7557	500	MG	1661	62
-7558	11.6	MG	847	194
-7559	20	MG	4385	51
-7560	4	MG	755	176
-7561	50	MG	1199	51
-7562	150	MG	3914	51
-7563	100	MG	2261	62
-7564	925	MBQ	2144	176
-7565	150	MG/ML	1276	201
-7566	40	MG/ML	2629	176
-7567	(20 + 12.5)	MG	3736	51
-7568	360	UEL	5105	201
-7569	10	MG	1506	62
-7570	50	MG/ML	1398	176
-7571	400	MG	183	51
-7572	900	UI/	3948	176
-7573	5	MG	2408	62
-7574	500	MG	813	51
-7575	(25+ 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-7576	400	MG	4992	139
-7577	500	MG	3884	158
-7578	0.5	MG/G	4164	147
-7579	5	MG/ML	2203	201
-7580	300	MG	5516	163
-7581	10.000	UI	4264	176
-7582	100	MG/ML	5114	204
-7583	100	MG	3981	62
-7584	2.5	MG	1460	38
-7585	10	MG	2324	22
-7586	50000	UI	1704	35
-7587	0.15	MG/ML	1236	179
-7588	1	MG	4227	37
-7589	10	MG/ML	799	194
-7590	500	MG	1816	51
-7591	10	MG	4822	62
-7592	4000	UI	4471	51
-7593	5550	MBQ	1345	176
-7594	2.5	PCC	1515	187
-7595	20	MG/ML	2059	176
-7596	400	MG	2129	51
-7597	20	MG/G	1264	166
-7598	30	MG	2381	51
-7599	200	MG	4986	51
-7600	300	MG	1665	197
-7601	600	MG	5516	163
-7602	100	MCG	3625	204
-7603	750	MG	1845	47
-7604	150	MG	2514	51
-7605	(14.91 + 23.40 + 19.61 + 198.28)	MG/ML	2548	181
-7606	5	MG/ML	2035	178
-7607	30000	UI	1719	51
-7608	62.5+4.38+1.25+2.5	MG/G	1242	69
-7609	20	MG	1819	62
-7610	200	MG/ML	183	200
-7611	19435	MBQ	2013	176
-7612	400	MG	4308	19
-7613	850	MG	2396	37
-7614	7.5	MG	4674	181
-7615	4	MG/ML	4000	181
-7616	(40 + 3 + 2.5 + 1 + 48.5 + 0.25)	MEQ/L	1312	189
-7617	400	MG	4911	62
-7618	1000	UI	568	140
-7619	100	MG	4776	176
-7620	COM		505	51
-7621	50	MG/ML	1427	212
-7622	100	MG/ML	2358	181
-7623	30	MG	4319	51
-7624	875	MG	245	51
-7625	5	MG	5453	51
-7626	3.5	MG/ML	1100	179
-7627	4	MG/ML	2204	176
-7628	100	UI/ML	5356	201
-7629	100	U	665	139
-7630	1	G	454	51
-7631	5	MG/ML	1518	176
-7632	2000	UI	1881	139
-7633	0.2	MG/ML	1637	176
-7634	1	MG/ML	1677	176
-7635	25	MG/ML	2028	201
-7636	150	MG	5350	51
-7637	25	MG	955	35
-7638	7	MG/ML	2500	212
-7639	50	MG/ML	2039	176
-7640	100	MG	1199	51
-7641	200	MG	4516	51
-7642	1	MG/ML	710	181
-7643	3	MG	3582	51
-7644	300	MG	404	51
-7645	20	MG	1290	62
-7646	1	MG/ML	496	176
-7647	(22.7	MG/ML+0.147	3952	187
-7648	3	MG/G	2576	147
-7649	50	MG/ML	3665	160
-7650	1.5	MUI	4410	51
-7651	40	MG/ML	1431	201
-7652	20	MG	5263	51
-7653	50	MG	2092	19
-7654	0.5	MG/ML	554	212
-7655	10	MG	4470	62
-7656	50	MG/G	4916	147
-7657	10	MG	5002	37
-7658	90	MG	1210	51
-7659	2	MG/ML	4951	212
-7660	15	MG	5419	51
-7661	4	MG	41	186
-7662	800	MG	476	62
-7663	90	MG	829	22
-7664	20	MG/ML	819	212
-7665	PED		1839	201
-7666	50	MG	1781	51
-7667	20	MG	5558	51
-7668	13.3	MG/ML	5450	212
-7669	2	MG/ML	3778	185
-7670	500	MG	5238	129
-7671	150.000	U/	535	201
-7672	(150 + 188)	MG	3799	95
-7673	50	MCG/ML	4021	176
-7674	SOL		117	191
-7675	80	MG/ML	3651	181
-7676	0.010	G	1682	197
-7677	64	MCG	3625	202
-7678	10	MG	4196	62
-7679	50	MG/ML	1843	167
-7680	5	MG	1957	37
-7681	75	MG	5463	140
-7682	2.4	MG/ML	4679	176
-7683	10	MG/G	2101	86
-7684	10	MG	5254	51
-7685	4000	UI	1873	176
-7686	20	MG	954	62
-7687	100	MG	2472	32
-7688	1110	MBQ	805	9
-7689	1.000.000	UI	4154	159
-7690	1050	UI/1.75	2443	140
-7691	500	MG	506	135
-7692	200	MG	4325	51
-7693	SOL		4645	176
-7694	20	MG	5168	62
-7695	1	MG	563	135
-7696	500	MG	5575	51
-7697	2.00	MG	360	51
-7698	50	MG	648	176
-7699	(2.0 + 0.03)	MG	30	51
-7700	400	MG	4863	139
-7701	0.275	MG/ML+3.850	1797	182
-7702	5	MG/ML	2273	176
-7703	60	MG	1884	51
-7704	2	MG	319	62
-7705	50	MG	4207	62
-7706	20	G	2103	176
-7707	100	MG	3717	35
-7708	(4 + 2.632 + 10 + 1 + 2)	MG	3692	51
-7709	5.45	MG	1257	51
-7710	25	MG	352	51
-7711	500	MG/ML	1582	181
-7712	20	MG	5420	35
-7713	20	MG	5178	51
-7714	(20.0 + 0.64 + 2.5)	MG/G	5062	147
-7715	100	MG	436	58
-7716	50000	UI	5338	51
-7717	100	MG	1647	51
-7718	(1000.0 + 200.0)	MG	246	156
-7719	500	MG	4393	173
-7720	400	MG	3643	173
-7721	10	MG	5326	51
-7722	20	MG	402	51
-7723	100	MG	1565	15
-7724	25	MG/	2630	176
-7725	8	MG	2302	15
-7726	75	MG	1196	62
-7727	50%	SOL	2412	176
-7728	900	MG	1575	102
-7729	5000	UI	211	51
-7730	0.5	MG	209	62
-7731	100	MG	4391	51
-7732	4	MG	1491	62
-7733	1	G	880	156
-7734	40	MG	3740	51
-7735	40	MG/ML	135	167
-7736	UVA		2548	108
-7737	5	MG	1896	48
-7738	250	MG	876	140
-7739	5	MG/ML	4156	212
-7740	400	MG	2293	19
-7741	80	MG	5136	51
-7742	100	MG/ML	3906	181
-7743	7	MG/ML	337	212
-7744	100	MG	979	62
-7745	10	MG	293	62
-7746	500	MG	861	58
-7747	0.32	G/G	1417	165
-7748	600	MG	2379	66
-7749	3000	UI	1882	176
-7750	1	MG/ML	4277	190
-7751	500	MG	985	51
-7752	20	MG	946	152
-7753	10	MG	5310	51
-7754	750	MG	861	58
-7755	40	MG	5400	176
-7756	5	UI/ML	3702	176
-7757	PO		4171	135
-7758	50	MG/ML	2153	212
-7759	300	MG	2187	13
-7760	1	MG/ML	1534	181
-7761	100	MG	4874	135
-7762	100	MCG/ML	1480	176
-7763	20	MG	4565	62
-7764	500	UI	2522	134
-7765	100	MG	612	22
-7766	25	MG	1878	176
-7767	50	MG/ML	175	204
-7768	100	MG	5404	58
-7769	44.94	MG/ML	847	204
-7770	(80+11.4)	MG/ML	245	163
-7771	250	MG	255	19
-7772	20	MG/ML	737	204
-7773	(0.50 + 2.15 + 2.15)	G/4.90	4707	127
-7774	0.50	MG/G	4162	147
-7775	1000	MG	342	131
-7776	(5.0 +50.0 +10.0)	MG	514	120
-7777	5000	UI/0.3	4264	176
-7778	40	MG	3752	16
-7779	(10.0 + 15.0)	MG	198	51
-7780	25	MG	1089	136
-7781	75	MG	4258	135
-7782	20	MG/G	2245	147
-7783	10	MG	1111	51
-7784	100	MG	179	139
-7785	10.0	G	2103	176
-7786	150	MG	4088	19
-7787	1	MG/G	5048	67
-7788	20	MG/G	3590	2
-7789	5	MG	4563	51
-7790	5	MG	4095	37
-7791	7	MG	22	62
-7792	200	MG/G	495	147
-7793	1500	UI	2520	134
-7794	5.0	G	2103	176
-7795	187	MG/	861	154
-7796	12	UI	3637	140
-7797	80	MG	5115	47
-7798	5	MG	2425	62
-7799	(42.5 + 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-7800	20	MG/G	923	68
-7801	12.5	MG	4452	76
-7802	1	MG	2074	51
-7803	30000	UI	78	35
-7804	200	MG	4741	13
-7805	5	MG/G	2576	86
-7806	500	MG/5	249	163
-7807	1	MG/ML	4299	176
-7808	15	MG	63	51
-7809	250	MG	841	62
-7810	200	MG	1443	62
-7811	500	MG	1137	37
-7812	400	MG	4325	51
-7813	300	MG	1756	37
-7814	1	MG	5487	51
-7815	5	PCC	596	176
-7816	40	MG	4868	62
-7817	(11.1 + 35 + 20)	G/L	3728	79
-7818	15	MG	3760	176
-7819	80	MG/ML	4529	163
-7820	80	MG	4869	62
-7821	500	MCG/ML	210	176
-7822	0.5	MG/G	1471	112
-7823	150	MG	5516	163
-7824	45	MG	2200	13
-7825	100	U/ML	3670	201
-7826	10	MG/ML	625	139
-7827	0.030 + 0.075	MG	2360	51
-7828	500	MG	2240	51
-7829	635	MG	4677	46
-7830	6	MG	5174	19
-7831	100	MG	291	62
-7832	4.0	MG/ML	2204	176
-7833	11.6	MG/G	1524	86
-7834	(40 + 0.6 +0.6)	MG/ML	4310	181
-7835	1000	MG	888	156
-7836	150	MG	2756	51
-7837	12.5	MG	807	62
-7838	770	MG	4677	102
-7839	50	MG	336	62
-7840	0.05	MG/ML	1710	179
-7841	20	MG/ML	923	166
-7842	5	MG/ML	1094	176
-7843	75	MG	4715	37
-7844	720	UEL	5105	201
-7845	15	MG	5436	51
-7846	200	MG	143	51
-7847	0.1	PCC	2262	179
-7848	2	MG	1062	62
-7849	4	G	4845	139
-7850	1	MG/ML	4754	176
-7851	15	DH	333	94
-7852	4000	UI	1882	176
-7853	1	MG	1215	62
-7854	4	MG/ML	3997	181
-7855	50	MG/ML	4742	176
-7856	2	MG/ML	1127	181
-7857	1.5	MG/ML	4655	176
-7858	50	MG	508	51
-7859	75	MG	5290	15
-7860	15	MG	1777	51
-7861	(200	MG/ML	3662	204
-7862	6.0	MG/0.5	4760	176
-7863	(15	MG/ML	3952	187
-7864	1000	MG	5057	156
-7865	0.25	MG/ML	4201	206
-7866	500	MG	959	131
-7867	20	MG/ML	1968	176
-7868	500	UI/ML	2529	201
-7869	450	MG	1574	51
-7870	25	MG	114	51
-7871	0.075	MG	3962	51
-7872	1.0	ML/ML	1918	209
-7873	8	MG	5402	48
-7874	(125.0 + 50.0 + 300.0 + 30.0)	MG	833	62
-7875	3	MG	1720	51
-7876	12.5	MG	4052	43
-7877	250	MG	318	51
-7878	15	MG	4293	51
-7879	100	MG	799	66
-7880	5	MG/G	4749	147
-7881	230	MG	3941	47
-7882	20	MG	4094	62
-7883	2.5	MG	1917	147
-7884	4	MG	1879	51
-7885	2	MG/ML	5081	185
-7886	100	MG	367	197
-7887	100	MCG	1037	51
-7888	50	MG/ML	4025	176
-7889	300	MG	2294	13
-7890	40	MG	5228	51
-7891	50	MG/ML	5138	83
-7892	10	MG	4886	62
-7893	500	U	1761	135
-7894			1311	189
-7895	(5.0 + 50.0 )	MG	558	19
-7896	40	MG/ML	2044	181
-7897	1000	UI	4472	35
-7898	COM		4818	62
-7899	1	MG	4806	13
-7900	400	MG	4197	51
-7901	100	MG	5405	58
-7902	0.56	MG	5415	135
-7903	100	MG	3595	62
-7904	0.01	G/ML	3985	111
-7905	(2 + 0.035)	MG	4902	51
-7906	120	MG	4540	19
-7907	50	MG	249	154
-7908	5	MG	2515	51
-7909	1.6	MG	4787	4
-7910	1.0	MG/G	72	86
-7911	250	MG	2280	62
-7912	50	MCG/DIA	1928	3
-7913	160	MG	5212	51
-7914	5	MG	1267	51
-7915	10	MG	5136	51
-7916	20	MG	4083	62
-7917	(8.6+0.33+0.30)	MG/ML	4352	176
-7918	20	PPC	647	176
-7919	60	MG	186	51
-7920	5000	UI	5045	35
-7921	100	MG	1790	54
-7922	2	MG	1511	62
-7923	0.5	MG/G	4990	68
-7924	0.48	MG/ML	4752	212
-7925	0.750	MG	3993	44
-7926	100	MG	1011	51
-7927	500	MG	2266	62
-7928	0.15	MG	1232	179
-7929	10	MG/ML	4078	203
-7930	(0.18	ML	3729	181
-7931	40	MG	4855	137
-7932	1	MG	4372	51
-7933	500	MG	2521	62
-7934	50	MG	2358	19
-7935	100	MG	2516	51
-7936	200	MG	2068	13
-7937	4	MCG/ML	1392	176
-7938	12.5	MG/5ML+125MG/5ML+56.25MG/5ML	514	212
-7939	215	MG	5237	51
-7940	4000	UI	1881	140
-7941	60	MG/G	2086	151
-7942	30	MG	1512	44
-7943	25.000	U.I./	3597	69
-7944	100	MG/G	1241	69
-7945	8	MG/ML	1557	181
-7946	20	MG	975	22
-7947	500	MG	991	51
-7948	25	MG/ML	2026	176
-7949	180	MG	190	51
-7950	50	MG/ML	2547	176
-7951	5	MCG/ML	4021	201
-7952	200	U/ML	2598	176
-7953	50	MG/G	45	68
-7954	0.01	G/ML	3961	111
-7955	0.25	MG/ML	695	190
-7956	(1.00+12.00)	MG/ML	2581	212
-7957	20	MG	4193	19
-7958	(0.5 + 1.0)	MG/G	1600	68
-7959	740	MBQ	805	9
-7960	300	MG	199	62
-7961	XAROPE		4702	212
-7962	200	MG/ML	1681	181
-7963	50	MG	27	136
-7964	60	MG	3863	140
-7965	25	MG	1120	51
-7966	5	MG+	4103	19
-7967	50	MG	3616	135
-7968	11.76 + 0.04 + 30	MG/ML	79	181
-7969	10	MG	3901	74
-7970	80	MG	4170	62
-7971	40	MG	2353	13
-7972	2.0	MG	80	51
-7973	100	MG/G	5061	69
-7974	200	MG	2119	19
-7975	5	MG/ML	2623	176
-7976	10	MG	4533	19
-7977	300	MG	803	51
-7978	200	MG	38	95
-7979	2	MG/ML	2273	181
-7980	25	MG/ML	2256	163
-7981	60	MG	829	62
-7982	460	MG/G	2217	127
-7983	88	MCG	1952	62
-7984	1.34	MG/ML	3852	176
-7985	200	MCG/DOSE	125	168
-7986	25	MG	839	37
-7987	(5+10)	MG	4552	13
-7988	750	MG	5119	62
-7989	0.25	MG/ML	1181	184
-7990	0.3	MG/ML	604	179
-7991	0.4	GBQ	4244	176
-7992	20	MG/G	918	68
-7993	900	MG	454	154
-7994	260	MG	4666	51
-7995	20	MG/G	917	147
-7996	(2 + 0.035)	MG	1733	51
-7997	40	MG	4126	177
-7998	36	MG	4245	58
-7999	150	MCG	4785	62
-8000	7	MG/G	4441	165
-8001	(200	MG+5MG+5MG)/5	4308	181
-8002	0.5	MG/ML	4201	206
-8003	20	MG	3858	135
-8004	5	MG/ML	1651	176
-8005	3	MG	4367	51
-8006	36	MG	1266	54
-8007	500	MG	1137	44
-8008	200	MG	4213	74
-8009	10	MG	1383	51
-8010	50	MCG/DOSE	1032	6
-8011	300	MG	735	58
-8012	0.462	G/G	1923	96
-8013	50	MCG/DOSE	749	202
-8014	5.0	MG	5396	51
-8015	20	MG	3875	51
-8016	250	MCG	2113	130
-8017	400	MG	970	62
-8018	3300	UI/ML	1418	175
-8019	100	MG/ML	183	204
-8020	20	MG	4873	13
-8021	10	MG/ML	2071	212
-8022	20	MG	3754	13
-8023	300	MG	2464	37
-8024	20	MG	220	35
-8025	1.0	G	444	133
-8026	0.5	MG	209	37
-8027	40	MG	4458	51
-8028	100	MG	5489	51
-8029	250	MG	4873	19
-8030	10	MCG	5209	51
-8031	10	MG	5145	62
-8032	15	MG	1171	19
-8033	80	MG	722	13
-8034	400	U	5416	142
-8035	50	MG	1872	32
-8036	100	MG	4213	74
-8037	7.5	MG/ML	224	181
-8038	20	MG	4322	4
-8039	250	MG	251	19
-8040	500	MCG/ML	327	176
-8041	1.0	MG/G	3765	147
-8042	10	MG	1135	51
-8043	5	MG	1024	47
-8044	100	MG	4548	176
-8045	100	MG	4728	131
-8046	50	MG	1919	62
-8047	400	MG	533	139
-8048	2.5	MG/ML+	3657	176
-8049	7000	UI	1687	32
-8050	10000000	UI	166	135
-8051	0.5	G/ML	2527	176
-8052	0.5	MG	763	62
-8053	0.2	MG/ML	380	212
-8054	20	MG	1327	62
-8055	50	MG	4427	139
-8056	1000	UI/ML	4663	176
-8057	(3	MG	1258	212
-8058	500	MG	799	66
-8059	100	MG/ML	1074	176
-8060	200	MG	1362	135
-8061	10	MG	4420	139
-8062	(50 + 300 + 30)	MG/ML	1655	181
-8063	500	MG	366	19
-8064	150	MG	2607	176
-8065	400	MG	815	62
-8066	10	MG	4263	48
-8067	40	MG	4870	62
-8068	30	MG	4255	48
-8069	500	MG	3927	139
-8070	10	MG/G	4587	68
-8071	5	MG/ML	5052	201
-8072	50	MG/G	58	68
-8073	250	MG	4117	62
-8074	150	MG	2092	44
-8075	10	MG/G	3844	68
-8076	10	MG	2237	51
-8077	20	MG	5569	51
-8078	4	MG	3748	51
-8079	0.4	MG	1175	58
-8080	150	MG	2114	44
-8081	2000	UI	97	135
-8082	150	MG	2636	51
-8083	50	MG/ML	737	181
-8084	40	MG/ML	454	163
-8085	(160+60)	MG/ML	3968	82
-8086	150	MG	1657	19
-8087	8	MG	4292	51
-8088	15	MG/5	224	212
-8089	100	MG	611	136
-8090	25	MG/ML	4757	212
-8091	10	MG/G	3607	67
-8092	20	MCG	4179	135
-8093	10	MG	1565	62
-8094	50	MG	5435	51
-8095	500	MG	3928	135
-8096	10	MG/ML	2251	194
-8097	1	MG	219	62
-8098	20	MG/G	969	86
-8099	3	MG/ML	5531	179
-8100	COM		504	51
-8101	0.5	MG/G	5219	68
-8102	15	MG	613	62
-8103	50	MG	1056	62
-8104	300	MG	1103	19
-8105	15	MG	1678	51
-8106	10	MG	4427	140
-8107	25	MG	4459	35
-8108	150	MG	2533	139
-8109	500	MG	464	62
-8110	500	MG	1582	62
-8111	7.50	MG/ML	422	188
-8112	100	MG	48	62
-8113	20	MG	4382	51
-8114	75	MCG	832	51
-8115	10	MG	556	62
-8116	100	MG	4377	51
-8117	(10.0 + 5.0)	MG	4218	59
-8118	(10 + 0.00025 + 0.0012)	MG/ML	771	204
-8119	500.000	UI	4039	139
-8120	857	MG	4887	51
-8121	2.05	MG/ML	2120	181
-8122	40	MG	2324	22
-8123	2.5	MG	4948	62
-8124	2	MG	5535	62
-8125	40	MG	1425	62
-8126	6	MG	4674	212
-8127	100	MG	4229	51
-8128	0.6	MG/0.5	4760	176
-8129	900	MG	5092	154
-8130	1	MG	1855	62
-8131	5	MG	1517	62
-8132	3700	MBQ	4456	176
-8133	0.1	MG/ML	3712	179
-8134	7.5	MG/5	613	204
-8135	50	MG/ML	1419	201
-8136	20	MG/ML	2152	212
-8137	1	MG/G	1249	117
-8138	75	UI	2443	140
-8139	0.075	MG	4811	74
-8140	(320.00+5.00)	MG	5232	51
-8141	200	MG/ML	2409	176
-8142	10	MG/G	277	86
-8143	0.5	MG/G	4222	147
-8144	5	MG	1803	51
-8145	0.8	MG/ML	1424	185
-8146	5	MG	4829	53
-8147	100	UI/ML	2602	201
-8148	64	MCG/DOSE	3625	202
-8149	12.5	MG	1203	62
-8150	1	MG/ML	1497	179
-8151	2.5	MG/ML	1062	181
-8152	32	MG	388	62
-8153	100	MG	5540	51
-8154	3.2	MG	4789	4
-8155	350	MG	1670	62
-8156	4	G	3988	131
-8157	0.64	MG/G	1292	68
-8158	15	MG	368	62
-8159	185	MG/COM	350	62
-8160	0.0040	G	1682	176
-8161	1.1	MG	4934	139
-8162	20	MG	4193	13
-8163	9	MG/ML	1078	176
-8164	1	MG/G	527	68
-8165	(99.65 + 1.5 + 2.5 + 1)	MEQ/L	1309	189
-8166	0.2	MG/ML	1415	194
-8167	10	MG/ML	5468	176
-8168	50	MG/ML	255	161
-8169	10	MG	4915	62
-8170	20	MG	3737	51
-8171	200	MG	2472	32
-8172	800	MG	468	62
-8173	500	MG	382	62
-8174	0.375	MG	4394	44
-8175	15	MG	1161	37
-8176	0.3	MG/ML	606	179
-8177	200	MG	2342	139
-8178	14000	UI	1703	51
-8179	(9.0	MG	4612	176
-8180	100	MG/G	792	93
-8181	5	MG	4553	47
-8182	50	MG	2556	62
-8183	400	MG	136	47
-8184	0.5	G	4857	140
-8185	100	MCG/DOSE	4277	199
-8186	40	MG	1046	51
-8187	20	MG	4430	51
-8188	(2.000+ 0.035)	MG	1514	51
-8189	75	MG	4146	13
-8190	200	MG/ML	935	181
-8191	SOL		3952	187
-8192	1.000	UI	2512	135
-8193	142	MG/ML	3728	79
-8194	1200000	UI	2258	132
-8195	50	MG	2352	59
-8196	10	MG	420	51
-8197	16	MG	4278	15
-8198	100	UI/ML	489	176
-8199	250	UI/ML	4905	176
-8200	150	MG/G	5073	152
-8201	50	MG/ML	3638	176
-8202	500	MG/5	249	154
-8203	0.030	MG	2360	51
-8204	100	MCG/DOSE	4752	199
-8205	(0.5 + 4.0)	MG/ML	4463	181
-8206	POM		4046	150
-8207	15	MG	4288	48
-8208	40	MG	1800	19
-8209	1%	POM	4700	114
-8210	40	MG	4374	15
-8211	300	UI/150	3948	176
-8212	0.5	MG/G	4199	67
-8213	500	MG	890	129
-8214	125	MG	4623	135
-8215	10.000	UI/ML	1881	176
-8216	200	MG	5441	19
-8217	0.5	MG/ML	1051	166
-8218	1% + 0.4%	GEL	1439	86
-8219	500	MG	294	51
-8220	5000	UI	940	139
-8221	30	MG	829	62
-8222	3	MG/ML	5327	212
-8223	SOL		4651	176
-8224	500	MG	1027	51
-8225	70	MG/5600	2197	62
-8226	320	MG	3664	51
-8227	250	MG	1427	32
-8228	1.000	UI	1418	51
-8229	200	MG	2001	139
-8230	1	MG/ML	2767	36
-8231	500	MG	5116	51
-8232	10	MG	4007	62
-8233	2	MG	98	62
-8234	3	MG/ML	4336	212
-8235	500	MG	255	19
-8236	(125 + 50 + 300 + 30)	MG	5003	37
-8237	100	MCG	5043	153
-8238	3300	UI/ML	1719	181
-8239	6	MCG	157	25
-8240	50	MG	1974	139
-8241	100	MG/ML	3882	176
-8242	2	MG	4369	51
-8243	(35.6 + 37 + 47.6)	MG/ML	2325	204
-8244	400	MG	5140	54
-8245	500	MG	2454	62
-8246	(15+ 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-8247	15	MG	5445	51
-8248	10	MG/G	4151	69
-8249	30	MG/ML	2179	181
-8250	2.25	G	251	163
-8251	4	MG	2420	62
-8252	2.5	MG/ML	5261	176
-8253	875	MG	5064	51
-8254	0.50	MG/ML	2632	176
-8255	250	MG	5109	51
-8256	20	U/ML	1826	176
-8257	400	MG	5243	51
-8258	2	MG/ML	1396	176
-8259	40	MG	2019	62
-8260	2.5	MG/ML	4543	176
-8261	0.3	MG/ML	2385	179
-8262	125	MG/ML	3794	139
-8263	15	MG	4074	16
-8264	150	MG	2528	176
-8265	20	MG	2172	51
-8266	300	MG	5509	51
-8267	20	MG/ML	1131	90
-8268	80	MG	5228	51
-8269	100	MG	397	51
-8270	11.6	MG	849	86
-8271	74	MBQ	2463	176
-8272	500	MG	4897	62
-8273	3.5	MG	660	142
-8274	0.25	MG/5ML	894	212
-8275	40	MG	1908	59
-8276	(21.60 + 46.80 + 9.80 + 200.0)	MG/ML	2548	2
-8277	25	MG	4368	133
-8278	2.0	X	5537	201
-8279	4	MG	1153	48
-8280	0.250	MG/ML	2159	182
-8281	10	MG	344	37
-8282	64750	MBQ	2354	176
-8283	100	MG	1085	37
-8284	0.5	MG/ML	1155	178
-8285	20	MG/ML	64	176
-8286	20	MG	63	51
-8287	12.5	MCG	4205	62
-8288	4	MG	1039	179
-8289	(0.15 + 0.02)	MG	1469	51
-8290	(95 + 30 + 65)	MEQ/L	1313	155
-8291	0.25	MG	4227	37
-8292	125	MG	1985	50
-8293	70	MG	155	37
-8294	3	MG/ML	717	212
-8295	150	MG	2538	137
-8296	27 + 5.4	MG/ML	4640	167
-8297	0.5	MG	1226	62
-8298	25	MG	1381	19
-8299	20	MG	4298	62
-8300	0.5	MG/ML	1316	173
-8301	30	MG/ML	4664	178
-8302	30	MG	4461	131
-8303	80	MG/ML	507	204
-8304	300	MG	2293	19
-8305	0.1	MG/ML	897	75
-8306	0.15	MG	399	62
-8307	0.60	G	4619	176
-8308	100	MG	1766	135
-8309	1	MG/ML	1126	176
-8310	50	MG	5353	51
-8311	1.0	MG/ML	4300	176
-8312	140	MG/ML	4684	193
-8313	40	MG	1989	51
-8314	10	MG/ML	2618	176
-8315	15	MG+250MG+20MG+15MG	1356	51
-8316	0.0045	G/ML	4615	176
-8317	1.50	MG	1539	44
-8318	15	MG	4263	48
-8319	75	MG	1338	51
-8320	250	MG	4271	51
-8321	0.5	MG/G	580	147
-8322	15	MG	4255	48
-8323	0.075	MG	2366	74
-8324	0.5	MG/G	4163	147
-8325	50	MG	1640	51
-8326	2.5	MG	5445	51
-8327	750	MG	2427	44
-8328	10	MG	743	74
-8329	40	MG	4051	51
-8330	875	MG	249	51
-8331	20	MG/ML	5308	181
-8332	250	MG	2456	51
-8333	100	MG	969	62
-8334	500	MG	2417	44
-8335	300	MG	737	51
-8336	(5.0 + 50.0 + 10.0)	MG	514	120
-8337	300	MG	5341	51
-8338	40	MG	3870	51
-8339	100	MG	4760	52
-8340	100	MG	2424	135
-8341	5	MG/ML	1093	176
-8342	250	MG	861	19
-8343	200	UI/ML	4661	176
-8344	2.2	MG	4204	144
-8345	1	G	5056	156
-8346	(800 + 160)	MG	4739	62
-8347	20	MG	2363	176
-8348	0.4	MG	1175	15
-8349	100	MG	2119	19
-8350	5	MG	1537	51
-8351	35	MG+	2027	62
-8352	50	MG	1186	19
-8353	0.5	MG/G	1470	68
-8354	1	MG/ML	4323	176
-8355	15	MG/ML	4890	176
-8356	SOL		785	181
-8357	40	MG	4776	176
-8358	25	MG	1386	62
-8359	5	MG	267	62
-8360	250	MG	1428	51
-8361	10	MG	299	62
-8362	8	MG	4416	51
-8363	5000	UI	1759	35
-8364	100	MG	4873	19
-8365	425	MG	4376	22
-8366	2	MG	2216	44
-8367	875	MG	4529	51
-8368	(37.5 +325.0)	MG	1189	51
-8369	10	MG/ML	745	181
-8370	150	MG	1200	51
-8371	300	MG	524	51
-8372	150	MG/G	445	86
-8373	152	MG	4757	74
-8374	(10.0 + 250.0)	MG	744	51
-8375	(80.00+12.50)	MG	1579	51
-8376	100	MG	1701	58
-8377	(20.0 + 0.5 + 2.5)	MG/G	918	68
-8378	10	MG	2263	62
-8379	50	COM	612	62
-8380	50	MG	5237	51
-8381	0.125	MG	1539	37
-8382	18	MG	5394	3
-8383	1	MG/G	1930	69
-8384	100	MG	1190	51
-8385	5	MG/G	4750	151
-8386	10	MG	2290	51
-8387	320	U/ML	431	201
-8388	4	MG	5139	47
-8389	1	MG	4398	51
-8390	80	MG	1661	204
-8391	4.5	MUI/0.5	4396	176
-8392	25	MG	324	51
-8393	50.000	UI	1418	51
-8394	50	MG	4986	19
-8395	300	MG	5126	51
-8396	10	MG	4066	62
-8397	20	MG	4084	62
-8398	2.5	MG	3621	51
-8399	100	MG	271	37
-8400	1.5	MG/ML	4657	176
-8401	5	MG/G	2350	149
-8402	5	MG	2483	62
-8403	250	MG	55	35
-8404	10	MG+20MG	1650	51
-8405	20	MG/	1031	67
-8406	4	MG	2420	2
-8407	25	MG	397	51
-8408	SOL		3688	79
-8409	50	MG	961	37
-8410	75	MG/DRAG	801	74
-8411	15	MG/ML	1663	204
-8412	(15+5.38+4.48+0.257+0.0508)	MG/ML	1515	187
-8413	(30 + 20)	MG/G	4957	67
-8414	10	MG/ML	5010	176
-8415	1	G	1137	44
-8416	16	MG	1222	15
-8417	1	MG	2032	51
-8418	7.5	MG/ML	2148	212
-8419	150	MG	3990	51
-8420	PO		4281	152
-8421	1	MG	2420	62
-8422	300	MG	2756	51
-8423	0.25	MG	933	140
-8424	20	MG/ML	1986	181
-8425	30	MG/ML	4485	154
-8426	35	MG/ML	5449	212
-8427	10	MG/G	1206	68
-8428	40	MG/G	5359	68
-8429	75	MG/ML	4715	200
-8430	5	MG	3913	37
-8431	(15 + 90)	MG	5248	58
-8432	(10 + 20)	MG	1229	13
-8433	60	MG	1121	51
-8434	20	MG/G	2024	69
-8435	1	MG/ML	1360	176
-8436	1500	MG	3813	51
-8437	100000	UI	4471	51
-8438	10	MG	62	35
-8439	1	MG	2438	140
-8440	7000	UI	4471	51
-8441	2	MG	106	51
-8442	100	MG	3929	135
-8443	(100.0 + 6.0 +12.5)	MCG	5069	168
-8444	50	MG	5017	58
-8445	20	MG/ML	3602	160
-8446	875	MG	1027	51
-8447	10	MG/ML	5130	212
-8448	275	MG	2095	51
-8449	10000	UI/ML	164	176
-8450	40	MG/ML	521	212
-8451	20	MG/ML	3647	176
-8452	3.5	MG/ML	1101	179
-8453	10	MG	3754	16
-8454	20	MG/ML	38	212
-8455	20	MG	409	51
-8456	20	MG/G	3590	88
-8457	2	MG/ML	4832	179
-8458	100	MG	4506	51
-8459	20	MG/G	3619	67
-8460	500	MG/ML	2773	176
-8461	10 + 10	MG	4056	62
-8462	600	UI	4184	134
-8463	10	MG	4300	62
-8464	30	MG	3809	13
-8465	(0.075+ 0.03)	MG	5124	51
-8466	10	MG	4283	62
-8467	875	MG	4510	51
-8468	0.64	MG/G	1602	147
-8469	400	MG	2130	51
-8470	12.5	MG	4132	37
-8471	25.000	UI/G	797	69
-8472	50	MG	5223	51
-8473	40	MG	3879	2
-8474	1.0	MG/G	32	68
-8475	2	MG	5515	62
-8476	44	MCG	622	176
-8477	100	MG	4873	13
-8478	100	MG	5565	62
-8479	200	MG/ML	4729	204
-8480	(500+10+5)	MG	1673	181
-8481	5	MG	789	13
-8482	450	MG	5321	51
-8483	150	MG	1648	44
-8484	500	MG	1546	62
-8485	20	MG	4095	37
-8486	500	MG	382	51
-8487	40	MG	2755	62
-8488	825	MG/ML	651	175
-8489	500	MG	5064	133
-8490	5	MG	4796	19
-8491	200	MG	2322	19
-8492	3	MG	1612	51
-8493	100	MG	367	135
-8494	10	MG	4628	140
-8495	500	MG	1022	139
-8496	10	MG	5091	37
-8497	PO		5193	140
-8498	5	MG	3945	37
-8499	200	MG	815	37
-8500	500	MG	5516	51
-8501	10	MG	5506	62
-8502	100	MG	4873	135
-8503	5	MG/G	2105	86
-8504	500	MG	1905	13
-8505	60	MG	1565	15
-8506	0.25	MG/ML	3841	178
-8507	500	U	977	176
-8508	900 + 100	MG	1366	198
-8509	900	G	594	164
-8510	50000	UI	3722	35
-8511	500	MG/ML	1660	181
-8512	21	MG/ML+	303	194
-8513	1	MG	4825	19
-8514	200	MG	943	19
-8515	250	MG	4670	51
-8516	300	MG	5067	51
-8517	400	MG	507	62
-8518	500	MG	1275	62
-8519	1200000	UI	2258	133
-8520	4	MG/ML	4013	181
-8521	50	MG	4124	54
-8522	40	MG	1321	51
-8523	50	MCG/ML	2049	176
-8524	5	MG	559	9
-8525	250	UI/ML	2305	176
-8526	10	MG/5ML	1127	181
-8527	4	MG	3593	13
-8528	50	MG	2301	51
-8529	1.0	MG/G	40	68
-8530	2	MG	298	62
-8531	20	MG	859	51
-8532	20	MG	3754	24
-8533	2	MG	4177	62
-8534	20	MG	1301	51
-8535	300	MG	4411	13
-8536	360	MG/G	139	167
-8537	13.3	MG/ML	2462	212
-8538	140	MG/ML	3911	176
-8539	2	MG/ML	990	176
-8540	COM		3619	114
-8541	200	MG	2343	142
-8542	15	MCG	1392	176
-8543	(1.0 + 50.0 + 50.0 + 50.0)	MG	174	51
-8544	2	MG	1543	37
-8545	50	MG/ML	4475	204
-8546	5	MG/ML	2091	176
-8547	1.50	MG	3993	44
-8548	20	MG/ML	2015	176
-8549	3	MG	2420	37
-8550	100	MG/ML	4459	181
-8551	80	MG	1046	51
-8552	7.7	MG	2392	104
-8553	1000	UI	1408	35
-8554	10	MG/ML	2035	176
-8555	2000	UI	164	176
-8556	40	MG	1341	176
-8557	600	MG	127	102
-8558	10	MG	4700	68
-8559	300	MG	4741	13
-8560	50	MG	4944	136
-8561	8.6	MG/ML	4352	176
-8562	15	MG	2030	58
-8563	25	MG	1707	32
-8564	600	MG	2468	116
-8565	40	MG/ML	2243	204
-8566	100	MG	5328	51
-8567	4	MG	1740	62
-8568	500	MG	2285	62
-8569	150	MG	4790	51
-8570	660	MG	2096	58
-8571	10	MG	5485	62
-8572	10	MG	66	134
-8573	(6+0.3+0.2+3.1)	MG/ML	4603	176
-8574	120	MG	2081	140
-8575	10	MG	1426	65
-8576	20	MG	4081	62
-8577	40	MG	4547	51
-8578	40	MG	3870	134
-8579	2	MG	4032	51
-8580	20	MG	3992	19
-8581	5	MG	5410	51
-8582	200	MG	5501	62
-8583	100	MCG/DOSE	1035	171
-8584	500	MG	911	133
-8585	54	MG	4245	58
-8586	20	MG/ML	2051	173
-8587	10	MG	3624	51
-8588	DRG		2357	74
-8589	750	MG	5115	52
-8590	250	MG	53	37
-8591	2.5	MG	5571	51
-8592	25	MG	4229	51
-8593	100	MG	5289	44
-8594	400	MG	515	62
-8595	45	MG	3982	62
-8596	200	MG	4134	59
-8597	500	MG	4528	51
-8598	(2.16 + 4.68 + 0.98 + 20.00)	MG/ML	2548	181
-8599	25	MCG+	4514	199
-8600	10	MG	4881	62
-8601	250	MG	5074	62
-8602	0.25	MG/ML	696	190
-8603	500	MG	5111	62
-8604	30	MCG/ML	438	140
-8605	120	MG	186	51
-8606	0.3	MG/G	4797	147
-8607	7	MG	1551	22
-8608	25	MG	5353	51
-8609	30	MG	2570	62
-8610	20	MG/G	917	67
-8611	44.94	MG/ML	612	181
-8612	250	MG	4306	125
-8613	0.05	MG/ML	3776	176
-8614	20	MG	3612	51
-8615	20	MG/ML	823	212
-8616	150	MG	2757	51
-8617	10	MG	3612	51
-8618	200	MG	5098	51
-8619	3	MG/ML	4977	179
-8620	2.5	MG	1044	62
-8621	20	MG/ML	1973	185
-8622	0. 64	MG/ML	1598	194
-8623	20	MG	3878	59
-8624	1	MG/G	579	151
-8625	800	MG	4359	47
-8626	20	MG	3731	51
-8627	667	MG/ML	3934	212
-8628	40	MG	3879	103
-8629	3.5	MG	5307	142
-8630	0.5	MG/G+1.0MG/G+10	4221	147
-8631	15000	UI	212	35
-8632	8	MG	793	62
-8633	80	MG	409	51
-8634	20	MG/G	5397	126
-8635	1000	MG	983	58
-8636	250	UI	630	134
-8637	40	MCL/ML	119	181
-8638	5	MG	3974	47
-8639	60	MG	2401	44
-8640	1.0	MG/G	5054	147
-8641	100	MG/ML	2415	176
-8642	469	MG/ML	5340	176
-8643	400	MG	217	35
-8644	25	MG	806	62
-8645	50	MG/ML	930	176
-8646	2	MG	4696	51
-8647	400	MG/5ML	249	154
-8648	875	MG	4555	51
-8649	9	DH	333	94
-8650	100	MG	2244	62
-8651	500	MG+30MG+2MG	1714	51
-8652	15	MG/ML	1053	181
-8653	400	MG	5363	35
-8654	320	MG	5228	51
-8655	25	UI/ML	2476	140
-8656	53.2	MG/G	2117	154
-8657	200	MG	970	62
-8658	(0.15 + 0.02)	MG	2020	51
-8659	875	MG	5278	51
-8660	1	MG/G	1291	68
-8661	0.50	MG/ML	1155	178
-8662	7400	MBQ	4456	176
-8663	150	MG	615	51
-8664	0.084	MG/ML	4594	176
-8665	5	MG/ML	2350	179
-8666	4	MG	100	62
-8667	100	MG/G	2090	86
-8668	25	MG	4052	43
-8669	16	MG	388	62
-8670	240	MG	1562	73
-8671	20	MG/ML	1627	185
-8672	50	MG	1150	19
-8673	37.5	MG	1775	15
-8674	4	MG	1822	48
-8675	20	MG	916	68
-8676	35	MG	67	59
-8677	80	MG	1875	51
-8678	(500.0 + 7.5)	MG	3889	37
-8679	5000	UI/G	465	147
-8680	20	MG/ML	1115	179
-8681	80	MG/G	4622	86
-8682	120	MG	2371	51
-8683	(10.0 + 10.0)	MG	5524	51
-8684	2	MG	1764	51
-8685	2	MG	4277	62
-8686	80	MG	410	51
-8687	0.5	MG/G	4320	81
-8688	0.5	MG/G	3603	202
-8689	200	MG/ML	1837	181
-8690	2	MG	3975	51
-8691	1.5	MG/ML	1717	212
-8692	200	MG/ML	1068	176
-8693	24	MG	1222	15
-8694	120	MG/G	2149	102
-8695	(37.5 + 325.0)	MG	4947	51
-8696	20	MG/G	925	68
-8697	25	MG	395	51
-8698	500	MG	5247	51
-8699	5	MG	1518	62
-8700	12.5	MG	3915	43
-8701	320	MG	4923	51
-8702	3	MG/ML	4639	191
-8703	1000	UI	94	140
-8704	100	MG	5512	19
-8705	20	MG/ML	1725	179
-8706	10	MG	4532	162
-8707	5	MG/G	4750	147
-8708	750	MG	3884	62
-8709	(0.5  + 1.0)	MG/G	1600	147
-8710	500	MG	382	46
-8711	15	MG	1172	19
-8712	1	MG	812	51
-8713	500	MG	4819	51
-8714	200	MG/ML	4311	181
-8715	100	MG	3601	102
-8716	2	MG/ML	3653	176
-8717	1	MG	4373	51
-8718	(6.44 + 0.314 + 3.68 + 2.44 + 2.92 + 0.225)	G/L	3969	195
-8719	15	U	972	135
-8720	2	MG/ML	1291	176
-8721	5	MG	5245	62
-8722	(125.0 + 5.0)	MG	1061	51
-8723	20	MG	1135	51
-8724	40	MG	4430	51
-8725	100	MG	5335	62
-8726	(10.0 + 5.0)	MG	198	51
-8727	500	MG/ML	4467	181
-8728	25000	UI/G	3599	69
-8729	40	MG/G	2149	102
-8730	4	MG	56	176
-8731	50	MG/ML	4530	2
-8732	500	MG/ML	1592	6
-8733	2	MG/ML	699	176
-8734	4	MG	4553	97
-8735	2.5	MG	1803	51
-8736	35	MG/ML	263	181
-8737	5	MG	4103	19
-8738	(80.0 + 12.5)	MG	4870	37
-8739	300	MG	405	58
-8740	25	MG/ML	844	166
-8741	160	MG	5233	51
-8742	1.200.000	U	535	2
-8743	2.5	MG	5164	19
-8744	5000	UI/0.25	3898	176
-8745	125	MG	1428	17
-8746	250	MCG	3682	142
-8747	SOL		485	181
-8748	20	MG/ML	294	163
-8749	1000	UI/ML	164	176
-8750	0.5	MG	1057	62
-8751	PO		4450	127
-8752	SOL		4644	176
-8753	50	MG	5488	51
-8754	30	MG	4374	15
-8755	75	MG	5298	15
-8756	100	UI	2304	176
-8757	400	MCG	1728	32
-8758	62.5	MG/G	541	69
-8759	500	MG	4451	62
-8760	0.0325	ML/ML	2460	212
-8761	100	MG/ML	1662	181
-8762	40	MG/ML	4743	176
-8763	100	MG	1919	62
-8764	75	MG	401	51
-8765	10	MG	2275	51
-8766	500	MG	244	13
-8767	900	MG	1574	51
-8768	12.5	MG	826	41
-8769	2	MG/ML	1676	181
-8770	20	MG	1158	51
-8771	5	MG	4299	62
-8772	100	MG	2319	62
-8773	13.33	MG/ML	5448	212
-8774	750	MG	968	62
-8775	(320.0+5.0)	MG	678	51
-8776	40	MG	5523	51
-8777	(10.0 + 2.5 + 10.0)	MG	5078	51
-8778	35	MG/ML	1664	181
-8779	75	MG	1299	176
-8780	(100 + 100  + 5)	MG	1331	51
-8781	75	MG/ML	861	204
-8782	40	MG	1322	51
-8783	COM		4249	62
-8784	SR		829	17
-8785	80	MG	4066	62
-8786	500	MG	2748	19
-8787	25	MG	2766	47
-8788	5	MG	238	62
-8789	(7.01 + 0.314 + 3.05 + 2.12 + 0.187)	G/L	636	195
-8790	(99.65 + 1.5 + 2.5 + 1.0)	MEQ/L	1308	189
-8791	2	MG	2420	62
-8792	500	MG	4912	133
-8793	500	UI	549	135
-8794	3	MG/G	4982	149
-8795	50	MG	2292	62
-8796	0.50	MG/ML	1143	178
-8797	200	MG/ML	2454	181
-8798	10	MG	638	37
-8799	100	MG	5037	19
-8800	500	MG	413	139
-8801	50	MG	4235	58
-8802	1850	MBQ	2402	176
-8803	32	MG/ML	3884	204
-8804	12	MCG	2186	130
-8805	2	MG	358	62
-8806	20	MG	1899	59
-8807	7.5	MG/ML	5013	176
-8808	2.5	MG	5436	51
-8809	3.5	MG	3916	19
-8810	10	MG	3848	32
-8811	20	MG	1124	13
-8812	120	MG	2029	51
-8813	500	MG	1193	129
-8814	500	MG	5141	19
-8815	(2.5 + 25.0 + 11.25)	MG/ML	514	212
-8816	500	MG	5112	62
-8817	120	MG	3800	19
-8818	25	MG	1344	201
-8819	50	MG/ML	620	176
-8820	2	MG	1302	62
-8821	4	UI	3637	140
-8822	200	MG	4234	51
-8823	500	UI	2476	140
-8824	0.75	MG	1493	62
-8825	13.33	MG/ML	4675	212
-8826	100	MG/ML	2770	176
-8827	300	MG	5101	51
-8828	(0.005 + 0.005)	ML/ML	785	181
-8829	150	MG	730	56
-8830	2.5	MG	348	176
-8831	4	MG	221	62
-8832	100	MG	3686	139
-8833	150	MG	930	44
-8834	2.0	MG	209	62
-8835	400	MG	3630	51
-8836	7.5	MG/ML	3657	176
-8837	2	MG	4316	51
-8838	300	MCG/ML	2070	176
-8839	0.125	MG	1713	147
-8840	0.585	MG	1928	4
-8841	0.5	MG	1225	62
-8842	12.5	MG	4773	13
-8843	875	MG	3665	37
-8844	5	MG	1735	59
-8845	7400	MBQ	2463	176
-8846	50	MG/ML	2412	176
-8847	80	MG	4923	51
-8848	300	MG	740	58
-8849	50	MG	147	62
-8850	0.10	G/G	4457	165
-8851	80	MG	3665	154
-8852	9	MUI/0.5	4396	176
-8853	1.0	MG/ML	3912	179
-8854	10000	UI/ML	78	181
-8855	5	PCC	4598	176
-8856	37.84	MG/ML	779	167
-8857	7.000	UI	4018	35
-8858	10	MG	1138	37
-8859	0.64	MG/G	4586	147
-8860	2	MG	2290	51
-8861	40	MG	1608	62
-8862	100.000	UI/G	4068	147
-8863	300	MG	4235	58
-8864	30	MG	1565	23
-8865	100	MG/ML	243	163
-8866	4	MG	56	177
-8867	500 + 65	MG	5113	51
-8868	40	MG	1577	51
-8869	750	MG	163	51
-8870	24	MG	1223	15
-8871	0.5	MG/G	1471	147
-8872	DRG		5341	74
-8873	3	MG	4050	13
-8874	15	MG	3863	140
-8875	7.000	UI	2185	51
-8876	4	G	4846	129
-8877	100	MG	1	62
-8878	400	MG	5154	62
-8879	(50.0 + 12.5)	MG	396	62
-8880	100	MG	1357	51
-8881	50	MG	2584	62
-8882	(0.50+1.00)	MG/G	1600	68
-8883	40	MG/G	5076	67
-8884	100	MG/ML	3750	79
-8885	XPE		2461	212
-8886	0.375	MG	4526	44
-8887	4	MG/ML	1557	181
-8888	5	MG/ML	68	179
-8889	4.000	UI/ML	2512	176
-8890	30	MG/ML	4579	178
-8891	3.125	MG	838	62
-8892	150	MG	2464	37
-8893	20	MG/ML	1684	179
-8894	30	MG	1368	44
-8895	10	MG	4842	51
-8896	10	MG	1265	51
-8897	320	MG	2306	176
-8898	16280	MBQ	1345	176
-8899	50	MG/ML	4613	176
-8900	250	MG	5092	19
-8901	25	MG/G	367	86
-8902	300	MG	820	51
-8903	7	MG/ML	13	167
-8904	40	MG	3874	59
-8905	200	MG	1874	62
-8906	50	MG/ML	818	212
-8907	1	MG/G	1493	68
-8908	3	MG	1850	22
-8909	10	MG	1071	35
-8910	50	MG/ML	193	193
-8911	20	MG/ML	5397	208
-8912	1000	MG	877	133
-8913	3	MG/ML	1771	212
-8914	1	MG	5151	62
-8915	30	MG	5073	69
-8916	(30 + 38.5 + 38.5 + 19)	MG/ML	4452	168
-8917	0.25	MG/ML	4469	176
-8918	100	MG	692	51
-8919	42923	MBQ	2013	176
-8920	1	MG/G	1864	86
-8921	0.64	MG/ML	1598	194
-8922	650	MG	5115	51
-8923	5	MG	2242	2
-8924	0.1	MG/ML	2385	179
-8925	35	MG/ML	4375	181
-8926	0.04	MG/ML	5031	179
-8927	1.0	MG	40	147
-8928	10	MG	4299	62
-8929	20	MG/	1895	181
-8930	200	MG/ML	968	181
-8931	10	MG/ML	4466	176
-8932	11.6	MG/G	612	171
-8933	10	MG	1649	51
-8934	2.5	MG/	4953	179
-8935	1	G	5148	133
-8936	40	MG	4040	62
-8937	COM		4038	51
-8938	1	G	1096	131
-8939	(15+ 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	1515	187
-8940	4.0	MG/ML	2567	176
-8941	50000	UI	1420	51
-8942	75	MG/ML	4065	176
-8943	50	MG	4117	62
-8944	20	MCG	851	135
-8945	(40.0 + 12.5)	MG	671	37
-8946	60	MG/ML	4978	190
-8947	200	MG	926	62
-8948	150	MG/ML	1747	176
-8949	2	PCC	1231	176
-8950	40	MG	2370	51
-8951	(30	MG	770	204
-8952	100	UI/ML	5431	201
-8953	0.1	ML/ML	2459	212
-8954	100	MG	398	62
-8955	PÓ		4407	134
-8956	50000	UI	5045	35
-8957	1000	MG	3935	197
-8958	200	MG	5412	51
-8959	100	MG	324	51
-8960	500	MG/ML	262	181
-8961	200	MG	2322	51
-8962	1	MG/G	578	68
-8963	500	MG	5529	51
-8964	75	MG/ML	672	190
-8965	50	MG/ML	215	200
-8966	(40.0 + 12.5)	MG	4867	37
-8967	400	MG	5480	51
-8968	50	MG	1413	44
-8969	150	MG	1988	51
-8970	1	G	1052	133
-8971	50	MG	809	37
-8972	0.6	MG	5167	51
-8973	100	MG	4124	54
-8974	15	MG	1677	62
-8975	30	MG	3982	62
-8976	100	MG	4473	185
-8977	1	MG/G	579	67
-8978	5	MG	4881	62
-8979	10	MG	5279	139
-8980	10	MG/ML	1961	139
-8981	20	MG	1011	51
-8982	1000	MG	2426	44
-8983	12.5	MG	1333	62
-8984	5	MG	4087	51
-8985	20	MG	4509	37
-8986	1.5	MG/ML	3655	212
-8987	100	MG/G	5075	69
-8988	150	MG	4364	51
-8989	(400 + 5 + 5)	MG	4308	19
-8990	25	MG	308	62
-8991	EMU		3693	79
-8992	3.0	MG/	1083	212
-8993	1	MG/G	2253	147
-8994	200	MG/ML	1078	176
-8995	75	MG	1050	44
-8996	500	MG/ML	1546	181
-8997	25000	UI/G	3597	69
-8998	0.25	MG/ML	2113	206
-8999	10000	UI	1719	51
-9000	1000	MG	1018	133
-9001	1	MG	3674	140
-9002	50	MG/ML	4554	163
-9003	50	MG/ML	3867	170
-9004	50	MG/G	4930	147
-9005	35	MG	4580	44
-9006	137	MCG	1952	37
-9007	240	MG	4849	16
-9008	500	MG	2426	44
-9009	80	MG/ML	1913	80
-9010	25	MG	4760	2
-9011	100	MG/ML	231	176
-9012	2500	UI	2543	176
-9013	EMU		4577	79
-9014	13	DH	333	94
-9015	(10.0 + 15.0)	MG	1112	51
-9016	250	MG	300	51
-9017	80	MG	2370	51
-9018	100	MG/15	4675	212
-9019	0.15	G	1261	62
-9020	(0.15 + 0.30)	MG/ML	1235	179
-9021	400	MG	1142	51
-9022	10 + 80	MG	4056	62
-9023	7000	UI	5382	51
-9024	200	MG/ML	3631	176
-9025	60	MG	1565	23
-9026	7.5	MG	704	58
-9027	300	MG	5175	62
-9028	1.2	U/G	2765	147
-9029	1.5	MG/ML	2564	179
-9030	2	G	1097	176
-9031	260	MG	2079	51
-9032	2.0	MG	2628	62
-9033	20	MG	4434	51
-9034	2000	UI/ML	1881	176
-9035	50	MCG	2253	207
-9036	2.5	MG	1957	37
-9037	500	MG	4314	9
-9038	5.0	MG/G	1863	147
-9039	80	MG	2372	51
-9040	SUS		772	204
-9041	DRG		522	74
-9042	10	MG	4389	51
-9043	500	MG	663	51
-9044	10	MG	643	51
-9045	400	MG	5140	62
-9046	(50.0 + 5.0)	MG	673	51
-9047	10	MG/G	3701	68
-9048	250	MG	4241	51
-9049	0.250	MG	1539	37
-9050	10	MG/ML	613	176
-9051	(0.05	MG	5080	51
-9052	(100+220)	MG	361	51
-9053	1	G	4393	173
-9054	5	MG	2272	62
-9055	12.5	MG	809	62
-9056	PO		5193	134
-9057	40	MG	2373	19
-9058	450	MG	4482	154
-9059	8	MG	4447	140
-9060	3	U/I	2764	116
-9061	40	MG	4869	37
-9062	500	MG	936	133
-9063	1	ML/ML	5399	108
-9064	30	MG	2200	13
-9065	1.0	MG/ML	598	186
-9066	7.000	UI	1418	51
-9067	600	MG	183	51
-9068	1.2	MG/ML	4698	203
-9069	300	MG	835	51
-9070	1	MG	331	51
-9071	22400	UI	2448	51
-9072	(103 + 1.5 + 3 + 1)	MEQ/L	1309	189
-9073	50	MCG/DOSE	125	168
-9074	5	MG	715	212
-9075	5	MG	2184	51
-9076	1000	MG	983	55
-9077	0.200	MG/DOSE	749	6
-9078	100	MG	1011	62
-9079	20	MG/G	583	68
-9080	10	MG	1644	62
-9081	100	MG	5130	51
-9082	2	MG	5021	62
-9083	(160.00+12.50)	MG	1579	51
-9084	5	MG	4323	197
-9085	0.15	MG	948	62
-9086	3.5	G	4001	127
-9087	11.60	MG/	1529	86
-9088	1	MG/G	4796	145
-9089	(138+2.0+3.5+1.0+113.02+3.0+32+1)	MEQ/L	1311	189
-9090	1.5	MG	5095	176
-9091	20	G	2310	176
-9092	60	MG/ML	5407	176
-9093	20	MG	765	51
-9094	400 + 50	MG/COM	177	62
-9095	24	MG	4278	15
-9096	1000	MG/SUP	3935	197
-9097	20	MG	410	51
-9098	150	MG	1095	58
-9099	40	MG/ML	3942	204
-9100	250	UI	551	140
-9101	(5	MG	4750	147
-9102	500	MG	947	51
-9103	100	MG/ML	4746	176
-9104	10	MG/G	1176	67
-9105	1	G	888	157
-9106	2.5	MG/ML	153	167
-9107	10	MG/ML	5166	184
-9108	120	MG	1875	51
-9109	500	MG	379	62
-9110	6	PCC	1048	192
-9111	400	MG	4863	140
-9112	50	MG	271	37
-9113	500	MG	2260	19
-9114	200	MCG	1952	62
-9115	100	MG	5474	62
-9116	71.5	MG/ML	4067	167
-9117	50000	UI	1759	35
-9118	250	MG	3696	37
-9119	100	MG	2001	139
-9120	5550	MBQ	805	9
-9121	1000	UI	516	140
-9122	6	MG	2518	19
-9123	(5	MG	471	147
-9124	5.0	MG	4388	51
-9125	(6.14 + 0.18596)	MG/ML	2524	189
-9126	5	MG/ML	1113	176
-9127	15	MG	1945	51
-9128	40	MG	402	51
-9129	62.5	MCG/DOSE	295	130
-9130	500	MG	5239	133
-9131	(0.250 + 0.250)	G/G	484	147
-9132	PO		5203	134
-9133	1.5	MG	2593	62
-9134	10	MG	5419	51
-9135	100	MG/ML	2769	176
-9136	1	MG	4370	51
-9137	100	MG	1297	51
-9138	100	MG	2532	176
-9139	5	MG	5504	51
-9140	200	MG	2326	62
-9141	100	MG	1461	44
-9142	400	MG	815	37
-9143	40	MG	4847	3
-9144	40	MG	4433	51
-9145	370	MBQ	2144	176
-9146	45	MG	4255	48
-9147	200	MG/ML	5111	181
-9148	11.6	MG/G	1532	86
-9149	2000	UI	207	135
-9150	50	MG/ML	4033	163
-9151	400	MCG	2052	48
-9152	1.0	MG/G	3765	68
-9153	10	MG	5314	62
-9154	300	MG	4891	11
-9155	5	MG	2479	62
-9156	500	MG	861	19
-9157	500	MG	871	13
-9158	80	MG	5234	51
-9159	500	MG	1458	50
-9160	40	MG	5466	32
-9161	(10 + 10)	MG	1229	13
-9162	(2.5  + 60.0)	MG	65	62
-9163	120	MG	4849	16
-9164	0.4	MG/ML	104	181
-9165	(50 + 50 + 2.5)	MG/ML	1332	176
-9166	(50.0 + 850.0)	MG	3586	51
-9167	40	MG	3873	59
-9168	100	MG	2270	62
-9169	35	MG	1683	62
-9170	8	MG/ML	4447	176
-9171	40	MG	4878	62
-9172	10	MG	692	51
-9173	200	MG/	3884	181
-9174	1	G	4393	133
-9175	40	MG	259	62
-9176	250	MG	989	51
-9177	150	MG	4061	13
-9178	1	MG/ML	346	198
-9179	50	MG/ML	4740	176
-9180	2.5	MG	315	51
-9181	150	MG	2140	19
-9182	80	MG	4568	51
-9183	20	MG	353	51
-9184	50	MG	1609	62
-9185	80	MG/ML	59	163
-9186	500	MG	4810	51
-9187	30	MG/ML	1218	176
-9188	750	MG	5111	62
-9189	5	MG	1258	51
-9190	40	MG/ML	1915	204
-9191	(40.0 + 25.0 + 10.0)	MG	532	51
-9192	50	MG/ML	2256	163
-9193	150	MG	2140	13
-9194	PO		5192	140
-9195	9	MG/ML	4616	176
-9196	100	MG	3591	62
-9197	40	MG	4801	51
-9198	50	MG/ML	4598	176
-9199	1350	UFP	5206	135
-9200	6	MG	221	62
-9201	20	MG	1911	59
-9202	500	MG	274	140
-9203	500	MG	2097	51
-9204	D2		724	176
-9205	100	MG	5044	176
-9206	6	MG	1406	1
-9207	150	MG	5317	51
-9208	50	MG/ML	5471	176
-9209	40	MG/ML	5059	167
-9210	400	MG	1810	139
-9211	240	MG	1197	59
-9212	PO		4523	137
-9213	10	MG	1272	62
-9214	500	MG	1353	51
-9215	150	MG+	4689	51
-9216	7.5	MG	2030	58
-9217	100	MG	479	139
-9218	20	MG/ML	491	185
-9219	20	MG	4432	51
-9220	100	U	4174	139
-9221	4000	UI	1703	51
-9222	3.0	MG	1980	13
-9223	20	MG/G	1318	68
-9224	1000	UI	1409	51
-9225	20	MG	3881	59
-9226	600	MG	183	35
-9227	20	MG	145	62
-9228	0.25	MG	1560	62
-9229	11	MG/ML	4087	181
-9230	(80.0 + 25.0)	MG	671	37
-9231	5	MG	4196	62
-9232	16.8	MG	1751	4
-9233	1.5	MG	4526	44
-9234	1000	UI	4471	51
-9235	5	MG/ML	69	179
-9236	50	MG	4770	13
-9237	500	MG	5148	133
-9238	30	MG	5027	3
-9239	0.010	G	1682	74
-9240	10	MG	3913	37
-9241	40	MG	3754	13
-9242	500	MG	934	38
-9243	20	MG	3754	16
-9244	20	MG	5418	51
-9245	1	G	3935	44
-9246	25	MG	1824	140
-9247	PO		273	126
-9248	(50.0 + 12.5)	MG	394	62
-9249	100	MCG/ML	493	185
-9250	0.64	MG/ML	1602	167
-9251	2	MG/ML	993	176
-9252	100	MCG/DOS	159	202
-9253	50	MG	1011	62
-9254	6.67	MG/ML	697	181
-9255	0.02	MG	1935	51
-9256	5	MG	1046	51
-9257	200	U	666	139
-9258	1.0	MG/ML	1316	173
-9259	10	MG/ML	1902	176
-9260	1	MG	4366	51
-9261	2.5	MG	1283	62
-9262	40	MG	1164	37
-9263	500	UI/500UI	5427	140
-9264	9	MG	5394	3
-9265	70	MG	791	136
-9266	40	MG	3731	51
-9267	200	MG/ML	5387	181
-9268	10	MG	2567	74
-9269	(0.03 + 0.075)	MG	1936	51
-9270	3.2	MG/ML	359	175
-9271	30	MG	4074	16
-9272	(320.00+12.50)	MG	1579	51
-9273	500	MG	4623	135
-9274	100	MG/ML	2775	176
-9275	20	MG/ML	461	163
-9276	50	MG	961	62
-9277	25	MG	4459	32
-9278	30	MG	1258	51
-9279	10	MG/G	3940	67
-9280	(40 + 25)	MG	3736	51
-9281	0.8	MG/ML	712	212
-9282	400	MG	4310	19
-9283	300	MG	3958	59
-9284	1	MG/ML	4500	176
-9285	500	MG	1665	62
-9286	500	MG	457	51
-9287	500	MG	941	51
-9288	COM		2021	52
-9289	40	MG/0.4	1829	176
-9290	150	MG	5073	66
-9291	500	MG	1585	181
-9292	4	MG	56	186
-9293	1.0	MG/G	3764	146
-9294	100	MG/G	4311	158
-9295	4	MG	2420	37
-9296	40	MG/ML	3976	179
-9297	500	MG	450	51
-9298	40	MG/ML	3789	201
-9299	10	MCG	851	135
-9300	200	MG/ML	4600	176
-9301	200	MG	46	37
-9302	62.5 + 4.380 + 1.250 + 2.5	MG	1242	69
-9303	576	MG	55	51
-9304	500	MG	4510	133
-9305	100	MG	4306	13
-9306	1	MG	2483	62
-9307	10	MG	1984	37
-9308	50	MG	930	13
-9309	45	MG	4695	176
-9310	50	MG+	4689	51
-9311	(120 + 8.58)	MG/ML	1027	160
-9312	12.5	MG	1202	62
-9313	60	MCG/ML	4497	176
-9314	160 + 12.5	MG	5234	51
-9315	(0.5 + 1)	MG/G	1600	145
-9316	(103 + 2 + 2.5 + 1)	MEQ/L	1309	189
-9317	300	MG	5252	51
-9318	60	MG	2539	51
-9319	600	MG	912	102
-9320	0.4	MG/ML	1403	212
-9321	80	MG/ML	4555	163
-9322	30	MG/ML	3703	188
-9323	1.0	MG	80	51
-9324	50	MG	5405	59
-9325	200	MG	4226	58
-9326	100	MG	3585	51
-9327	1000	MG	2352	129
-9328	1.0	MG/ML	4832	179
-9329	600	MG	3893	37
-9330	20	MG	316	51
-9331	50	MG/ML	3983	111
-9332	5	MG	4083	37
-9333	60	MG	759	183
-9334	400	U	905	139
-9335	PO		1422	140
-9336	750	MG	3884	37
-9337	16	MG	566	62
-9338	0.075	MG	323	51
-9339	40	MG	531	51
-9340	400	MG	5375	32
-9341	100	MG	404	51
-9342	600	MG	454	154
-9343	10	MG	1050	51
-9344	4	MG	3594	121
-9345	1	MG	4050	13
-9346	550	MCG/ML	188	202
-9347	60	MG	334	51
-9348	30	MG	5282	19
-9349	25	MG/ML	1166	176
-9350	20	MG	2015	49
-9351	1	G	1137	51
-9352	0.25	MG	907	62
-9353	40	MG	375	51
-9354	200	MG	407	62
-9355	5	MG	1255	62
-9356	150	MG	1095	56
-9357	20	MG	743	176
-9358	150	MG	4240	51
-9359	150	MCG/ML	1049	176
-9360	200	MG	5272	135
-9361	1200	MG	4848	188
-9362	125	MG	4117	62
-9363	500	MG	3929	135
-9364	3.125	MG	839	51
-9365	0.5	MG	761	62
-9366	100	MG	3783	176
-9367	0.075	MG	1468	51
-9368	3330	MBQ	805	9
-9369	100	MG	3651	160
-9370	150	MG/ML	4557	175
-9371	10	MG/G	1245	67
-9372	0.05	MG/ML	5442	179
-9373	24	MCG	235	35
-9374	50	MG	930	19
-9375	10	MG/ML	197	181
-9376	5	MG	5326	47
-9377	1.5	MG	80	51
-9378	16.00	MG/ML	2462	212
-9379	64	MCG/DOSE	749	202
-9380	250	MG	4393	133
-9381	0.5	MG/2	554	105
-9382	900	MG	5530	160
-9383	10	MG	4563	62
-9384	200	MG	2187	19
-9385	250	UI	551	135
-9386	40	MG/ML	540	204
-9387	150	MG	1756	37
-9388	COM		5408	62
-9389	604.72	MG/ML	2295	176
-9390	40	MG	1198	19
-9391	25	MG/ML	4117	204
-9392	600	MG	38	102
-9393	500	MG	865	52
-9394	150	MG	5267	51
-9395	125	UI/ML	4905	140
-9396	29	GBQ	4244	176
-9397	2	MG/	1127	181
-9398	10	MG/ML	74	185
-9399	32	MG/ML	2454	204
-9400	50	MG	826	62
-9401	400	MG	2269	51
-9402	5	MG	2433	51
-9403	150	MG	4689	51
-9404	30	MG/G	1416	165
-9405	200	MG	2187	13
-9406	150	MG	668	2
-9407	27	G/1000	4208	176
-9408	20	MG	1416	111
-9409	300	MG	5066	37
-9410	2	MG/G	2605	68
-9411	75	MG	1659	62
-9412	24	MG	1533	37
-9413	0.1	MG/ML	1568	179
-9414	(103 + 1.5 + 3.0 + 1.0)	MEQ/L	1308	189
-9415	(300.0 + 125.0 + 50.0 + 30.0)	MG	5066	37
-9416	100	MG	2544	51
-9417	15	MG	4051	51
-9418	4	MG/ML	2566	176
-9419	7000	UI	1408	35
-9420	0.5	MG	437	32
-9421	250	MG	3715	19
-9422	2.5	MG	5437	51
-9423	1	MG/G	1230	117
-9424	(25.0 + 25.0)	MG	90	37
-9425	5000	UI	1704	35
-9426	250	MG	1428	44
-9427	8	MG	3980	51
-9428	37.5	MCG	4205	62
-9429	50	MG/ML	2601	2
-9430	500	MG	2256	13
-9431	500	UI/ML	164	176
-9432	1000	UI	211	51
-9433	10	MG/ML	1970	176
-9434	(103 + 1.5 + 3.5 + 1.0)	MEQ/L	1308	172
-9435	1000	MG	447	51
-9436	500	MG	870	19
-9437	50	MG	595	51
-9438	400	MG	483	62
-9439	250	MG	1566	19
-9440	500.000	UI	138	74
-9441	100	MG/ML	4772	176
-9442	(160.00+12.50+5.00)	MG	1982	51
-9443	2	MG/ML	1877	176
-9444	200	MG	2346	139
-9445	400	MG	1860	51
-9446	62.5	MG/G	1243	69
-9447	10	MG	275	62
-9448	300	MG	2752	51
-9449	1.0	MG/ML	4157	186
-9450	3	MG/ML	225	212
-9451	2000	UI	211	51
-9452	50	MG	5544	19
-9453	5.0	MG/G	478	147
-9454	2.5	MG	433	51
-9455	50	MG	2028	51
-9456	210	MG	4063	51
-9457	SOL		4260	181
-9458	40	MG	3943	51
-9459	3	MG/ML	1259	212
-9460	10	MG	4298	62
-9461	75	MG	1663	176
-9462	74	MG/G	4224	147
-9463	(0.03 + 0.075)	MG	189	51
-9464	160	MG	2345	51
-9465	1	PCC	416	179
-9466	(0.035 + 2)	MG	4496	51
-9467	10	MG/ML	1946	176
-9468	0.125	MG	4526	62
-9469	70	MG	4685	51
-9470	100	MG/ML	4530	181
-9471	100	MG	385	51
-9472	4	MG	5326	47
-9473	50	MG	4132	37
-9474	100	MG/G	2280	93
-9475	4000	UI/ML	1882	176
-9476	250	MG	453	12
-9477	100	MCG	1952	62
-9478	4	G	3989	139
-9479	100	MG	1477	58
-9480	10	MG/ML	1986	181
-9481	10	MG	1895	51
-9482	4000	UI	1719	35
-9483	75	MG	4809	13
-9484	250	MG	486	197
-9485	750	U/ML	3763	176
-9486	320	MG	4465	35
-9487	20	MG/G	3619	68
-9488	(1.0 + 2.0)	G	4737	156
-9489	300	MG	1178	51
-9490	200	MG	367	42
-9491	60	MG	3847	62
-9492	18	MG	1138	58
-9493	500	MG	767	62
-9494	2000	UI	4264	140
-9495	400	MG	2510	62
-9496	50	MG/ML	2224	176
-9497	100	MG	5235	51
-9498	40	MG	3734	51
-9499	120	MG	3802	9
-9500	500	UI	551	140
-9501	32	MCG	729	207
-9502	4	UI	2595	176
-9503	15	MG/ML	2264	204
-9504	150	MG	5454	51
-9505	1	MG	2479	62
-9506	(180.0 + 240.0)	MG	187	58
-9507	4	MG	1213	62
-9508	300	MG	1732	51
-9509	500	MG	983	55
-9510	80	MG/ML	245	163
-9511	37.5	MG	1189	51
-9512	6	MG/ML	3855	176
-9513	5	MG	1827	122
-9514	4	MG	3771	48
-9515	4	MG/ML	1555	181
-9516	50	MG/ML	3933	176
-9517	25	MG	4877	51
-9518	150	MG	5463	140
-9519	50	MG/G	4938	147
-9520	2	MG/ML	1168	176
-9521	(37+40+5)	MG/ML	2329	204
-9522	(320.00+25.00+10.00)	MG	1982	51
-9523	50	MG	1616	62
-9524	(99.65 + 2.0 + 3.5 + 1.0)	MEQ/L	1308	189
-9525	100	MG	5017	58
-9526	100	MG	2750	51
-9527	50	MG/ML	5023	176
-9528	1.000.000	UI	499	135
-9529	(99.65 + 2 + 2.5 + 1)	MEQ/L	1309	189
-9530	50	MCG	4205	62
-9531	10	MG/	1168	176
-9532	40	MG	4434	51
-9533	4	MG/ML	4996	179
-9534	100	MG	1414	58
-9535	1	MG/G	5054	68
-9536	175	MCG	4785	62
-9537	500	MG	4393	133
-9538	300	MG	4111	51
-9539	10	MG	2288	51
-9540	10	MG	5418	51
-9541	20	MG	1799	51
-9542	10	MG	4562	51
-9543	500	MG	869	13
-9544	6.25	MG	839	62
-9545	60	MG	1165	51
-9546	150	MG	4391	51
-9547	10	MG	344	62
-9548	100	MG	1811	58
-9549	8	MCG	235	35
-9550	0.5	MG	1494	62
-9551	(50.00+20.00)	MG/G	61	68
-9552	1	MG/ML	4371	181
-9553	5	MG	4705	37
-9554	500	MG	3665	19
-9555	100	MG	2634	51
-9556	PO		1076	158
-9557	20	MG	602	62
-9558	40	MG	1287	62
-9559	50	MG	2565	62
-9560	900	UI/800	5427	134
-9561	500	MG	2312	140
-9562	25	MG/ML	1507	176
-9563	0.16	G/ML	1835	192
-9564	0.50	MG/G	4219	147
-9565	70	MG	653	62
-9566	1	MG	4794	19
-9567	1000	MG	5499	135
-9568	10	MG	4550	51
-9569	10	MG/G	3609	173
-9570	30	UI	1326	135
-9571	500	MG/ML	3626	181
-9572	6	MG	306	212
-9573	5	MG	4086	62
-9574	60	MG	280	74
-9575	2.5	UI	5200	134
-9576	200	MG	1848	51
-9577	100	MG	1565	23
-9578	20	MG	1000	51
-9579	200	MG	2119	152
-9580	0.2	MG/	380	212
-9581	2	MG/ML	4833	179
-9582	150.000	U/ML	535	201
-9583	200	MG	405	58
-9584	200	MG	1304	13
-9585	80	MG	675	51
-9586	10	MG	1637	62
-9587	SUS		5198	2
-9588	150	MG	4824	51
-9589	800	MG	4296	51
-9590	3.5	MG/G	4748	68
-9591	420	MG	3954	185
-9592	27	MG	1980	3
-9593	10	MG/ML	3646	212
-9594	SOL		4663	176
-9595	1.00	MCG	4527	35
-9596	0.5	MG/G	1600	147
-9597	1	G	5377	46
-9598	0.1	G/G	3690	68
-9599	20	MG/5	4193	181
-9600	2	MG/ML	1697	201
-9601	10	MG	1538	37
-9602	875	MG	4034	51
-9603	250	MG	936	133
-9604	100	MG/ML	2454	204
-9605	150	MG	1195	15
-9606	50	MG	4917	62
-9607	50	MG	1756	37
-9608	5	MG/ML	1678	176
-9609	5	MG/ML	1677	176
-9610	2	MG	1167	135
-9611	10	MG	4561	51
-9612	0.12	MG/ML	2438	176
-9613	(462+90+438)	MG/G	1924	127
-9614	360	MG	4635	51
-9615	PÓ		5192	134
-9616	200	MG/G	2122	152
-9617	900	MG	453	163
-9618	25	MG	4986	51
-9619	10	MG	4374	62
-9620	100	MG	4985	51
-9621	67	MG	2530	19
-9622	2.5	MG/ML	1716	176
-9623	0.5	MG/ML	1565	173
-9624	100	MG	930	139
-9625	500	MG	866	19
-9626	8	MG	1393	62
-9627	25	MG	5335	62
-9628	1	MG	2422	62
-9629	5	MG	1084	62
-9630	20	MG	3746	51
-9631	1	MG	1768	142
-9632	SOL		3803	176
-9633	16	UI	629	135
-9634	600	MG	452	163
-9635	200	MG/ML	1661	175
-9636	1.0	MG/G	5054	68
-9637	150	MG/ML	4572	176
-9638	250	MG	5207	66
-9639	3.125	MG	839	62
-9640	100	MCG	4287	130
-9641	10	MG	4829	53
-9642	6.67	MG/ML	755	181
-9643	(8.6 + 0.3 + 0.33)	MG/ML	4352	176
-9644	500.000	UI	4683	135
-9645	250	MG	1339	19
-9646	100	MG	275	176
-9647	7.5	MG/G	4417	68
-9648	25	MG	4984	51
-9649	40	MG	4299	62
-9650	50	MG	369	19
-9651	500	MG	1912	51
-9652	(400 +5 +5)	MG	4308	19
-9653	5	MG	5254	51
-9654	(10.0 + 5.0)	MG	1112	51
-9655	48	MUI	5490	176
-9656	37.84	MG/ML	206	167
-9657	250	MG	3665	154
-9658	4	MG	131	59
-9659	SOL		4641	178
-9660	200	MG	3990	51
-9661	50	MG	2140	19
-9662	770	MG	4677	51
-9663	20	MG	3743	51
-9664	20	MG	4383	51
-9665	10	MG/ML	3601	204
-9666	50	MG	1190	51
-9667	50	MCG/ML	4021	181
-9668	10	MG	3637	176
-9669	15	MG	4333	13
-9670	(42.5+ 5.38 + 4.48 + 0.257 + 0.0508)	MG/ML	1515	187
-9671	185	MG/G	350	62
-9672	20	MG	745	176
-9673	12	MG	1403	54
-9674	50	MG	1919	37
-9675	COM		2355	51
-9676	4	MG/ML	1291	176
-9677	200	MG	2333	142
-9678	20	MG	1367	19
-9679	40	MG/ML	1628	176
-9680	1	ML/ML	3909	209
-9681	0.5	MG/G	1051	194
-9682	10	MG	3580	41
-9683	500	MG	3884	62
-9684	400	MG	4308	13
-9685	1	ML/ML	2777	190
-9686	5	MG/ML	932	179
-9687	24	MG	706	30
-9688	2960	MBQ	805	9
-9689	0.5	MG	1215	62
-9690	(1.0 + 2.0)	MG	1927	51
-9691	(100 + 100)	MG/ML	1490	176
-9692	100	U/ML	4591	176
-9693	50	MG	1544	62
-9694	(60 + 60 + 60 + 60)	MCG	1778	201
-9695	6	MG/ML	4674	212
-9696	200	MG/ML	5064	163
-9697	600	MG	2152	95
-9698	25	MG/ML	5405	176
-9699	160	MG	1038	51
-9700	500	MG	258	132
-9701	150	MG	1195	29
-9702	20	MG/ML	1114	179
-9703	100	MG	284	140
-9704	0.05	MG	1710	179
-9705	375	MG	861	154
-9706	3	MG/G	1548	86
-9707	0.5	MG/G	86	87
-9708	(40.0 + 10.0)	MG	3741	51
-9709	4000	UI/ML	1881	176
-9710	250	MG	792	51
-9711	500.000	UI	4045	135
-9712	150	MG	4076	19
-9713	75	MG	4249	51
-9714	4	MG	2422	62
-9715	40	MG/ML	2149	212
-9716	60	MG	784	51
-9717	750	MG	2417	44
-9718	5	MG/ML	709	176
-9719	(2 + 0.5)	PCC	1725	179
-9720	0.5	MG/G	1597	67
-9721	100	MG	3589	62
-9722	100	MG/ML	2007	176
-9723	1	MG	3956	51
-9724	6.000	UI/0.3	4264	176
-9725	50	MG	2634	51
-9726	3	MG	5327	212
-9727	10 + 20	MG	4056	62
-9728	30	MG/ML	3676	178
-9729	10	MG	4565	62
-9730	500	MG	3939	51
-9731	60	MG/ML	4572	185
-9732	1000	MG	959	131
-9733	0.25	MG/ML	3714	179
-9734	1.5	MG	4057	37
-9735	300	MG	1412	136
-9736	4	MG	600	48
-9737	10	MG	4704	51
-9738	4	MG/ML	754	176
-9739	50	MG	5303	13
-9740	25	MG	4225	15
-9741	74	MBQ	2299	176
-9742	30	MG/G	285	69
-9743	3.5	MG/G	592	149
-9744	400	MG	4584	51
-9745	10000	UI	3617	176
-9746	30	MG	334	51
-9747	0.375	MG	4228	44
-9748	140	MG/ML	2629	176
-9749	23680	MBQ	2144	176
-9750	4.5	MG	1980	13
-9751	6	MG/ML	3854	176
-9752	150	MG/ML	3957	176
-9753	8.6	MG/ML	4604	176
-9754	10	MG	1966	139
-9755	100	MG	330	51
-9756	2.5	MG	1267	51
-9757	1	MG	4058	62
-9758	250	MCG/DOSE	1035	171
-9759	35.4	MG/ML	4495	204
-9760	11.6	MG/G	95	173
-9761	600	MG	175	62
-9762	1	MG/G	527	111
-9763	5	MG/ML	3633	176
-9764	50	UI/ML	4479	176
-9765	100	MG	2042	62
-9766	(400 + 4 + 4)	MG	4309	13
-9767	25	MG	1050	51
-9768	2	MG/ML	3865	176
-9769	100	MG	5016	197
-9770	50	MG/ML	4776	176
-9771	100	MG	4682	13
-9772	1	G	2342	139
-9773	75	MG	3809	13
-9774	(0.5 + 1 + 10 + 10)	MG/G	5217	67
-9775	80	MG	5494	51
-9776	40	MG	3754	142
-9777	SOL		3729	181
-9778	120	MG/ML	4605	192
-9779	10	MG	1321	51
-9780	100	MG	5283	58
-9781	100	MG	2786	19
-9782	80	MG/ML	1028	160
-9783	50	MG	214	136
-9784	100	MG	336	62
-9785	AER		418	171
-9786	600	MG	454	163
-9787	10	MG	1876	51
-9788	2%	SOL	3862	173
-9789	5	MG/ML	727	179
-9790	20	MG/ML	2214	79
-9791	10	MG/ML	3935	198
-9792	88	MCG	4205	62
-9793	40	MG	3875	51
-9794	0.5	MG/ML	103	176
-9795	150	MG	1954	58
-9796	75	MG	801	62
-9797	40	MG/G	2560	2
-9798	1	MG/ML	1642	204
-9799	20	MG/ML	5392	167
-9800	25	MG/ML	2269	181
-9801	50	MG/	683	176
-9802	140	MG/ML	520	204
-9803	120	MG	2528	176
-9804	80	MG	679	51
-9805	1	ML/ML	1838	105
-9806	0.8	MG/ML	56	185
-9807	50	MG	757	51
-9808	300	MG	5367	51
-9809	4	UI	629	135
-9810	75	MG	312	13
-9811	90	MG	4942	51
-9812	150	MG	4376	51
-9813	30	MG	4209	19
-9814	450	MG	3953	51
-9815	80	MG	4878	37
-9816	5	MG/ML	4757	212
-9817	5	MG	4822	62
-9818	FRAMBOESA		2548	173
-9819	7400	MBQ	1690	176
-9820	50	MG	5256	51
-9821	250	MG	1769	19
-9822	5	MG	4403	51
-9823	3	MG/G	4987	147
-9824	10	PCC	2219	176
-9825	20	MG	1278	140
-9826	(375+12.50+12.50)	MG/ML	1673	176
-9827	5	MG	237	62
-9828	1	MG/ML	3949	204
-9829	100	MCG/DOSE	98	6
-9830	50	MG	4501	58
-9831	100.000	UI/G	2573	147
-9832	500	MG	5119	62
-9833	200	MG	4235	58
-9834	0.25	MG/ML	3709	179
-9835	111	MBQ	2463	176
-9836	5	MG/ML	2486	176
-9837	10	MG/	1900	176
-9838	1	MG	266	51
-9839	80	MG	5400	176
-9840	(0.3 + 5.0)	MG/ML	2386	179
-9841	80	MG/ML	480	204
-9842	50	MG	700	51
-9843	100	MCG/DOSE	101	199
-9844	2	G	876	140
-9845	10	MG	5168	62
-9846	250	MG	4875	13
-9847	1000	MG	5300	176
-9848	1000	MG	877	131
-9849	6.67	MG/ML	171	181
-9850	SOL		4044	181
-9851	4.5% + 0.5% + 0.5%	AER	272	7
-9852	1	MG	5054	68
-9853	10	MG	3754	19
-9854	25	MG	4773	13
-9855	2	MG	4696	62
-9856	50	MG	4871	37
-9857	250	MG	5554	135
-9858	SOL		4968	194
-9859	50	MG/ML	5522	163
-9860	20	MG	531	51
-9861	2500	MCG/ML	228	176
-9862	1.5	G	3815	158
-9863	160	MG	679	51
-9864	100	MG	2187	51
-9865	0.4	MG/ML	4032	181
-9866	10	MG	789	13
-9867	0.8	MG/ML	645	212
-9868	25	MG/ML	5483	188
-9869	200	MG/ML	4609	176
-9870	2.5	MG	4390	32
-9871	16	MG	574	62
-9872	20	MG	638	37
-9873	5	MG	4299	71
-9874	10	MG	4458	51
-9875	SOL		504	181
-9876	0.50	MG/G	4162	68
-9877	10	MG	473	62
-9878	10	MG/ML	3983	111
-9879	850	MG	1559	51
-9880	DRG		3905	74
-9881	40	MG/G	2439	68
-9882	200	MG	1752	15
-9883	20	MG/ML	3964	185
-9884	500	MG	2546	131
-9885	SUS		4784	201
-9886	0.25	MG/G	5376	67
-9887	250	MG	4240	51
-9888	0.5	MG	2442	62
-9889	5.0	MG	4390	32
-9890	4.0	MG	1494	176
-9891	1	G	881	131
-9892	14	MG	4436	37
-9893	10	MG/ML	701	176
-9894	3	MG/ML	411	181
-9895	120	MG	1562	51
-9896	20	MG	4084	37
-9897	5	MG/ML	2625	176
-9898	27750	MBQ	2354	176
-9899	2	MG/ML	1151	179
-9900	60	MG	1520	44
-9901	(103 + 2.0 + 2.5 + 1.0)	MEQ/L	1308	189
-9902	50	MG	692	51
-9903	400	MG	4022	51
-9904	100	MG	3928	139
-9905	25	U	5185	201
-9906	(42.5	MG/ML+0.147	3952	187
-9907	14	MG	3594	4
-9908	60	MG	3863	135
-9909	80	MG	1298	51
-9910	400	MG	2097	51
-9911	(50 + 12.5)	MG	398	51
-9912	(0.6 + 0.02 + 0.03 + 0.31)	G/ML	4619	176
-9913	200	MCG/DOSE	4201	130
-9914	(450.0 + 50.0 + 35.0)	MG	1671	62
-9915	75	MG	692	51
-9916	50	MG/ML	2358	176
-9917	7.5	MG/ML	4399	176
-9918	84	MG/ML	596	176
-9919	20	MG	4949	51
-9920	11.6	MG/G	848	88
-9921	500	MG	1814	51
-9922	100	MG	2210	19
-9923	3.5	MG	661	139
-9924	500	MG	3665	13
-9925	50	MG/ML	725	176
-9926	300	MG	4557	51
-9927	80	MG/ML	3662	154
-9928	35	MG/ML	4489	181
-9929	20	MG/G	915	67
-9930	2923	MBQ	2165	176
-9931	(4.0 + 500.0)	MG/ML	744	176
-9932	500	MG	4918	37
-9933	1	MCG	4527	32
-9934	0.5	MG/G	4162	145
-9935	2	MG/	2583	181
-9936	2	MG/ML	5533	176
-9937	250	MG	3999	51
-9938	50	MG/ML	3590	198
-9939	5	MG	537	51
-9940	40	MG/	3686	176
-9941	40	MG	2381	51
-9942	100	MG	127	102
-9943	300	MG	4338	13
-9944	320	MG	5234	51
-9945	25	MG/G	924	86
-9946	120	MG	2372	51
-9947	500	MG	4361	58
-9948	40	MG/G	4717	68
-9949	400	MG	479	139
-9950	740	MBQ	2492	196
-9951	0.75	MG	1491	62
-9952	200	MG	58	62
-9953	500	MG	1427	51
-9954	1000	UI	1420	51
-9955	200	MG/ML	903	181
-9956	5	MG	4094	62
-9957	1000	MG	879	133
-9958	50	MG	1964	139
-9959	40	MG	1009	19
-9960	20	MG/ML	3632	176
-9961	2.5	MG	599	62
-9962	200	MCG	4287	130
-9963	5	MG	3604	13
-9964	5	MG	4696	51
-9965	5	MG/ML	4585	179
-9966	75	MG	5291	44
-9967	POM		3659	147
-9968	150	MG	2513	176
-9969	20	MG/ML	912	212
-9970	2.000.000	UI	4154	128
-9971	2.5	MG/ML	3658	176
-9972	250	MG/ML	2596	176
-9973	200	MG	3619	62
-9974	1	G	876	140
-9975	0.5	G	4737	176
-9976	0.2 %	SOL	4241	106
-9977	5.0	MG/ML	1603	201
-9978	3500	UI	2543	176
-9979	10	MG	1765	51
-9980	(300 + 50)	MG	1691	51
-9981	50	U	4174	139
-9982	1.000.000	UI	4751	135
-9983	240	MG	4125	51
-9984	4	MG	1692	62
-9985	100	MG	345	131
-9986	10	MG/25	1279	62
-9987	50	MG/ML	242	163
-9988	300	MG	3758	176
-9989	200	MG/ML	4595	176
-9990	100	MG	858	62
-9991	11.7	MG/2.7	3695	8
-9992			1311	117
-9993	EMPL		4452	76
-9994	20	MG/G	919	68
-9995	100	MG	5532	60
-9996	250	MG/ML	4346	176
-9997	3.0	MG	4228	44
-9998	(105 + 1.5 + 3.5 + 1.0)	MEQ/L	1308	189
-9999	5	MG	562	37
-10000	25	MG	2516	51
-10001	189	MG/ML	3846	176
-10002	180	MG	186	51
-10003	5	MG	2393	62
-10004	900	MG	5516	163
-10005	(138+2+2.5+1)	MEQ/L	1314	189
-10006	50	MG	508	197
-10007	50	MG/ML	871	204
-10008	20	MG	5523	51
-10009	1	MG/ML	4370	167
-10010	50	MG	5175	62
-10011	10	MG	5536	46
-10012	10	MG	4995	37
-10013	20	MG	916	147
-10014	4	MG/ML	5144	176
-10015	10	MG/ML	1561	212
-10016	5	MG	4566	51
-10017	6	MG	2518	13
-10018	10	MG	2292	212
-10019	1500	MG	251	163
-10020	900	MG	2099	99
-10021	0.5	PCC	416	179
-10022	50	MG	1606	62
-10023	10	MG/G	162	68
-10024	40	MG/ML	4080	201
-10025	400	MG	4745	51
-10026	4	MG/ML	4900	179
-10027	150	MG	2758	62
-10028	250	MCG	4368	51
-10029	200	MG	4233	51
-10030	250	MG	608	51
-10031	100	MG	222	51
-10032	12	UI	2595	140
-10033	150	MG	302	51
-10034	40	MG	4562	51
-10035	75	MCG	1468	51
-10036	150	MG	5126	51
-10037	(5.0  + 25.0)	MG	558	19
-10038	500	MG	3928	139
-10039	750	MG/	2410	176
-10040	(37.50 + 2.25)	MG/ML	2481	176
-10041	2	MG/ML	2591	181
-10042	600	MG	38	95
-10043	500	MG	2405	62
-10044	100	U	2063	176
-10045	62.5	MG/G	1244	69
-10046	5	MG/ML	16	212
-10047	5000	UI	4264	140
-10048	1	MG/G	1931	69
-10049	100	MG	4702	181
-10050	5000	UI	4471	51
-10051	4	MG/ML	3791	179
-10052	20	MG	946	62
-10053	500	MG	4726	156
-10054	162	MG	64	176
-10055	10	MG	1171	19
-10056	1	G	2590	154
-10057	0.5	MG/ML	3677	167
-10058	3.0	MGPAS	2116	120
-10059	100	MG/ML	24	176
-10060	132	MCG	4257	176
-10061	500	MG	1681	62
-10062	500	MG	5454	51
-10063	10	MG/ML	969	204
-10064	12	MG/ML	4809	163
-10065	37	MBQ	2463	176
-10066	12	UI	627	135
-10067	2	PCC	5468	90
-10068	500	MG	889	131
-10069	10	MG	154	62
-10070	52.8	MG/ML	4452	107
-10071	100	MG/ML	1433	176
-10072	250	MG	1404	50
-10073	500	MG	4053	62
-10074	10	MG/ML	1870	181
-10075	20	MG	1367	51
-10076	4	MG	1478	15
-10077	40	MG	1909	139
-10078	2	MG	30	51
-10079	10	MG/ML	5012	176
-10080	5	MG	105	62
-10081	5550	MBQ	2463	176
-10082	500	MG	4922	51
-10083	100	MG	1963	139
-10084	200	MG/ML	4599	176
-10085	1125	MG	251	163
-10086	100	U	666	139
-10087	25	MG	824	62
-10088	160	MG/5ML	3884	204
-10089	20	MG/G	796	68
-10090	200	MG	2241	181
-10091	100	MG	1919	37
-10092	150	MG	2138	19
-10093	1000	UI	1719	32
-10094	10	MG	4404	51
-10095	60	MG	1729	31
-10096	2.5	MG	5039	51
-10097	50	MG	1399	135
-10098	1.5	MG/ML	2116	36
-10099	400	MG	4865	133
-10100	2%	GEL	1131	90
-10101	150	MG	5298	15
-10102	(178 + 185 + 230)	MG	2325	47
-10103	50	MG/ML	4240	176
-10104	50	MG	5014	19
-10105	150	MCG/ML	1106	176
-10106	200	MG/ML	140	176
-10107	1	MG	5535	62
-10108	50	MG	4041	51
-10109	40	MG/ML	1278	176
-10110	20	MG/ML	787	185
-10111	80	MG	1562	74
-10112	60	MG	1434	16
-10113	12.5	MG	810	62
-10114	5 %	SOL	3705	176
-10115	5	MG	4794	19
-10116	250	MG	5574	62
-10117	5	G	4857	140
-10118	1	MG/G	75	88
-10119	450	MG	1570	51
-10120	25	MG	4715	37
-10121	20	MG/ML	4350	178
-10122	12.5	MG	1616	62
-10123	7.5	MG/ML	1083	181
-10124	20	MG/G	2380	69
-10125	1	MG	4687	62
-10126	9	MG/ML	4609	176
-10127	200	MG	5539	62
-10128	4.0	MG/ML	3997	181
-10129	100	MG	3926	139
-10130	1	MG/G	5053	146
-10131	2.5	MG	1084	62
-10132	10	MG/ML	3984	111
-10133	150	MG	3810	51
-10134	5	MG	5523	51
-10135	750	MG	4897	62
-10136	25	MG	4501	58
-10137	80	MG	4869	37
-10138	5	MG	106	51
-10139	40	MG/ML	454	108
-10140	150	MG	2141	19
-10141	1	MG/ML	1678	176
-10142	(50.0 + 12.5)	MG/ML	1027	160
-10143	200	MG	5084	135
-10144	100	MG	4927	139
-10145	0.5	MG/ML	2478	176
-10146	10	MG	4566	51
-10147	150	MG	2135	19
-10148	5	MG	4466	62
-10149	300	MG	2315	13
-10150	20	MG	1430	51
-10151	10	MG	3861	19
-10152	160	MG	5229	51
-10153	1.000	MG	4482	51
-10154	10	MG	1789	68
-10155	200	MG	5140	54
-10156	20	MG	1992	13
-10157	3	MG/ML	3945	167
-10158	5	MG	4886	62
-10159	32	MG/ML	1681	204
-10160	20	MG	1821	62
-10161	SUS		4909	201
-10162	30	MG/ML	464	208
-10163	3	MG/ML	411	212
-10164	50	MG/ML	250	163
-10165	200	MG	2516	58
-10166	400	MCG/ML	1032	198
-10167	500	UI/ML	1881	176
-10168	51282	MBQ	2144	176
-10169	(25+5.38+4.48+0.257+0.0508)	MG/ML	1515	187
-10170	2	MEQ/ML	35	176
-10171	2.5	MG	4103	19
-10172	2.5	MG/G	1441	68
-10173	25	MG	1609	62
-10174	2	MG/ML	1403	181
-10175	2	MG	503	51
-10176	1	MG/G	4825	147
-10177	250	UI	3708	134
-10178	(1000.0 + 200.0)	MG	245	156
-10179	100	MG	5014	197
-10180	50	MG	847	158
-10181	10.000	UI/ML	2512	176
-10182	40	MG	3754	15
-10183	1	MG/ML	1352	186
-10184	2.5	MG/ML	1547	181
-10185	5	MG	5259	62
-10186	120	MG	1197	59
-10187	2	MG	221	62
-10188	400	MG	736	35
-10189	800	MG	480	62
-10190	0.1	MG/G	5068	68
-10191	(0.15+ 0.03)	MG	3636	51
-10192	20	MG/ML	5158	181
-10193	400	MG	4983	51
-10194	200	MG	1262	51
-10195	110	MCG	5125	25
-10196	10	MG/G	1455	68
-10197	50	MG	405	58
-10198	COM		4513	51
-10199	111	MBQ	828	176
-10200	(20 + 0.64 + 2.5)	MG/G	918	68
-10201	1000	MG	865	52
-10202	150	MG	4156	19
-10203	25	MG	2584	51
-10204	2.0	MG/ML	4832	179
-10205	10	MG	1245	32
-10206	(0.075+ 0.03)	MG	2060	51
-10207	0.5	MG/G	1470	147
-10208	150	MG	813	51
-10209	4	MG	1246	62
-10210	0.10	MG	399	62
-10211	6	MG/ML	4474	176
-10212	200	MG	134	62
-10213	150	MG	5544	19
-10214	PO		5250	134
-10215	0.50	MG/G	4220	147
-10216	15	MG	5571	48
-10217	(15 + 5.38 + 4.48 + 0.183 + 0.0508)	MG/ML	1515	187
-10218	400	MG	4862	139
-10219	50	MG/ML	243	163
-10220	20	MG/ML	815	204
-10221	500	MG	454	51
-10222	(25+5.38+4.48+0.183+0.0508)	MG/ML	1515	187
-10223	20	MG/G	915	211
-10224	5.0	MG/ML	1092	176
-10225	2	G	2590	154
-10226	1	MG	4368	62
-10227	900	MG	452	154
-10228	2	MG	4569	62
-10229	650	G	594	164
-10230	50	MG	4872	62
-10231	200	MG	5014	51
-10232	160	MG	2019	62
-10233	35	MG+300MG+50MG	1683	62
-10234	150	MG/ML	1299	176
-10235	100	MG/ML	1078	176
-10236	200	MG	1125	142
-10237	25	MG	1919	37
-10238	25	MG/ML	4850	176
-10239	100	MG/G	350	181
-10240	5	MG	1327	62
-10241	10	MG	5571	51
-10242	1000	UI	2520	134
-10243	5	G	2310	176
-10244	225	MG	1224	51
-10245	100	MG	3601	45
-10246	10	MG/ML	720	212
-10247	3	MUI/0.5	4396	176
-10248	10	MG	2782	35
-10249	400	MCG	3842	130
-10250	(1 + 100 + 50)	MG	1006	51
-10251	80	MG	4565	51
-10252	1	MG	449	37
-10253	0.5	MG/ML	897	181
-10254	200	MG	5070	35
-10255	200	MG	814	50
-10256	50	MG	5325	51
-10257	20	MG/G	2136	102
-10258	100	MG	4891	23
-10259	5000	UI	4048	147
-10260	100	MG	345	133
-10261	40	MG	3755	156
-10262	5	MG	4298	62
-10263	(20.0 + 0.5 + 2.5)	MG/G	5086	147
-10264	3	MG	2518	13
-10265	40	MG/ML	2298	181
-10266	0.5	MG/G	4162	147
-10267	1	G	1886	156
-10268	10	MG	1643	62
-10269	300	MG/ML	2430	176
-10270	1.5	MG/ML	203	179
-10271	70	MG	1618	19
-10272	100	MG	4459	32
-10273	20	MG	4776	176
-10274	125	MG/ML	3794	176
-10275	0.015	MG	4524	51
-10276	1	MG/G	510	86
-10277	5	MG	1649	51
-10278	90	MG	4695	176
-10279	80	MG	1579	51
-10280	160	MG	1577	51
-10281	5	MG	2394	62
-10282	(400 + 80)	MG	4739	62
-10283	0.66	G/ML	694	204
-10284	2.5	MG/ML	1058	181
-10285	200	MG/G	3691	68
-10286	100	MG	5246	13
-10287	0.25	MG/5	894	212
-10288	(3 + 1.5  + 93.33)	MG/G	1342	125
-10289	500	MG	1137	51
-10290	10	MG	1640	51
-10291	10	MG/G	4026	68
-10292	5	UI/ML	3845	176
-10293	500	MG	1428	51
-10294	1500	UI	208	176
-10295	10	MG	4405	51
-10296	5.0	MG/	4953	179
-10297	1	G	855	46
-10298	100	UI/DOSE	4479	178
-10299	1.0	MG	937	51
-10300	10	PCC	596	176
-10301	250	MCG	2166	130
-10302	150	MG	5507	55
-10303	(3.00+3.00)	MG/ML	570	201
-10304	2.5	MG/ML	581	203
-10305	1	MG	1539	37
-10306	(2.0 + 0.03)	MG	241	51
-10307	300.000	U/ML	535	201
-10308	10	MG	1894	51
-10309	15	MG	1166	212
-10310	20	MG	4562	51
-10311	7000	UI	1719	51
-10312	10	MG	1642	62
-10313	40	MG	3743	51
-10314	75	MG	1532	58
-10315	0.25	MG/ML	115	176
-10316	SOL		122	191
-10317	0.125	MG/G	1712	68
-10318	SOL		4648	176
-10319	0.0022	G/ML	4615	176
-10320	100	MG	2044	2
-10321	50	MG/ML	1546	181
-10322	1.5	MG/ML	4832	179
-10323	100	MCG/ML	4541	176
-10324	200	MG	923	62
-10325	20	MG	929	166
-10326	(400 +5 + 5)	MG	4308	19
-10327	200	MG	928	62
-10328	3	MG	4337	51
-10329	100	MG/ML	596	176
-10330	2	MG	4294	135
-10331	20	MG/ML	5122	176
-10332	200	MCG	4180	66
-10333	50	MG	1851	51
-10334	5.0	MG	3775	51
-10335	20	MG/ML	5555	160
-10336	20	MG/ML	1628	185
-10337	2000	UI	5548	140
-10338	20	MG/ML	5274	188
-10339	370	MBQ	828	176
-10340	0.1	MG/ML	31	167
-10341	0.5	MG/G	5217	67
-10342	200	MG	1783	62
-10343	11.6	MG/G	2026	86
-10344	60	MG	1341	176
-10345	250	MG/ML	403	176
-10346	100	MG	10	137
-10347	50000	UI	78	32
-10348	50	MG/ML	1830	181
-10349	3	MG	5476	51
-10350	(230+141.47+185)	MG	1925	47
-10351	300	MCG	4205	62
-10352	0.35	MG	3641	37
-10353	100	MG/	2630	176
-10354	750	MG	2471	116
-10355	3	MG/ML	721	212
-10356	4	MG	2290	51
-10357	10	MG	5453	51
-10358	30	MG	1434	16
-10359	80 + 12.5	MG	5234	51
-10360	500	MG	3662	62
-10361	15	MG/ML	5126	212
-10362	5	MG/ML	715	212
-10363	120	MG	4814	51
-10364	1	MG/ML	4112	181
-10365	20	MG	4884	51
-10366	150	MG	3806	51
-10367	70	PCC	4598	176
-10368	1100	KBQ/ML	5462	176
-10369	(20.0 + 0.64)	MG/G	795	68
-10370	1	MG/ML	4370	181
-10371	30	MG	774	62
-10372	27	MG	5394	3
-10373	25	MG	809	37
-10374	90	MG	139	116
-10375	50	MCG/ML	5147	176
-10376	1000	MG	879	131
-10377	DRG		4702	74
-10378	10	MG/ML	1594	79
-10379	260	MG	4480	51
-10380	11.6	MG/G	780	86
-10381	50	MILHÕES/ML	2123	204
-10382	7000	UI	78	32
-10383	25	MG	4770	13
-10384	100	MG	274	140
-10385	4	UI	2595	140
-10386	25	MG	4136	51
-10387	75	MG	1195	62
-10388	6	MG/ML	2147	212
-10389	0.5	MG/G	1472	147
-10390	28.2	MG/G+52.6MG/G+13.3MG/G	5331	210
-10391	2.5	MG/ML	1562	176
-10392	125	MG	5153	156
-10393	250	MG	440	62
-10394	1	MG/ML	2003	176
-10395	300	MG	1940	51
-10396	30	MG	2401	44
-10397	2	MG/ML	5058	106
-10398	100	MG	4530	35
-10399	40	MG	2363	176
-10400	10	MG	160	62
-10401	1	G	890	129
-10402	30	MG	3864	140
-10403	7.50	MG/ML	26	188
-10404	1.0	MG/ML	103	190
-10405	10	MG	171	51
+COPY public.medication_presentation_dosage (id, medicationid, presentationid, dosageid, dosage_amount, dosage_unit) FROM stdin;
+1	4483	51	641	\N	\N
+2	1470	87	531	\N	\N
+3	1375	51	1335	\N	\N
+4	1624	176	989	\N	\N
+5	1486	51	324	\N	\N
+6	2612	175	1046	\N	\N
+7	462	131	581	\N	\N
+8	3861	19	1455	\N	\N
+9	1770	179	1255	\N	\N
+10	191	51	1367	\N	\N
+11	2397	82	464	\N	\N
+12	2038	62	656	\N	\N
+13	3578	37	91	\N	\N
+14	894	212	490	\N	\N
+15	4871	37	1006	\N	\N
+16	983	51	989	\N	\N
+17	5344	51	1195	\N	\N
+18	4792	51	937	\N	\N
+19	1173	19	804	\N	\N
+20	2282	62	1281	\N	\N
+21	2193	176	986	\N	\N
+22	680	51	1335	\N	\N
+23	1110	176	721	\N	\N
+24	2543	176	1447	\N	\N
+25	1272	62	804	\N	\N
+26	987	51	989	\N	\N
+27	97	135	1071	\N	\N
+28	1029	44	1084	\N	\N
+29	1706	62	1298	\N	\N
+30	4165	79	693	\N	\N
+31	3644	51	1184	\N	\N
+32	451	51	641	\N	\N
+33	802	62	1006	\N	\N
+34	888	156	1281	\N	\N
+35	2327	127	1144	\N	\N
+36	4366	51	1152	\N	\N
+37	395	62	1006	\N	\N
+38	4876	13	937	\N	\N
+39	2338	173	1117	\N	\N
+40	2324	13	937	\N	\N
+41	2270	62	1298	\N	\N
+42	1740	62	1043	\N	\N
+43	1028	51	1497	\N	\N
+44	4677	181	1149	\N	\N
+45	829	114	1367	\N	\N
+46	1522	74	1043	\N	\N
+47	1121	51	726	\N	\N
+48	4460	140	1405	\N	\N
+49	5251	51	656	\N	\N
+50	2015	13	937	\N	\N
+51	3704	176	1307	\N	\N
+52	2133	51	918	\N	\N
+53	247	154	1184	\N	\N
+54	4037	74	1542	\N	\N
+55	955	35	1298	\N	\N
+56	27	136	1428	\N	\N
+57	2140	176	1046	\N	\N
+58	4969	51	684	\N	\N
+59	1280	19	918	\N	\N
+60	262	176	1286	\N	\N
+61	2402	176	958	\N	\N
+62	3783	176	1195	\N	\N
+63	1291	62	529	\N	\N
+64	4018	35	1265	\N	\N
+65	1315	189	1491	\N	\N
+66	2014	134	1287	\N	\N
+67	5475	51	1152	\N	\N
+68	3733	51	282	\N	\N
+69	243	19	1281	\N	\N
+70	1890	181	594	\N	\N
+71	547	140	995	\N	\N
+72	4718	204	1484	\N	\N
+73	2290	51	1502	\N	\N
+74	3720	179	1154	\N	\N
+75	5128	185	693	\N	\N
+76	2191	51	1281	\N	\N
+77	2536	68	1306	\N	\N
+78	1302	62	1502	\N	\N
+79	544	133	591	\N	\N
+80	4460	140	856	\N	\N
+81	1160	176	1298	\N	\N
+82	5470	176	944	\N	\N
+83	4857	176	680	\N	\N
+84	762	37	529	\N	\N
+85	5145	176	1335	\N	\N
+86	4707	127	302	\N	\N
+87	4867	37	384	\N	\N
+88	997	51	937	\N	\N
+89	3859	58	1298	\N	\N
+90	935	46	1281	\N	\N
+91	4598	176	1286	\N	\N
+92	706	15	1502	\N	\N
+93	5275	139	684	\N	\N
+94	4978	179	1154	\N	\N
+95	3751	16	937	\N	\N
+96	4729	47	856	\N	\N
+97	2208	130	199	\N	\N
+98	1027	160	388	\N	\N
+99	2145	51	1335	\N	\N
+100	1712	111	533	\N	\N
+101	3771	48	1502	\N	\N
+102	2267	51	1335	\N	\N
+103	4249	51	791	\N	\N
+104	1012	51	684	\N	\N
+105	315	51	1335	\N	\N
+106	4704	44	1348	\N	\N
+107	2748	160	1307	\N	\N
+108	2480	176	1307	\N	\N
+109	2144	176	829	\N	\N
+110	1148	37	1335	\N	\N
+111	5354	176	1390	\N	\N
+112	5009	51	1075	\N	\N
+113	2013	176	773	\N	\N
+114	3986	62	804	\N	\N
+115	445	68	922	\N	\N
+116	5275	140	1239	\N	\N
+117	5114	181	1104	\N	\N
+118	4083	37	937	\N	\N
+119	5217	68	29	\N	\N
+120	4225	15	1298	\N	\N
+121	4433	51	1335	\N	\N
+122	4986	13	804	\N	\N
+123	4516	51	1006	\N	\N
+124	5094	62	1075	\N	\N
+125	816	62	1006	\N	\N
+126	5425	176	923	\N	\N
+127	712	175	1046	\N	\N
+128	5567	51	684	\N	\N
+129	1682	51	684	\N	\N
+130	197	51	937	\N	\N
+131	3927	139	656	\N	\N
+132	1663	86	692	\N	\N
+133	2523	176	1275	\N	\N
+134	432	212	529	\N	\N
+135	1960	51	836	\N	\N
+136	1206	67	692	\N	\N
+137	1354	184	656	\N	\N
+138	79	181	623	\N	\N
+139	4269	62	592	\N	\N
+140	1579	51	248	\N	\N
+141	718	212	509	\N	\N
+142	5332	62	1335	\N	\N
+143	3859	58	791	\N	\N
+144	1625	176	721	\N	\N
+145	2212	212	751	\N	\N
+146	2103	176	891	\N	\N
+147	572	75	477	\N	\N
+148	78	35	766	\N	\N
+149	5051	51	1335	\N	\N
+150	4449	127	25	\N	\N
+151	4780	130	745	\N	\N
+152	4205	62	831	\N	\N
+153	430	188	1010	\N	\N
+154	67	51	791	\N	\N
+155	4647	176	1561	\N	\N
+156	3947	181	1046	\N	\N
+157	2064	147	1396	\N	\N
+158	2502	212	1463	\N	\N
+159	5015	167	665	\N	\N
+160	1051	81	533	\N	\N
+161	2199	176	795	\N	\N
+162	1596	171	1295	\N	\N
+163	2136	176	944	\N	\N
+164	1299	176	1075	\N	\N
+165	1704	35	645	\N	\N
+166	2534	62	918	\N	\N
+167	2510	204	1199	\N	\N
+168	3994	51	1239	\N	\N
+169	5008	135	1062	\N	\N
+170	809	62	1298	\N	\N
+171	5232	51	246	\N	\N
+172	3628	19	804	\N	\N
+173	5477	51	1152	\N	\N
+174	4856	62	989	\N	\N
+175	245	160	389	\N	\N
+176	2553	62	1298	\N	\N
+177	857	114	856	\N	\N
+178	4739	204	1199	\N	\N
+179	4923	51	818	\N	\N
+180	251	19	1281	\N	\N
+181	1346	37	1448	\N	\N
+182	3619	114	933	\N	\N
+183	4353	176	3	\N	\N
+184	5398	51	1281	\N	\N
+185	5085	68	537	\N	\N
+186	3798	51	1536	\N	\N
+187	808	62	1006	\N	\N
+188	5292	15	791	\N	\N
+189	4212	159	268	\N	\N
+190	4965	67	692	\N	\N
+191	4021	176	1280	\N	\N
+192	2597	167	690	\N	\N
+193	3987	135	1039	\N	\N
+194	1758	35	1424	\N	\N
+195	2406	176	665	\N	\N
+196	240	207	1293	\N	\N
+197	1184	58	656	\N	\N
+198	3922	176	835	\N	\N
+199	5400	176	937	\N	\N
+200	5040	135	1210	\N	\N
+201	4278	15	1502	\N	\N
+202	2407	176	665	\N	\N
+203	2026	45	1207	\N	\N
+204	1288	51	1281	\N	\N
+205	918	147	188	\N	\N
+206	5515	62	529	\N	\N
+207	674	51	818	\N	\N
+208	2124	152	918	\N	\N
+209	4231	51	918	\N	\N
+210	2136	212	944	\N	\N
+211	690	51	937	\N	\N
+212	1779	176	863	\N	\N
+213	1484	68	861	\N	\N
+214	925	62	918	\N	\N
+215	1952	62	1453	\N	\N
+216	1529	194	698	\N	\N
+217	5318	32	684	\N	\N
+218	4427	140	1298	\N	\N
+219	1027	140	856	\N	\N
+220	2467	69	941	\N	\N
+221	3935	101	1039	\N	\N
+222	5405	197	1298	\N	\N
+223	5090	86	927	\N	\N
+224	1100	51	1281	\N	\N
+225	2027	62	1122	\N	\N
+226	554	212	494	\N	\N
+227	408	145	510	\N	\N
+228	1146	176	516	\N	\N
+229	1388	51	791	\N	\N
+230	580	68	531	\N	\N
+231	5067	51	791	\N	\N
+232	4797	147	583	\N	\N
+233	4000	181	1503	\N	\N
+234	4775	19	1084	\N	\N
+235	1188	176	1307	\N	\N
+236	4051	51	1006	\N	\N
+237	4598	176	994	\N	\N
+238	5132	176	1380	\N	\N
+239	329	51	1298	\N	\N
+240	1882	176	911	\N	\N
+241	5391	67	531	\N	\N
+242	2515	51	592	\N	\N
+243	3965	168	698	\N	\N
+244	566	62	974	\N	\N
+245	4130	13	989	\N	\N
+246	1894	51	804	\N	\N
+247	1366	51	1510	\N	\N
+248	1479	179	1338	\N	\N
+249	714	212	693	\N	\N
+250	4140	79	693	\N	\N
+251	515	204	1195	\N	\N
+252	5153	156	1281	\N	\N
+253	2519	37	684	\N	\N
+254	810	62	1006	\N	\N
+255	969	204	1307	\N	\N
+256	882	156	856	\N	\N
+257	4502	58	1335	\N	\N
+258	5392	13	656	\N	\N
+259	4023	176	1561	\N	\N
+260	4795	13	860	\N	\N
+261	3904	19	656	\N	\N
+262	2288	51	804	\N	\N
+263	2113	171	1293	\N	\N
+264	1169	51	1298	\N	\N
+265	893	19	918	\N	\N
+266	457	19	989	\N	\N
+267	1949	62	684	\N	\N
+268	1631	156	97	\N	\N
+269	4706	51	1195	\N	\N
+270	554	181	1338	\N	\N
+271	1474	212	533	\N	\N
+272	1070	62	684	\N	\N
+273	413	139	656	\N	\N
+274	1743	176	1561	\N	\N
+275	1096	131	1039	\N	\N
+276	5388	46	856	\N	\N
+277	1545	51	1513	\N	\N
+278	304	139	989	\N	\N
+279	2559	67	1198	\N	\N
+280	1192	51	1216	\N	\N
+281	1404	50	733	\N	\N
+282	1721	51	1152	\N	\N
+283	4561	51	937	\N	\N
+284	3601	50	656	\N	\N
+285	1996	140	607	\N	\N
+286	1510	62	553	\N	\N
+287	5387	46	1039	\N	\N
+288	2144	176	1226	\N	\N
+289	2239	51	1493	\N	\N
+290	5058	19	1298	\N	\N
+291	3875	135	1195	\N	\N
+292	2726	201	671	\N	\N
+293	280	212	693	\N	\N
+294	5423	135	918	\N	\N
+295	448	142	1281	\N	\N
+296	2347	140	1258	\N	\N
+297	4689	51	1300	\N	\N
+298	4987	86	1337	\N	\N
+299	4046	197	1539	\N	\N
+300	4239	58	1122	\N	\N
+301	4292	19	825	\N	\N
+302	5033	179	435	\N	\N
+303	4568	51	1195	\N	\N
+304	3892	181	923	\N	\N
+305	4652	176	1561	\N	\N
+306	3884	200	665	\N	\N
+307	577	62	1502	\N	\N
+308	4840	51	1281	\N	\N
+309	65	212	365	\N	\N
+310	4707	127	36	\N	\N
+311	4289	139	693	\N	\N
+312	964	67	187	\N	\N
+313	245	163	382	\N	\N
+314	1892	51	684	\N	\N
+315	325	51	657	\N	\N
+316	2290	51	1411	\N	\N
+317	378	212	502	\N	\N
+318	1515	187	216	\N	\N
+319	5157	41	918	\N	\N
+320	4965	78	693	\N	\N
+321	228	176	1280	\N	\N
+322	4637	127	1556	\N	\N
+323	2476	140	645	\N	\N
+324	1706	181	1010	\N	\N
+325	5234	51	244	\N	\N
+326	1852	51	197	\N	\N
+327	1078	176	1527	\N	\N
+328	1791	137	956	\N	\N
+329	2174	58	607	\N	\N
+330	4333	13	684	\N	\N
+331	2362	51	16	\N	\N
+332	2064	147	1397	\N	\N
+333	5571	48	1335	\N	\N
+334	5115	47	818	\N	\N
+335	4989	51	1006	\N	\N
+336	883	156	641	\N	\N
+337	2100	51	1216	\N	\N
+338	1922	204	1010	\N	\N
+339	3862	51	1006	\N	\N
+340	4368	48	529	\N	\N
+341	3857	62	1281	\N	\N
+342	826	41	1348	\N	\N
+343	2326	204	1145	\N	\N
+344	2373	13	1481	\N	\N
+345	5106	204	819	\N	\N
+346	1349	179	228	\N	\N
+347	251	163	1405	\N	\N
+348	5546	135	1062	\N	\N
+349	1611	62	1298	\N	\N
+350	278	51	1029	\N	\N
+351	825	62	490	\N	\N
+352	249	154	992	\N	\N
+353	5518	51	1253	\N	\N
+354	3921	111	693	\N	\N
+355	695	190	490	\N	\N
+356	3851	58	937	\N	\N
+357	6	201	1338	\N	\N
+358	1719	51	1272	\N	\N
+359	1375	51	937	\N	\N
+360	2073	179	1338	\N	\N
+361	1209	62	1	\N	\N
+362	4375	19	838	\N	\N
+363	1825	176	1307	\N	\N
+364	454	163	786	\N	\N
+365	5214	145	861	\N	\N
+366	4556	62	791	\N	\N
+367	1517	62	684	\N	\N
+368	4778	139	1184	\N	\N
+369	631	69	1379	\N	\N
+370	3816	51	762	\N	\N
+371	3674	140	1043	\N	\N
+372	4873	19	1335	\N	\N
+373	4785	62	732	\N	\N
+374	892	13	918	\N	\N
+375	2151	212	1154	\N	\N
+376	2273	62	1335	\N	\N
+377	4777	176	1252	\N	\N
+378	863	58	1184	\N	\N
+379	4897	181	923	\N	\N
+380	2205	181	1054	\N	\N
+381	1589	176	1281	\N	\N
+382	1150	19	1006	\N	\N
+383	5334	139	660	\N	\N
+384	4583	35	1274	\N	\N
+385	5223	51	656	\N	\N
+386	956	176	142	\N	\N
+387	5505	62	684	\N	\N
+388	4426	67	89	\N	\N
+389	5310	62	684	\N	\N
+390	2013	176	775	\N	\N
+391	545	176	1561	\N	\N
+392	5428	13	989	\N	\N
+393	530	51	1195	\N	\N
+394	2266	181	1286	\N	\N
+395	819	212	1307	\N	\N
+396	3648	47	656	\N	\N
+397	612	194	713	\N	\N
+398	1565	173	863	\N	\N
+399	5371	51	1414	\N	\N
+400	2205	167	1154	\N	\N
+401	971	176	923	\N	\N
+402	1176	62	733	\N	\N
+403	1924	96	307	\N	\N
+404	2198	135	791	\N	\N
+405	3700	37	1335	\N	\N
+406	304	37	918	\N	\N
+407	2508	62	1481	\N	\N
+408	1311	189	123	\N	\N
+409	3673	178	533	\N	\N
+410	3665	160	1484	\N	\N
+411	2346	139	856	\N	\N
+412	839	62	1006	\N	\N
+413	5029	19	1298	\N	\N
+414	4673	212	1463	\N	\N
+415	1995	176	566	\N	\N
+416	1195	19	1455	\N	\N
+417	414	176	494	\N	\N
+418	1081	176	1529	\N	\N
+419	1396	176	1240	\N	\N
+420	853	74	1542	\N	\N
+421	3597	198	632	\N	\N
+422	4228	44	605	\N	\N
+423	4415	37	1335	\N	\N
+424	5089	159	641	\N	\N
+425	2548	181	204	\N	\N
+426	1151	179	884	\N	\N
+427	254	129	166	\N	\N
+428	1025	103	1010	\N	\N
+429	3792	176	1400	\N	\N
+430	2629	176	1484	\N	\N
+431	1190	62	1298	\N	\N
+432	554	6	1046	\N	\N
+433	1895	51	937	\N	\N
+434	209	37	490	\N	\N
+435	97	135	1288	\N	\N
+436	4898	62	1281	\N	\N
+437	998	51	937	\N	\N
+438	4554	163	1484	\N	\N
+439	149	51	1281	\N	\N
+440	4076	13	656	\N	\N
+441	4024	212	1199	\N	\N
+442	5577	51	1362	\N	\N
+443	2539	51	1516	\N	\N
+444	166	135	1069	\N	\N
+445	2358	176	1298	\N	\N
+446	209	62	582	\N	\N
+447	2344	51	1362	\N	\N
+448	5344	51	684	\N	\N
+449	4165	79	944	\N	\N
+450	4362	51	791	\N	\N
+451	1609	62	718	\N	\N
+452	5263	51	1195	\N	\N
+453	3883	51	1184	\N	\N
+454	4607	176	1526	\N	\N
+455	1687	32	645	\N	\N
+456	1265	51	592	\N	\N
+457	1385	135	1281	\N	\N
+458	4986	51	1298	\N	\N
+459	1565	181	693	\N	\N
+460	2765	147	549	\N	\N
+461	1881	176	1072	\N	\N
+462	4597	192	728	\N	\N
+463	1351	24	1367	\N	\N
+464	1646	51	1335	\N	\N
+465	1851	51	918	\N	\N
+466	1565	15	1084	\N	\N
+467	1435	181	767	\N	\N
+468	3849	58	937	\N	\N
+469	821	51	1075	\N	\N
+470	4457	112	994	\N	\N
+471	937	51	529	\N	\N
+472	4299	71	937	\N	\N
+473	3801	19	726	\N	\N
+474	3591	204	1307	\N	\N
+475	1741	13	167	\N	\N
+476	1654	181	1307	\N	\N
+477	4989	51	656	\N	\N
+478	5151	181	1046	\N	\N
+479	1765	51	937	\N	\N
+480	852	194	1561	\N	\N
+481	4720	58	1298	\N	\N
+482	4109	51	1152	\N	\N
+483	1746	51	684	\N	\N
+484	397	62	1006	\N	\N
+485	5468	194	665	\N	\N
+486	4205	62	1453	\N	\N
+487	4855	139	1195	\N	\N
+488	3706	140	645	\N	\N
+489	1650	51	688	\N	\N
+490	5452	51	1502	\N	\N
+491	1258	176	1561	\N	\N
+492	2165	176	1520	\N	\N
+493	5556	51	937	\N	\N
+494	951	68	692	\N	\N
+495	3629	51	684	\N	\N
+496	2134	201	1563	\N	\N
+497	542	62	1184	\N	\N
+498	2168	147	440	\N	\N
+499	4598	176	665	\N	\N
+500	1410	32	1272	\N	\N
+501	4884	135	1195	\N	\N
+502	2628	181	878	\N	\N
+503	4891	204	919	\N	\N
+504	560	176	693	\N	\N
+505	222	51	1006	\N	\N
+506	3952	187	137	\N	\N
+507	867	204	1307	\N	\N
+508	4096	179	1255	\N	\N
+509	3722	35	645	\N	\N
+510	2582	181	901	\N	\N
+511	1118	16	1084	\N	\N
+512	5440	179	1297	\N	\N
+513	3866	135	1119	\N	\N
+514	1384	51	684	\N	\N
+515	3586	51	329	\N	\N
+516	5154	51	1184	\N	\N
+517	2470	69	641	\N	\N
+518	2105	147	1153	\N	\N
+519	2623	181	1240	\N	\N
+520	4662	176	1561	\N	\N
+521	2320	36	608	\N	\N
+522	3859	58	918	\N	\N
+523	1179	176	81	\N	\N
+524	4190	35	1424	\N	\N
+525	751	74	918	\N	\N
+526	5376	67	531	\N	\N
+527	4786	178	1201	\N	\N
+528	1117	139	1298	\N	\N
+529	1667	204	1563	\N	\N
+530	1083	2	807	\N	\N
+531	4661	176	1561	\N	\N
+532	5429	137	656	\N	\N
+533	1833	62	684	\N	\N
+534	3766	117	861	\N	\N
+535	2153	212	944	\N	\N
+536	1949	62	1335	\N	\N
+537	3727	176	954	\N	\N
+538	1348	35	1272	\N	\N
+539	2033	212	1060	\N	\N
+540	4561	51	1481	\N	\N
+541	1896	48	804	\N	\N
+542	5487	51	1152	\N	\N
+543	4972	149	1153	\N	\N
+544	3587	204	693	\N	\N
+545	1118	24	1367	\N	\N
+546	47	156	989	\N	\N
+547	882	156	1281	\N	\N
+548	4518	105	864	\N	\N
+549	4498	176	1307	\N	\N
+550	5273	51	1013	\N	\N
+551	1432	201	795	\N	\N
+552	50	68	941	\N	\N
+553	2487	181	1046	\N	\N
+554	1932	32	1189	\N	\N
+555	2469	69	191	\N	\N
+556	3744	51	1195	\N	\N
+557	668	176	684	\N	\N
+558	1238	159	872	\N	\N
+559	1703	51	637	\N	\N
+560	5250	140	1556	\N	\N
+561	2052	48	649	\N	\N
+562	4764	46	1039	\N	\N
+563	1881	139	1071	\N	\N
+564	4704	44	718	\N	\N
+565	900	62	877	\N	\N
+566	5406	176	1561	\N	\N
+567	1719	32	1272	\N	\N
+568	1570	99	1513	\N	\N
+569	1209	62	1006	\N	\N
+570	1137	62	1493	\N	\N
+571	939	181	1561	\N	\N
+572	4738	68	684	\N	\N
+573	1627	176	1199	\N	\N
+574	434	170	494	\N	\N
+575	4368	51	860	\N	\N
+576	4493	25	1293	\N	\N
+577	4244	176	857	\N	\N
+578	419	62	856	\N	\N
+579	5252	51	656	\N	\N
+580	5537	198	881	\N	\N
+581	3963	35	1266	\N	\N
+582	5249	51	1216	\N	\N
+583	1073	74	656	\N	\N
+584	1563	201	1307	\N	\N
+585	4087	181	1154	\N	\N
+586	2137	19	1298	\N	\N
+587	2051	88	424	\N	\N
+588	5371	35	1274	\N	\N
+589	4482	51	1281	\N	\N
+590	3988	156	1040	\N	\N
+591	2131	19	937	\N	\N
+592	4539	51	768	\N	\N
+593	1772	51	1335	\N	\N
+594	2254	176	937	\N	\N
+595	2017	51	893	\N	\N
+596	2589	51	1195	\N	\N
+597	5191	201	586	\N	\N
+598	5163	62	1239	\N	\N
+599	2518	181	1046	\N	\N
+600	5441	19	989	\N	\N
+601	2312	136	1281	\N	\N
+602	4300	62	1335	\N	\N
+603	2070	176	1361	\N	\N
+604	2005	176	1010	\N	\N
+605	1137	51	1493	\N	\N
+606	1228	62	684	\N	\N
+607	3853	2	555	\N	\N
+608	1496	176	1046	\N	\N
+609	1645	37	684	\N	\N
+610	3685	51	1075	\N	\N
+611	4061	13	703	\N	\N
+612	1622	19	1281	\N	\N
+613	21	51	74	\N	\N
+614	4756	62	1281	\N	\N
+615	4722	51	1335	\N	\N
+616	4602	176	366	\N	\N
+617	4471	51	637	\N	\N
+618	2279	176	1338	\N	\N
+619	3629	51	937	\N	\N
+620	1072	62	1298	\N	\N
+621	304	149	1087	\N	\N
+622	3646	47	656	\N	\N
+623	2516	58	1298	\N	\N
+624	1530	74	1298	\N	\N
+625	181	176	1286	\N	\N
+626	3604	13	937	\N	\N
+627	4921	19	937	\N	\N
+628	1472	111	531	\N	\N
+629	3611	51	684	\N	\N
+630	1345	176	1395	\N	\N
+631	5130	181	1307	\N	\N
+632	5062	68	188	\N	\N
+633	158	29	1135	\N	\N
+634	1012	51	937	\N	\N
+635	2141	163	1304	\N	\N
+636	5322	135	918	\N	\N
+637	314	212	665	\N	\N
+638	2528	176	1195	\N	\N
+639	1686	177	1199	\N	\N
+640	4333	13	937	\N	\N
+641	2377	35	1281	\N	\N
+642	5432	201	671	\N	\N
+643	3851	58	684	\N	\N
+644	2142	173	1298	\N	\N
+645	3944	181	1089	\N	\N
+646	1796	176	789	\N	\N
+647	750	185	1345	\N	\N
+648	4606	176	1529	\N	\N
+649	4406	51	684	\N	\N
+650	1681	62	1448	\N	\N
+651	222	51	1298	\N	\N
+652	1184	176	1307	\N	\N
+653	4262	51	684	\N	\N
+654	1024	181	863	\N	\N
+655	3755	140	1195	\N	\N
+656	5234	51	818	\N	\N
+657	1482	142	1298	\N	\N
+658	453	51	989	\N	\N
+659	902	51	1075	\N	\N
+660	265	51	860	\N	\N
+661	1501	212	24	\N	\N
+662	5487	51	1043	\N	\N
+663	4966	95	684	\N	\N
+664	2026	51	1298	\N	\N
+665	4718	204	1199	\N	\N
+666	3945	37	1195	\N	\N
+667	4503	19	1298	\N	\N
+668	1711	68	462	\N	\N
+669	1109	62	1084	\N	\N
+670	5293	15	791	\N	\N
+671	4622	86	1171	\N	\N
+672	213	51	836	\N	\N
+673	4428	204	1010	\N	\N
+674	547	140	671	\N	\N
+675	949	179	693	\N	\N
+676	1080	176	923	\N	\N
+677	600	48	1502	\N	\N
+678	4637	46	1556	\N	\N
+679	4059	147	893	\N	\N
+680	1309	189	110	\N	\N
+681	2598	176	671	\N	\N
+682	2438	135	860	\N	\N
+683	918	147	937	\N	\N
+684	1268	37	60	\N	\N
+685	792	204	1199	\N	\N
+686	3590	200	1307	\N	\N
+687	2229	51	656	\N	\N
+688	302	51	1075	\N	\N
+689	528	51	1298	\N	\N
+690	4565	51	937	\N	\N
+691	4899	37	989	\N	\N
+692	469	147	1337	\N	\N
+693	4826	194	1199	\N	\N
+694	4855	135	1195	\N	\N
+695	5549	51	684	\N	\N
+696	121	176	1561	\N	\N
+697	1296	51	1006	\N	\N
+698	3886	37	1075	\N	\N
+699	1096	176	1039	\N	\N
+700	1940	51	1184	\N	\N
+701	3892	62	1448	\N	\N
+702	1024	62	684	\N	\N
+703	5371	35	1272	\N	\N
+704	1062	62	529	\N	\N
+705	3642	51	1184	\N	\N
+706	4796	19	860	\N	\N
+707	3671	13	1195	\N	\N
+708	5412	51	1298	\N	\N
+709	1164	62	1195	\N	\N
+710	759	177	1195	\N	\N
+711	738	176	520	\N	\N
+712	2770	176	923	\N	\N
+713	4290	135	1043	\N	\N
+714	4741	13	791	\N	\N
+715	4873	13	768	\N	\N
+716	1639	51	1281	\N	\N
+717	1267	51	592	\N	\N
+718	2381	51	1298	\N	\N
+719	1364	74	656	\N	\N
+720	5299	167	683	\N	\N
+721	612	114	1010	\N	\N
+722	2366	51	448	\N	\N
+723	783	13	656	\N	\N
+724	4346	194	693	\N	\N
+725	4875	13	768	\N	\N
+726	4029	181	517	\N	\N
+727	1435	35	1424	\N	\N
+728	5463	176	791	\N	\N
+729	182	151	360	\N	\N
+730	855	46	1039	\N	\N
+731	1123	13	529	\N	\N
+732	109	62	791	\N	\N
+733	1983	135	1281	\N	\N
+734	3597	69	980	\N	\N
+735	1601	194	539	\N	\N
+736	1010	167	1297	\N	\N
+737	376	51	1195	\N	\N
+738	1600	68	531	\N	\N
+739	1213	212	561	\N	\N
+740	3576	204	632	\N	\N
+741	5149	13	1222	\N	\N
+742	2321	181	1561	\N	\N
+743	1435	48	1070	\N	\N
+744	1448	147	631	\N	\N
+745	512	119	1335	\N	\N
+746	2013	176	707	\N	\N
+747	4119	62	684	\N	\N
+748	5350	51	656	\N	\N
+749	474	62	684	\N	\N
+750	1605	139	937	\N	\N
+751	2429	134	866	\N	\N
+752	768	111	1484	\N	\N
+753	2525	176	1077	\N	\N
+754	1168	176	1421	\N	\N
+755	3973	193	1307	\N	\N
+756	1421	51	937	\N	\N
+757	3779	176	1412	\N	\N
+758	4131	197	656	\N	\N
+759	2175	12	1152	\N	\N
+760	1999	134	1288	\N	\N
+761	5449	212	711	\N	\N
+762	2015	48	937	\N	\N
+763	4021	201	1280	\N	\N
+764	2286	204	1199	\N	\N
+765	4693	62	918	\N	\N
+766	249	51	1281	\N	\N
+767	3732	51	937	\N	\N
+768	4148	45	656	\N	\N
+769	5501	204	1199	\N	\N
+770	2781	62	1335	\N	\N
+771	2231	51	239	\N	\N
+772	630	134	645	\N	\N
+773	192	198	1412	\N	\N
+774	4323	58	1335	\N	\N
+775	1540	51	937	\N	\N
+776	4799	51	937	\N	\N
+777	654	135	810	\N	\N
+778	4581	62	1298	\N	\N
+779	4079	62	1335	\N	\N
+780	5535	62	529	\N	\N
+781	4693	62	656	\N	\N
+782	4148	22	656	\N	\N
+783	1663	62	1298	\N	\N
+784	5182	201	1563	\N	\N
+785	990	51	1281	\N	\N
+786	5463	135	791	\N	\N
+787	5259	62	684	\N	\N
+788	3658	176	1421	\N	\N
+789	1515	187	295	\N	\N
+790	2780	35	684	\N	\N
+791	3863	135	1516	\N	\N
+792	1906	59	937	\N	\N
+793	5481	51	1043	\N	\N
+794	38	102	1198	\N	\N
+795	1156	176	441	\N	\N
+796	4891	23	1075	\N	\N
+797	676	51	818	\N	\N
+798	418	178	503	\N	\N
+799	5144	176	1161	\N	\N
+800	1218	62	1367	\N	\N
+801	4565	51	684	\N	\N
+802	1169	51	656	\N	\N
+803	230	176	1561	\N	\N
+804	3744	51	937	\N	\N
+805	4870	37	275	\N	\N
+806	684	176	693	\N	\N
+807	4299	176	693	\N	\N
+808	4873	13	989	\N	\N
+809	4721	58	1006	\N	\N
+810	5293	15	1135	\N	\N
+811	2512	135	1158	\N	\N
+812	5256	51	1006	\N	\N
+813	452	163	1513	\N	\N
+814	208	176	645	\N	\N
+815	4394	44	552	\N	\N
+816	2527	106	528	\N	\N
+817	1299	142	791	\N	\N
+818	38	102	656	\N	\N
+819	3997	62	684	\N	\N
+820	426	58	1411	\N	\N
+821	329	51	656	\N	\N
+822	4485	62	1281	\N	\N
+823	5123	51	791	\N	\N
+824	2771	176	1042	\N	\N
+825	4368	51	1279	\N	\N
+826	1673	181	355	\N	\N
+827	167	135	634	\N	\N
+828	4962	176	1046	\N	\N
+829	4190	35	637	\N	\N
+830	4610	176	1412	\N	\N
+831	3861	181	1046	\N	\N
+832	552	212	1567	\N	\N
+833	4669	19	791	\N	\N
+834	5371	32	1071	\N	\N
+835	4939	62	893	\N	\N
+836	4112	181	1240	\N	\N
+837	2379	86	434	\N	\N
+838	2369	181	1195	\N	\N
+839	917	68	907	\N	\N
+840	4773	13	1298	\N	\N
+841	5067	62	1075	\N	\N
+842	1325	51	1335	\N	\N
+843	5380	51	1075	\N	\N
+844	1518	62	684	\N	\N
+845	5106	62	1281	\N	\N
+846	1345	176	1498	\N	\N
+847	3681	176	656	\N	\N
+848	3842	130	915	\N	\N
+849	1312	189	283	\N	\N
+850	113	51	1006	\N	\N
+851	5081	185	863	\N	\N
+852	4583	35	1424	\N	\N
+853	945	147	996	\N	\N
+854	4111	51	1455	\N	\N
+855	296	176	1239	\N	\N
+856	2483	181	1046	\N	\N
+857	5533	51	1239	\N	\N
+858	4505	19	656	\N	\N
+859	4620	176	557	\N	\N
+860	1830	176	1307	\N	\N
+861	1237	135	791	\N	\N
+862	5333	176	1412	\N	\N
+863	5304	62	825	\N	\N
+864	4857	140	680	\N	\N
+865	5257	51	1481	\N	\N
+866	5148	131	1039	\N	\N
+867	1182	62	1043	\N	\N
+868	4700	147	684	\N	\N
+869	5455	135	937	\N	\N
+870	5115	204	1104	\N	\N
+871	1817	62	1335	\N	\N
+872	5484	51	684	\N	\N
+873	4285	130	1335	\N	\N
+874	1500	16	1084	\N	\N
+875	2222	51	1152	\N	\N
+876	3660	37	1281	\N	\N
+877	5371	51	616	\N	\N
+878	4434	51	1335	\N	\N
+879	2229	51	1006	\N	\N
+880	279	179	944	\N	\N
+881	2510	93	1285	\N	\N
+882	44	62	918	\N	\N
+883	5234	51	1477	\N	\N
+884	4798	51	1335	\N	\N
+885	795	147	1557	\N	\N
+886	3586	58	82	\N	\N
+887	1335	145	861	\N	\N
+888	1898	35	791	\N	\N
+889	1105	56	1455	\N	\N
+890	3993	44	1052	\N	\N
+891	662	51	1378	\N	\N
+892	1080	176	1529	\N	\N
+893	4481	154	1513	\N	\N
+894	1277	51	1214	\N	\N
+895	1701	58	1298	\N	\N
+896	4332	51	1298	\N	\N
+897	2152	212	1199	\N	\N
+898	3667	181	1015	\N	\N
+899	1548	86	583	\N	\N
+900	3899	62	989	\N	\N
+901	1682	74	1548	\N	\N
+902	77	186	1561	\N	\N
+903	1978	51	860	\N	\N
+904	4533	19	804	\N	\N
+905	5029	181	665	\N	\N
+906	4560	51	684	\N	\N
+907	5326	103	1239	\N	\N
+908	15	51	1536	\N	\N
+909	419	62	1281	\N	\N
+910	468	62	1184	\N	\N
+911	38	212	1199	\N	\N
+912	5195	201	1563	\N	\N
+913	2286	62	1184	\N	\N
+914	1325	51	684	\N	\N
+915	1591	62	856	\N	\N
+916	973	62	1006	\N	\N
+917	2522	134	645	\N	\N
+918	3600	86	941	\N	\N
+919	1100	51	989	\N	\N
+920	3905	51	656	\N	\N
+921	2606	13	490	\N	\N
+922	2578	181	517	\N	\N
+923	3761	51	893	\N	\N
+924	3659	67	188	\N	\N
+925	3613	19	656	\N	\N
+926	4786	176	1341	\N	\N
+927	2518	13	1165	\N	\N
+928	887	133	1281	\N	\N
+929	1329	179	1242	\N	\N
+930	371	102	786	\N	\N
+931	710	181	1240	\N	\N
+932	2627	176	1195	\N	\N
+933	2521	176	1307	\N	\N
+934	2517	176	1043	\N	\N
+935	794	62	825	\N	\N
+936	3579	62	981	\N	\N
+937	733	176	1335	\N	\N
+938	4526	62	485	\N	\N
+939	5115	62	1281	\N	\N
+940	1782	13	1018	\N	\N
+941	1708	51	340	\N	\N
+942	847	74	1298	\N	\N
+943	453	51	1281	\N	\N
+944	4393	173	989	\N	\N
+945	2287	51	1195	\N	\N
+946	293	62	1335	\N	\N
+947	23	51	893	\N	\N
+948	3988	129	1235	\N	\N
+949	4475	62	656	\N	\N
+950	4884	140	1195	\N	\N
+951	4043	135	1268	\N	\N
+952	4436	37	1152	\N	\N
+953	5238	157	1281	\N	\N
+954	4337	51	1043	\N	\N
+955	211	51	766	\N	\N
+956	5163	62	860	\N	\N
+957	2568	19	1075	\N	\N
+958	513	136	1006	\N	\N
+959	3952	187	298	\N	\N
+960	3844	194	693	\N	\N
+961	1260	51	1536	\N	\N
+962	4549	140	937	\N	\N
+963	3780	51	1502	\N	\N
+964	5278	163	1484	\N	\N
+965	2057	51	1281	\N	\N
+966	4653	176	1561	\N	\N
+967	4114	176	694	\N	\N
+968	1991	19	656	\N	\N
+969	4421	135	684	\N	\N
+970	888	2	1281	\N	\N
+971	5497	13	791	\N	\N
+972	739	176	897	\N	\N
+973	3666	51	739	\N	\N
+974	32	68	861	\N	\N
+975	1881	176	638	\N	\N
+976	5214	170	861	\N	\N
+977	2337	147	433	\N	\N
+978	1893	51	684	\N	\N
+979	78	51	1424	\N	\N
+980	889	131	856	\N	\N
+981	2383	179	944	\N	\N
+982	4049	147	631	\N	\N
+983	4514	199	1001	\N	\N
+984	12	212	1463	\N	\N
+985	4429	160	944	\N	\N
+986	5032	179	8	\N	\N
+987	4635	181	665	\N	\N
+988	3650	62	1335	\N	\N
+989	975	22	1367	\N	\N
+990	2584	62	1006	\N	\N
+991	693	62	1152	\N	\N
+992	2068	13	656	\N	\N
+993	516	140	995	\N	\N
+994	4882	179	1338	\N	\N
+995	2551	181	1043	\N	\N
+996	553	136	1298	\N	\N
+997	1346	62	1448	\N	\N
+998	4293	51	684	\N	\N
+999	110	153	748	\N	\N
+1000	4419	139	937	\N	\N
+1001	1363	139	1298	\N	\N
+1002	1952	62	1293	\N	\N
+1003	249	47	989	\N	\N
+1004	1998	140	645	\N	\N
+1005	4785	62	1293	\N	\N
+1006	642	212	561	\N	\N
+1007	901	173	1281	\N	\N
+1008	648	176	1307	\N	\N
+1009	511	181	1110	\N	\N
+1010	3659	68	1537	\N	\N
+1011	4497	176	1410	\N	\N
+1012	5557	135	918	\N	\N
+1013	4985	51	1006	\N	\N
+1014	164	176	616	\N	\N
+1015	829	2	836	\N	\N
+1016	254	129	1039	\N	\N
+1017	2476	140	995	\N	\N
+1018	1491	62	529	\N	\N
+1019	1027	154	918	\N	\N
+1020	1675	51	989	\N	\N
+1021	3715	163	991	\N	\N
+1022	23	51	684	\N	\N
+1023	273	194	1561	\N	\N
+1024	1091	212	612	\N	\N
+1025	1368	44	1367	\N	\N
+1026	158	29	1455	\N	\N
+1027	1634	108	1554	\N	\N
+1028	1820	176	1307	\N	\N
+1029	37	62	1281	\N	\N
+1030	2205	167	714	\N	\N
+1031	3749	117	583	\N	\N
+1032	306	181	1084	\N	\N
+1033	1285	39	860	\N	\N
+1034	245	51	1281	\N	\N
+1035	5405	77	692	\N	\N
+1036	5165	176	511	\N	\N
+1037	3608	111	944	\N	\N
+1038	1203	62	1006	\N	\N
+1039	817	181	1199	\N	\N
+1040	2254	62	1195	\N	\N
+1041	4752	176	533	\N	\N
+1042	4615	176	413	\N	\N
+1043	2081	135	1481	\N	\N
+1044	3861	19	1006	\N	\N
+1045	5115	181	923	\N	\N
+1046	5141	163	991	\N	\N
+1047	14	51	1195	\N	\N
+1048	5194	201	1563	\N	\N
+1049	5158	51	684	\N	\N
+1050	3958	51	1184	\N	\N
+1051	1264	68	941	\N	\N
+1052	5491	13	656	\N	\N
+1053	907	62	521	\N	\N
+1054	2525	176	1121	\N	\N
+1055	4636	46	1281	\N	\N
+1056	2402	176	1442	\N	\N
+1057	2089	51	1122	\N	\N
+1058	4771	51	656	\N	\N
+1059	410	51	1195	\N	\N
+1060	4075	59	937	\N	\N
+1061	843	51	1298	\N	\N
+1062	99	190	494	\N	\N
+1063	5291	44	791	\N	\N
+1064	4255	51	1222	\N	\N
+1065	1646	51	684	\N	\N
+1066	2314	19	989	\N	\N
+1067	4501	58	656	\N	\N
+1068	3988	156	1039	\N	\N
+1069	1496	75	477	\N	\N
+1070	4216	185	1166	\N	\N
+1071	1317	68	531	\N	\N
+1072	4815	62	119	\N	\N
+1073	2001	139	1362	\N	\N
+1074	3627	179	438	\N	\N
+1075	5145	62	1335	\N	\N
+1076	145	51	937	\N	\N
+1077	2137	19	656	\N	\N
+1078	5358	86	493	\N	\N
+1079	5077	167	477	\N	\N
+1080	3606	69	424	\N	\N
+1081	5314	37	684	\N	\N
+1082	252	154	1307	\N	\N
+1083	542	204	1199	\N	\N
+1084	4863	142	1184	\N	\N
+1085	5152	176	944	\N	\N
+1086	2309	62	989	\N	\N
+1087	3794	136	989	\N	\N
+1088	2137	19	791	\N	\N
+1089	1029	44	1367	\N	\N
+1090	202	58	791	\N	\N
+1091	4290	135	1335	\N	\N
+1092	4595	176	795	\N	\N
+1093	5389	181	1561	\N	\N
+1094	1555	62	684	\N	\N
+1095	681	176	1046	\N	\N
+1096	4561	51	1335	\N	\N
+1097	2533	140	1210	\N	\N
+1098	4274	149	617	\N	\N
+1099	455	136	1281	\N	\N
+1100	4500	62	656	\N	\N
+1101	4859	44	918	\N	\N
+1216	2315	13	1184	\N	\N
+1102	203	179	880	\N	\N
+1103	593	149	1063	\N	\N
+1104	3908	51	1513	\N	\N
+1105	4095	167	1154	\N	\N
+1106	2146	176	1010	\N	\N
+1107	1052	131	1039	\N	\N
+1108	2016	51	804	\N	\N
+1109	1531	204	809	\N	\N
+1110	5577	186	1046	\N	\N
+1111	749	202	1101	\N	\N
+1112	1681	158	1281	\N	\N
+1113	7	181	1281	\N	\N
+1114	4614	176	1307	\N	\N
+1115	2156	176	477	\N	\N
+1116	5503	19	791	\N	\N
+1117	251	163	1150	\N	\N
+1118	183	51	918	\N	\N
+1119	932	176	1089	\N	\N
+1120	1681	51	1281	\N	\N
+1121	2497	62	684	\N	\N
+1122	5112	62	1448	\N	\N
+1123	1657	19	1455	\N	\N
+1124	233	181	923	\N	\N
+1125	1878	176	1298	\N	\N
+1126	1447	68	941	\N	\N
+1127	494	147	794	\N	\N
+1128	274	135	1281	\N	\N
+1129	847	51	718	\N	\N
+1130	2306	176	1480	\N	\N
+1131	1809	13	1184	\N	\N
+1132	3918	51	948	\N	\N
+1133	48	37	656	\N	\N
+1134	325	51	656	\N	\N
+1135	2486	62	860	\N	\N
+1136	5341	181	795	\N	\N
+1137	4862	140	918	\N	\N
+1138	2218	127	305	\N	\N
+1139	2140	176	1043	\N	\N
+1140	1124	51	937	\N	\N
+1141	4223	68	30	\N	\N
+1142	435	19	656	\N	\N
+1143	3981	62	1006	\N	\N
+1144	1698	62	1043	\N	\N
+1145	1615	44	1281	\N	\N
+1146	4825	147	510	\N	\N
+1147	1791	144	956	\N	\N
+1148	1600	67	531	\N	\N
+1149	3674	140	970	\N	\N
+1150	4798	51	937	\N	\N
+1151	4479	178	926	\N	\N
+1152	5554	149	430	\N	\N
+1153	4428	51	1281	\N	\N
+1154	3910	51	1014	\N	\N
+1155	3660	181	1286	\N	\N
+1156	2532	176	1367	\N	\N
+1157	5255	51	1096	\N	\N
+1158	5275	140	1240	\N	\N
+1159	4178	32	818	\N	\N
+1160	5137	176	994	\N	\N
+1161	5085	147	537	\N	\N
+1162	4016	167	1338	\N	\N
+1163	1240	67	937	\N	\N
+1164	800	51	1281	\N	\N
+1165	1802	32	1184	\N	\N
+1166	601	51	1298	\N	\N
+1167	3884	198	665	\N	\N
+1168	1775	15	1455	\N	\N
+1169	4383	51	684	\N	\N
+1170	39	146	861	\N	\N
+1171	2519	58	1348	\N	\N
+1172	1290	62	1335	\N	\N
+1173	4800	9	1455	\N	\N
+1174	4118	51	860	\N	\N
+1175	3687	48	1335	\N	\N
+1176	388	62	1502	\N	\N
+1177	597	44	791	\N	\N
+1178	4672	51	804	\N	\N
+1179	685	186	693	\N	\N
+1180	3635	185	1046	\N	\N
+1181	1035	171	916	\N	\N
+1182	249	154	734	\N	\N
+1183	1938	142	47	\N	\N
+1184	2491	201	1132	\N	\N
+1185	2201	176	1042	\N	\N
+1186	5305	62	825	\N	\N
+1187	2443	176	1080	\N	\N
+1188	641	212	561	\N	\N
+1189	2412	176	665	\N	\N
+1190	4675	212	1353	\N	\N
+1191	4696	62	1335	\N	\N
+1192	1776	51	1335	\N	\N
+1193	443	139	660	\N	\N
+1194	2056	176	1307	\N	\N
+1195	103	199	652	\N	\N
+1196	4406	51	1195	\N	\N
+1197	1006	176	85	\N	\N
+1198	4866	51	1298	\N	\N
+1199	243	51	1497	\N	\N
+1200	1019	179	490	\N	\N
+1201	5372	35	1424	\N	\N
+1202	507	204	1199	\N	\N
+1203	252	163	1307	\N	\N
+1204	3799	51	733	\N	\N
+1205	5468	176	865	\N	\N
+1206	2586	19	791	\N	\N
+1207	5253	51	1013	\N	\N
+1208	5143	62	529	\N	\N
+1209	576	62	1239	\N	\N
+1210	4957	69	1087	\N	\N
+1211	1333	62	1057	\N	\N
+1212	2144	176	1114	\N	\N
+1213	178	194	1278	\N	\N
+1214	252	163	1298	\N	\N
+1215	3654	179	1154	\N	\N
+1217	5029	58	656	\N	\N
+1218	4455	212	1567	\N	\N
+1219	4925	176	1073	\N	\N
+1220	2617	176	1046	\N	\N
+1221	2488	37	804	\N	\N
+1222	551	135	645	\N	\N
+1223	5052	201	944	\N	\N
+1224	13	181	1463	\N	\N
+1225	447	51	1281	\N	\N
+1226	2209	139	797	\N	\N
+1227	1926	51	1043	\N	\N
+1228	517	51	989	\N	\N
+1229	5216	145	531	\N	\N
+1230	1183	142	1239	\N	\N
+1231	930	142	656	\N	\N
+1232	169	62	490	\N	\N
+1233	1773	51	1362	\N	\N
+1234	647	176	904	\N	\N
+1235	305	69	692	\N	\N
+1236	1907	59	1195	\N	\N
+1237	1577	19	818	\N	\N
+1238	117	176	1561	\N	\N
+1239	4156	19	918	\N	\N
+1240	4279	154	1556	\N	\N
+1241	5091	176	1089	\N	\N
+1242	5217	68	531	\N	\N
+1243	134	204	1199	\N	\N
+1244	2466	69	941	\N	\N
+1245	1161	37	1084	\N	\N
+1246	1529	88	698	\N	\N
+1247	2758	62	1075	\N	\N
+1248	1279	62	939	\N	\N
+1249	1032	202	1295	\N	\N
+1250	1777	51	937	\N	\N
+1251	1077	176	851	\N	\N
+1252	1986	51	804	\N	\N
+1253	103	190	863	\N	\N
+1254	930	59	656	\N	\N
+1255	5016	181	665	\N	\N
+1256	2321	36	608	\N	\N
+1257	1791	144	1418	\N	\N
+1258	4095	167	714	\N	\N
+1259	1381	135	937	\N	\N
+1260	869	19	1281	\N	\N
+1261	4554	51	1497	\N	\N
+1262	258	131	856	\N	\N
+1263	1854	32	1479	\N	\N
+1264	5459	58	328	\N	\N
+1265	5267	51	1075	\N	\N
+1266	2128	19	768	\N	\N
+1267	2255	62	1195	\N	\N
+1268	1161	37	1222	\N	\N
+1269	2479	62	684	\N	\N
+1270	1569	51	1481	\N	\N
+1271	1811	58	1006	\N	\N
+1272	2495	173	693	\N	\N
+1273	3630	181	1370	\N	\N
+1274	5231	51	1481	\N	\N
+1275	2582	212	1044	\N	\N
+1276	5226	58	1281	\N	\N
+1277	1873	176	1424	\N	\N
+1278	3681	176	937	\N	\N
+1279	2428	51	1184	\N	\N
+1280	4990	170	531	\N	\N
+1281	2296	59	937	\N	\N
+1282	1361	142	918	\N	\N
+1283	28	62	1298	\N	\N
+1284	103	212	517	\N	\N
+1285	4385	51	684	\N	\N
+1286	2013	176	961	\N	\N
+1287	1195	29	1135	\N	\N
+1288	1584	62	1281	\N	\N
+1289	872	51	856	\N	\N
+1290	1899	135	1195	\N	\N
+1291	3768	176	693	\N	\N
+1292	5313	62	684	\N	\N
+1293	2518	19	607	\N	\N
+1294	4810	51	989	\N	\N
+1295	4919	147	1337	\N	\N
+1296	2404	152	786	\N	\N
+1297	4334	51	656	\N	\N
+1298	2303	176	731	\N	\N
+1299	4685	51	1298	\N	\N
+1300	2782	35	937	\N	\N
+1301	4697	69	861	\N	\N
+1302	2192	19	1535	\N	\N
+1303	647	176	904	\N	\N
+1304	1187	19	1298	\N	\N
+1305	2503	212	1463	\N	\N
+1306	829	114	1516	\N	\N
+1307	5516	51	1362	\N	\N
+1308	2268	156	918	\N	\N
+1309	4952	194	951	\N	\N
+1310	935	42	1281	\N	\N
+1311	1266	54	849	\N	\N
+1312	2281	181	923	\N	\N
+1313	1311	189	124	\N	\N
+1314	4986	13	1006	\N	\N
+1315	599	51	317	\N	\N
+1316	4740	176	994	\N	\N
+1317	2409	176	656	\N	\N
+1318	1685	179	944	\N	\N
+1319	60	186	441	\N	\N
+1320	4709	176	665	\N	\N
+1321	4884	142	937	\N	\N
+1322	5045	35	637	\N	\N
+1323	565	176	863	\N	\N
+1324	2013	176	1221	\N	\N
+1325	4443	19	684	\N	\N
+1326	4359	204	1484	\N	\N
+1327	4859	44	1184	\N	\N
+1328	1083	212	1345	\N	\N
+1329	3840	51	1362	\N	\N
+1330	3931	212	412	\N	\N
+1331	1264	62	918	\N	\N
+1447	1796	176	649	\N	\N
+1332	958	36	608	\N	\N
+1333	4244	176	1500	\N	\N
+1334	2381	51	937	\N	\N
+1335	1539	62	490	\N	\N
+1336	1184	13	1298	\N	\N
+1337	2241	62	1281	\N	\N
+1338	1821	62	1335	\N	\N
+1339	564	68	937	\N	\N
+1340	3604	13	684	\N	\N
+1341	2149	212	944	\N	\N
+1342	2547	62	656	\N	\N
+1343	4642	178	533	\N	\N
+1344	2271	181	1199	\N	\N
+1345	4546	80	1484	\N	\N
+1346	5121	176	1561	\N	\N
+1347	2273	62	860	\N	\N
+1348	5175	62	791	\N	\N
+1349	521	62	1184	\N	\N
+1350	5372	51	1424	\N	\N
+1351	817	62	656	\N	\N
+1352	2229	51	918	\N	\N
+1353	5304	62	1103	\N	\N
+1354	5024	99	989	\N	\N
+1355	2354	176	1518	\N	\N
+1356	4399	176	693	\N	\N
+1357	2626	176	474	\N	\N
+1358	4716	51	1084	\N	\N
+1359	5285	51	1006	\N	\N
+1360	1336	176	684	\N	\N
+1361	169	62	860	\N	\N
+1362	3818	51	1122	\N	\N
+1363	881	139	856	\N	\N
+1364	2161	13	937	\N	\N
+1365	4134	197	656	\N	\N
+1366	3977	179	944	\N	\N
+1367	5519	131	1448	\N	\N
+1368	533	176	923	\N	\N
+1369	962	149	1153	\N	\N
+1370	1310	189	1492	\N	\N
+1371	955	185	1307	\N	\N
+1372	4205	62	709	\N	\N
+1373	1358	51	791	\N	\N
+1374	2530	181	541	\N	\N
+1375	2505	212	1417	\N	\N
+1376	1411	51	1298	\N	\N
+1377	1137	37	641	\N	\N
+1378	2208	168	201	\N	\N
+1379	1374	13	1075	\N	\N
+1380	126	62	684	\N	\N
+1381	789	13	893	\N	\N
+1382	198	51	60	\N	\N
+1383	42	181	1338	\N	\N
+1384	4061	9	703	\N	\N
+1385	4727	139	656	\N	\N
+1386	5469	176	944	\N	\N
+1387	5129	51	1135	\N	\N
+1388	2077	51	1335	\N	\N
+1389	2613	181	1286	\N	\N
+1390	2303	176	1451	\N	\N
+1391	259	62	1481	\N	\N
+1392	2089	51	791	\N	\N
+1393	1919	62	1006	\N	\N
+1394	4583	35	637	\N	\N
+1395	2576	147	1337	\N	\N
+1396	1128	167	690	\N	\N
+1397	2567	176	944	\N	\N
+1398	4112	19	684	\N	\N
+1399	4021	176	1334	\N	\N
+1400	1239	176	1338	\N	\N
+1401	4488	51	641	\N	\N
+1402	4562	51	1481	\N	\N
+1403	1237	135	1075	\N	\N
+1404	1387	51	937	\N	\N
+1405	4677	98	710	\N	\N
+1406	1800	16	1195	\N	\N
+1407	3614	19	656	\N	\N
+1408	4808	89	1549	\N	\N
+1409	1195	20	1135	\N	\N
+1410	103	190	1046	\N	\N
+1411	5547	48	893	\N	\N
+1412	2062	51	726	\N	\N
+1413	2359	51	259	\N	\N
+1414	1543	62	1043	\N	\N
+1415	4718	62	1480	\N	\N
+1416	5133	185	500	\N	\N
+1417	2258	132	1357	\N	\N
+1418	1105	74	1006	\N	\N
+1419	4217	51	1152	\N	\N
+1420	2247	68	692	\N	\N
+1421	325	51	1299	\N	\N
+1422	2595	139	1244	\N	\N
+1423	1938	19	1546	\N	\N
+1424	5307	142	860	\N	\N
+1425	4617	187	809	\N	\N
+1426	1238	159	573	\N	\N
+1427	635	46	641	\N	\N
+1428	876	140	1281	\N	\N
+1429	4594	176	1492	\N	\N
+1430	2399	191	809	\N	\N
+1431	792	51	1184	\N	\N
+1432	1751	173	441	\N	\N
+1433	618	181	450	\N	\N
+1434	2427	44	1281	\N	\N
+1435	1308	189	100	\N	\N
+1436	4785	62	1001	\N	\N
+1437	5414	51	918	\N	\N
+1438	1687	32	1071	\N	\N
+1439	4691	62	804	\N	\N
+1440	4560	51	937	\N	\N
+1441	802	62	716	\N	\N
+1442	1059	176	790	\N	\N
+1443	1018	133	989	\N	\N
+1444	4955	179	944	\N	\N
+1445	1562	74	1195	\N	\N
+1446	4781	51	88	\N	\N
+1448	56	176	561	\N	\N
+1449	1268	37	314	\N	\N
+1450	1501	212	441	\N	\N
+1451	2122	19	918	\N	\N
+1452	1411	51	656	\N	\N
+1453	1584	181	1286	\N	\N
+1454	2757	51	1075	\N	\N
+1455	3712	179	511	\N	\N
+1456	760	177	1367	\N	\N
+1457	538	51	118	\N	\N
+1458	1885	135	1281	\N	\N
+1459	1272	62	1084	\N	\N
+1460	142	176	914	\N	\N
+1461	3803	51	842	\N	\N
+1462	1872	32	656	\N	\N
+1463	3762	25	789	\N	\N
+1464	3652	51	1184	\N	\N
+1465	1807	67	43	\N	\N
+1466	1767	41	1486	\N	\N
+1467	249	163	734	\N	\N
+1468	4183	51	918	\N	\N
+1469	1960	51	1516	\N	\N
+1470	4198	51	860	\N	\N
+1471	2567	181	1353	\N	\N
+1472	871	19	1281	\N	\N
+1473	4699	51	173	\N	\N
+1474	1493	176	1240	\N	\N
+1475	5214	68	861	\N	\N
+1476	4705	37	684	\N	\N
+1477	2289	140	1517	\N	\N
+1478	2463	176	841	\N	\N
+1479	4170	62	1195	\N	\N
+1480	1131	86	941	\N	\N
+1481	3616	140	1298	\N	\N
+1482	1194	51	684	\N	\N
+1483	481	68	869	\N	\N
+1484	5450	212	826	\N	\N
+1485	249	154	989	\N	\N
+1486	420	175	372	\N	\N
+1487	4767	74	1542	\N	\N
+1488	2603	201	671	\N	\N
+1489	4148	39	145	\N	\N
+1490	1979	62	1455	\N	\N
+1491	82	176	1154	\N	\N
+1492	4724	131	1281	\N	\N
+1493	1799	51	1335	\N	\N
+1494	3636	51	16	\N	\N
+1495	4509	37	684	\N	\N
+1496	2579	176	1561	\N	\N
+1497	1577	51	1481	\N	\N
+1498	5131	67	51	\N	\N
+1499	4066	62	1195	\N	\N
+1500	4561	51	1195	\N	\N
+1501	5545	186	1239	\N	\N
+1502	2171	13	684	\N	\N
+1503	1099	51	1084	\N	\N
+1504	4390	35	937	\N	\N
+1505	4303	86	692	\N	\N
+1506	839	62	981	\N	\N
+1507	4444	181	518	\N	\N
+1508	2538	140	1210	\N	\N
+1509	1427	51	1075	\N	\N
+1510	139	86	850	\N	\N
+1511	1972	139	1239	\N	\N
+1512	2149	154	1556	\N	\N
+1513	638	37	1084	\N	\N
+1514	734	58	791	\N	\N
+1515	2444	176	477	\N	\N
+1516	2208	130	649	\N	\N
+1517	4710	122	1470	\N	\N
+1518	4682	181	693	\N	\N
+1519	1326	135	1244	\N	\N
+1520	2496	68	1306	\N	\N
+1521	5415	135	595	\N	\N
+1522	1346	62	1281	\N	\N
+1523	4908	2	989	\N	\N
+1524	1267	51	1418	\N	\N
+1525	5309	2	665	\N	\N
+1526	2105	147	1337	\N	\N
+1527	799	167	693	\N	\N
+1528	1943	212	1307	\N	\N
+1529	53	176	1307	\N	\N
+1530	4299	62	937	\N	\N
+1531	1289	62	893	\N	\N
+1532	219	2	1239	\N	\N
+1533	2113	206	863	\N	\N
+1534	5150	154	1216	\N	\N
+1535	1314	189	129	\N	\N
+1536	20	182	1561	\N	\N
+1537	2097	51	1075	\N	\N
+1538	4461	176	533	\N	\N
+1539	2396	37	641	\N	\N
+1540	4863	142	918	\N	\N
+1541	3938	62	1268	\N	\N
+1542	2170	62	1184	\N	\N
+1543	719	212	432	\N	\N
+1544	1117	139	684	\N	\N
+1545	2114	42	791	\N	\N
+1546	390	62	825	\N	\N
+1547	3674	140	1335	\N	\N
+1548	4335	51	1006	\N	\N
+1549	5398	212	1307	\N	\N
+1550	5550	140	1556	\N	\N
+1551	3637	140	976	\N	\N
+1552	4406	51	937	\N	\N
+1553	4747	62	1084	\N	\N
+1554	5144	176	1043	\N	\N
+1555	1731	19	918	\N	\N
+1556	893	13	918	\N	\N
+1557	2087	13	1075	\N	\N
+1558	1287	65	1335	\N	\N
+1559	775	47	1362	\N	\N
+1560	1388	51	1362	\N	\N
+1561	22	62	777	\N	\N
+1562	4984	51	684	\N	\N
+1563	3795	13	1335	\N	\N
+1564	1781	51	656	\N	\N
+1565	2115	36	793	\N	\N
+1566	4155	51	684	\N	\N
+1567	1227	62	529	\N	\N
+1568	1751	4	722	\N	\N
+1569	5435	51	656	\N	\N
+1570	2237	51	1335	\N	\N
+1571	5306	176	1307	\N	\N
+1572	1832	176	1338	\N	\N
+1573	1247	176	1046	\N	\N
+1574	2090	204	1199	\N	\N
+1575	5412	142	918	\N	\N
+1576	4486	154	1513	\N	\N
+1577	4338	19	791	\N	\N
+1578	428	51	1184	\N	\N
+1579	3898	176	1278	\N	\N
+1580	1681	167	923	\N	\N
+1581	4021	201	1297	\N	\N
+1582	3952	187	136	\N	\N
+1583	8	62	1006	\N	\N
+1584	3746	51	1195	\N	\N
+1585	1068	51	684	\N	\N
+1586	158	21	1135	\N	\N
+1587	4629	51	1195	\N	\N
+1588	789	13	804	\N	\N
+1589	2774	176	923	\N	\N
+1590	1164	62	1481	\N	\N
+1591	3727	176	1471	\N	\N
+1592	4959	179	168	\N	\N
+1593	510	86	1153	\N	\N
+1594	4129	51	1335	\N	\N
+1595	229	62	656	\N	\N
+1596	233	62	918	\N	\N
+1597	2492	196	930	\N	\N
+1598	2492	196	1139	\N	\N
+1599	2339	204	290	\N	\N
+1600	4338	19	656	\N	\N
+1601	5424	51	1216	\N	\N
+1602	281	176	1297	\N	\N
+1603	3739	51	282	\N	\N
+1604	1217	51	1298	\N	\N
+1605	4788	4	1058	\N	\N
+1606	116	13	529	\N	\N
+1607	4247	51	1502	\N	\N
+1608	5053	117	861	\N	\N
+1609	2200	13	1455	\N	\N
+1610	4511	62	726	\N	\N
+1611	1130	51	937	\N	\N
+1612	5151	62	1335	\N	\N
+1613	1719	32	1274	\N	\N
+1614	4409	32	684	\N	\N
+1615	2251	62	733	\N	\N
+1616	2520	134	995	\N	\N
+1617	3863	140	1516	\N	\N
+1618	2120	181	1168	\N	\N
+1619	4386	176	693	\N	\N
+1620	1153	176	1046	\N	\N
+1621	442	62	1335	\N	\N
+1622	5224	51	962	\N	\N
+1623	1614	51	989	\N	\N
+1624	333	94	678	\N	\N
+1625	3921	117	1560	\N	\N
+1626	678	51	385	\N	\N
+1627	5041	51	656	\N	\N
+1628	829	114	1084	\N	\N
+1629	1759	35	1424	\N	\N
+1630	1558	127	1224	\N	\N
+1631	5570	203	1154	\N	\N
+1632	1025	139	1281	\N	\N
+1633	5272	51	918	\N	\N
+1634	4599	114	1533	\N	\N
+1635	4315	176	975	\N	\N
+1636	1352	176	1307	\N	\N
+1637	268	176	1307	\N	\N
+1638	118	176	1561	\N	\N
+1639	756	51	231	\N	\N
+1640	2406	176	474	\N	\N
+1641	1910	59	1195	\N	\N
+1642	1707	32	1298	\N	\N
+1643	780	86	697	\N	\N
+1644	243	163	919	\N	\N
+1645	566	62	1502	\N	\N
+1646	2776	51	1455	\N	\N
+1647	5336	92	1045	\N	\N
+1648	1330	176	1280	\N	\N
+1649	1636	51	733	\N	\N
+1650	859	62	684	\N	\N
+1651	5238	129	856	\N	\N
+1652	3986	62	1084	\N	\N
+1653	1999	134	995	\N	\N
+1654	606	179	477	\N	\N
+1655	481	68	937	\N	\N
+1656	4914	62	582	\N	\N
+1657	2294	51	1362	\N	\N
+1658	502	51	1043	\N	\N
+1659	3814	62	1428	\N	\N
+1660	1938	19	47	\N	\N
+1661	550	143	1556	\N	\N
+1662	2316	149	861	\N	\N
+1663	395	62	656	\N	\N
+1664	477	62	1480	\N	\N
+1665	4757	51	1298	\N	\N
+1666	577	62	825	\N	\N
+1667	5578	51	1253	\N	\N
+1668	4148	15	94	\N	\N
+1669	306	212	1567	\N	\N
+1670	334	51	726	\N	\N
+1671	2205	181	863	\N	\N
+1672	4929	204	1307	\N	\N
+1673	975	62	937	\N	\N
+1674	1591	176	1286	\N	\N
+1675	447	163	1199	\N	\N
+1676	4883	62	656	\N	\N
+1677	255	140	856	\N	\N
+1678	4164	68	531	\N	\N
+1679	261	62	1006	\N	\N
+1680	4790	51	918	\N	\N
+1681	341	133	1247	\N	\N
+1682	1248	69	692	\N	\N
+1683	3991	108	684	\N	\N
+1684	4082	147	905	\N	\N
+1685	1334	181	1421	\N	\N
+1686	4887	51	1128	\N	\N
+1687	3754	15	937	\N	\N
+1688	4563	51	1195	\N	\N
+1689	1279	62	684	\N	\N
+1690	1194	51	1335	\N	\N
+1691	78	51	1274	\N	\N
+1692	17	62	656	\N	\N
+1693	663	51	656	\N	\N
+1694	4615	176	409	\N	\N
+1695	1500	16	1367	\N	\N
+1696	5328	64	656	\N	\N
+1697	4072	62	937	\N	\N
+1698	1125	139	918	\N	\N
+1699	1162	68	941	\N	\N
+1700	1692	62	1043	\N	\N
+1701	373	179	1297	\N	\N
+1702	1041	51	1043	\N	\N
+1703	1449	32	684	\N	\N
+1704	4609	176	665	\N	\N
+1705	5473	145	344	\N	\N
+1706	4134	19	1298	\N	\N
+1707	5051	51	684	\N	\N
+1708	1393	62	825	\N	\N
+1709	1397	176	1010	\N	\N
+1710	2183	135	1298	\N	\N
+1711	5099	188	693	\N	\N
+1712	2766	47	656	\N	\N
+1713	1298	51	1096	\N	\N
+1714	1314	189	1	\N	\N
+1715	2028	86	692	\N	\N
+1716	3735	51	937	\N	\N
+1717	4829	53	1195	\N	\N
+1718	1922	204	1307	\N	\N
+1719	4428	62	1281	\N	\N
+1720	732	56	791	\N	\N
+1721	4936	165	1306	\N	\N
+1722	2183	176	693	\N	\N
+1723	5524	51	274	\N	\N
+1724	2532	176	1481	\N	\N
+1725	333	94	776	\N	\N
+1726	4457	165	1559	\N	\N
+1727	907	45	490	\N	\N
+1728	3739	51	285	\N	\N
+1729	4002	127	1426	\N	\N
+1730	4961	209	495	\N	\N
+1731	1866	212	991	\N	\N
+1732	2051	111	424	\N	\N
+1733	4264	176	912	\N	\N
+1734	4495	212	1060	\N	\N
+1735	845	51	656	\N	\N
+1736	2490	51	1516	\N	\N
+1737	1772	51	684	\N	\N
+1738	1359	35	1272	\N	\N
+1739	38	98	727	\N	\N
+1740	150	176	902	\N	\N
+1741	3792	176	1291	\N	\N
+1742	1751	4	1335	\N	\N
+1743	975	62	1195	\N	\N
+1744	4926	176	665	\N	\N
+1745	1536	62	1006	\N	\N
+1746	1881	140	1071	\N	\N
+1747	5211	51	1006	\N	\N
+1748	1189	51	259	\N	\N
+1749	5325	51	656	\N	\N
+1750	4372	51	1152	\N	\N
+1751	2261	133	923	\N	\N
+1752	2624	176	1307	\N	\N
+1753	4892	186	441	\N	\N
+1754	4621	179	1561	\N	\N
+1755	576	62	860	\N	\N
+1756	4686	176	425	\N	\N
+1757	3888	51	1281	\N	\N
+1758	1532	51	1298	\N	\N
+1759	1170	51	1480	\N	\N
+1760	4700	194	693	\N	\N
+1761	4277	212	517	\N	\N
+1762	1533	62	825	\N	\N
+1763	1308	189	106	\N	\N
+1764	1240	69	941	\N	\N
+1765	5357	86	531	\N	\N
+1766	344	37	804	\N	\N
+1767	225	212	1152	\N	\N
+1768	249	163	991	\N	\N
+1769	975	65	1335	\N	\N
+1770	4654	176	1205	\N	\N
+1771	2333	142	856	\N	\N
+1772	1124	13	684	\N	\N
+1773	5397	199	941	\N	\N
+1774	2300	62	656	\N	\N
+1775	4811	51	448	\N	\N
+1776	765	51	1195	\N	\N
+1777	965	19	1184	\N	\N
+1778	5027	3	937	\N	\N
+1779	4827	46	786	\N	\N
+1780	2437	62	860	\N	\N
+1781	1654	181	1286	\N	\N
+1782	2326	204	1199	\N	\N
+1783	826	41	981	\N	\N
+1784	4082	147	616	\N	\N
+1785	3701	194	693	\N	\N
+1786	1846	176	665	\N	\N
+1787	861	154	1141	\N	\N
+1788	1311	189	122	\N	\N
+1789	4582	59	1298	\N	\N
+1790	250	163	665	\N	\N
+1791	2271	62	1298	\N	\N
+1907	3707	134	1288	\N	\N
+1792	3728	79	130	\N	\N
+1793	4279	158	363	\N	\N
+1794	2339	204	291	\N	\N
+1795	5342	179	320	\N	\N
+1796	3739	51	937	\N	\N
+1797	4743	176	693	\N	\N
+1798	1291	62	553	\N	\N
+1799	252	132	1281	\N	\N
+1800	824	62	718	\N	\N
+1801	5370	62	923	\N	\N
+1802	4242	59	684	\N	\N
+1803	1703	51	1424	\N	\N
+1804	2432	51	1281	\N	\N
+1805	4787	4	1058	\N	\N
+1806	1776	51	684	\N	\N
+1807	262	62	856	\N	\N
+1808	1925	47	967	\N	\N
+1809	5472	145	1306	\N	\N
+1810	4051	51	937	\N	\N
+1811	4889	51	1281	\N	\N
+1812	2622	185	1046	\N	\N
+1813	1397	176	1307	\N	\N
+1814	1003	176	944	\N	\N
+1815	2529	176	1314	\N	\N
+1816	3781	135	791	\N	\N
+1817	1922	181	1010	\N	\N
+1818	4194	19	937	\N	\N
+1819	5016	19	1298	\N	\N
+1820	1552	13	684	\N	\N
+1821	2463	176	1139	\N	\N
+1822	2574	62	1335	\N	\N
+1823	544	133	1356	\N	\N
+1824	3601	204	1307	\N	\N
+1825	4638	67	692	\N	\N
+1826	2341	76	1543	\N	\N
+1827	4137	140	791	\N	\N
+1828	387	142	1281	\N	\N
+1829	4201	130	1182	\N	\N
+1830	960	149	1153	\N	\N
+1831	894	62	490	\N	\N
+1832	523	181	1561	\N	\N
+1833	2258	162	1357	\N	\N
+1834	2036	204	1010	\N	\N
+1835	386	51	1281	\N	\N
+1836	4230	152	1494	\N	\N
+1837	4190	35	911	\N	\N
+1838	4826	166	1199	\N	\N
+1839	4368	48	582	\N	\N
+1840	5067	51	1362	\N	\N
+1841	596	176	1466	\N	\N
+1842	4702	155	1184	\N	\N
+1843	515	62	1480	\N	\N
+1844	5092	62	1281	\N	\N
+1845	1322	51	1335	\N	\N
+1846	1607	62	1298	\N	\N
+1847	4158	62	1195	\N	\N
+1848	1573	37	1216	\N	\N
+1849	5303	13	1084	\N	\N
+1850	5090	86	925	\N	\N
+1851	1410	32	1071	\N	\N
+1852	2242	2	937	\N	\N
+1853	504	212	1567	\N	\N
+1854	4960	142	462	\N	\N
+1855	1787	15	974	\N	\N
+1856	1578	51	246	\N	\N
+1857	1055	68	692	\N	\N
+1858	507	62	293	\N	\N
+1859	2427	44	641	\N	\N
+1860	404	51	1006	\N	\N
+1861	1659	62	791	\N	\N
+1862	4802	176	795	\N	\N
+1863	4831	4	1195	\N	\N
+1864	941	51	1184	\N	\N
+1865	3717	35	791	\N	\N
+1866	2595	134	749	\N	\N
+1867	2007	176	1010	\N	\N
+1868	4808	19	222	\N	\N
+1869	3802	19	726	\N	\N
+1870	1942	51	1516	\N	\N
+1871	716	212	1338	\N	\N
+1872	4980	176	1307	\N	\N
+1873	1783	62	656	\N	\N
+1874	721	62	1084	\N	\N
+1875	3715	19	1281	\N	\N
+1876	2452	51	1536	\N	\N
+1877	3619	166	941	\N	\N
+1878	1532	44	656	\N	\N
+1879	1258	74	1084	\N	\N
+1880	4248	62	1253	\N	\N
+1881	5047	51	1536	\N	\N
+1882	319	62	490	\N	\N
+1883	5571	48	684	\N	\N
+1884	2015	86	1337	\N	\N
+1885	3636	62	469	\N	\N
+1886	1350	24	1084	\N	\N
+1887	229	176	975	\N	\N
+1888	2000	176	863	\N	\N
+1889	3998	51	1455	\N	\N
+1890	1552	181	1240	\N	\N
+1891	712	212	612	\N	\N
+1892	1763	212	863	\N	\N
+1893	1494	68	583	\N	\N
+1894	1069	62	1298	\N	\N
+1895	770	204	114	\N	\N
+1896	4464	62	1195	\N	\N
+1897	3598	147	631	\N	\N
+1898	3741	51	279	\N	\N
+1899	571	19	1335	\N	\N
+1900	3995	51	1043	\N	\N
+1901	4028	72	1411	\N	\N
+1902	2441	51	684	\N	\N
+1903	454	51	641	\N	\N
+1904	1899	59	1195	\N	\N
+1905	1669	62	358	\N	\N
+1906	1638	176	1307	\N	\N
+1908	4369	51	1152	\N	\N
+1909	1807	62	42	\N	\N
+1910	5378	176	665	\N	\N
+1911	1406	62	1084	\N	\N
+1912	4234	51	1075	\N	\N
+1913	2275	176	944	\N	\N
+1914	4479	178	1313	\N	\N
+1915	3674	140	1365	\N	\N
+1916	5235	51	1298	\N	\N
+1917	3627	179	441	\N	\N
+1918	2443	176	1514	\N	\N
+1919	4885	62	937	\N	\N
+1920	4818	62	237	\N	\N
+1921	4087	37	1335	\N	\N
+1922	1293	68	684	\N	\N
+1923	4167	79	693	\N	\N
+1924	5022	65	529	\N	\N
+1925	5571	139	684	\N	\N
+1926	996	97	941	\N	\N
+1927	3970	19	92	\N	\N
+1928	5082	135	1281	\N	\N
+1929	38	102	941	\N	\N
+1930	246	156	356	\N	\N
+1931	2256	19	989	\N	\N
+1932	5011	176	1421	\N	\N
+1933	4987	86	1153	\N	\N
+1934	1794	51	1152	\N	\N
+1935	1569	51	1195	\N	\N
+1936	317	51	860	\N	\N
+1937	4368	51	1152	\N	\N
+1938	2590	154	1281	\N	\N
+1939	1369	51	259	\N	\N
+1940	2518	19	1165	\N	\N
+1941	2619	176	1240	\N	\N
+1942	4720	44	656	\N	\N
+1943	423	178	533	\N	\N
+1944	4780	130	1409	\N	\N
+1945	1736	181	1421	\N	\N
+1946	4908	204	733	\N	\N
+1947	1844	62	140	\N	\N
+1948	1346	181	923	\N	\N
+1949	5347	176	693	\N	\N
+1950	2015	197	937	\N	\N
+1951	4372	51	1043	\N	\N
+1952	1390	176	1140	\N	\N
+1953	5417	176	728	\N	\N
+1954	1892	51	804	\N	\N
+1955	63	51	684	\N	\N
+1956	1993	176	1089	\N	\N
+1957	4076	19	1298	\N	\N
+1958	4721	58	1298	\N	\N
+1959	1936	51	4	\N	\N
+1960	255	154	1307	\N	\N
+1961	4232	51	656	\N	\N
+1962	1702	35	1424	\N	\N
+1963	3722	35	1424	\N	\N
+1964	2103	176	527	\N	\N
+1965	3757	54	516	\N	\N
+1966	248	163	388	\N	\N
+1967	3897	59	937	\N	\N
+1968	5102	51	1281	\N	\N
+1969	185	51	1043	\N	\N
+1970	1562	59	726	\N	\N
+1971	3704	176	665	\N	\N
+1972	3753	51	937	\N	\N
+1973	628	135	791	\N	\N
+1974	177	62	1536	\N	\N
+1975	967	51	1184	\N	\N
+1976	4991	113	863	\N	\N
+1977	5538	186	435	\N	\N
+1978	5197	204	1563	\N	\N
+1979	4159	176	1338	\N	\N
+1980	992	62	656	\N	\N
+1981	911	133	856	\N	\N
+1982	97	135	787	\N	\N
+1983	4337	51	529	\N	\N
+1984	975	28	1298	\N	\N
+1985	4689	51	782	\N	\N
+1986	1588	62	1281	\N	\N
+1987	4678	98	710	\N	\N
+1988	1751	4	893	\N	\N
+1989	1600	147	28	\N	\N
+1990	4986	51	656	\N	\N
+1991	2280	69	664	\N	\N
+1992	2450	176	1092	\N	\N
+1993	4383	51	804	\N	\N
+1994	2372	51	1195	\N	\N
+1995	5191	201	1563	\N	\N
+1996	1591	181	1286	\N	\N
+1997	1435	35	1070	\N	\N
+1998	2528	176	1481	\N	\N
+1999	3580	41	937	\N	\N
+2000	927	166	944	\N	\N
+2001	4876	13	1335	\N	\N
+2002	4199	147	531	\N	\N
+2003	874	51	1281	\N	\N
+2004	4552	13	326	\N	\N
+2005	925	166	944	\N	\N
+2006	2195	181	223	\N	\N
+2007	530	51	937	\N	\N
+2008	1404	50	1281	\N	\N
+2009	1909	135	1195	\N	\N
+2010	2512	135	1049	\N	\N
+2011	3952	187	301	\N	\N
+2012	4191	62	1006	\N	\N
+2013	847	86	698	\N	\N
+2014	458	178	863	\N	\N
+2015	930	86	1009	\N	\N
+2016	3799	95	87	\N	\N
+2017	1610	176	693	\N	\N
+2018	1409	51	637	\N	\N
+2019	330	51	937	\N	\N
+2020	243	163	1186	\N	\N
+2021	5118	62	1281	\N	\N
+2022	486	197	1448	\N	\N
+2023	2103	176	906	\N	\N
+2024	1036	176	1367	\N	\N
+2025	4615	176	454	\N	\N
+2026	5504	51	684	\N	\N
+2027	1937	167	665	\N	\N
+2028	4596	176	945	\N	\N
+2029	1459	212	529	\N	\N
+2030	5301	207	1293	\N	\N
+2031	1867	62	529	\N	\N
+2032	4137	51	656	\N	\N
+2033	1403	181	1561	\N	\N
+2034	642	212	612	\N	\N
+2035	3773	176	1046	\N	\N
+2036	529	51	937	\N	\N
+2037	3945	167	714	\N	\N
+2038	4111	51	1362	\N	\N
+2039	5445	51	684	\N	\N
+2040	4205	62	1001	\N	\N
+2041	3793	117	861	\N	\N
+2042	254	156	166	\N	\N
+2043	4033	51	1281	\N	\N
+2044	4908	19	1281	\N	\N
+2045	891	131	1448	\N	\N
+2046	457	51	989	\N	\N
+2047	4333	13	1006	\N	\N
+2048	100	199	654	\N	\N
+2049	2532	176	1195	\N	\N
+2050	3589	204	1307	\N	\N
+2051	1821	62	684	\N	\N
+2052	346	62	684	\N	\N
+2053	5144	75	477	\N	\N
+2054	247	62	1497	\N	\N
+2055	3601	197	1006	\N	\N
+2056	4061	9	1455	\N	\N
+2057	260	176	1307	\N	\N
+2058	5560	19	937	\N	\N
+2059	2142	204	1119	\N	\N
+2060	1121	51	836	\N	\N
+2061	867	204	1457	\N	\N
+2062	2749	62	718	\N	\N
+2063	586	75	477	\N	\N
+2064	1496	62	529	\N	\N
+2065	1096	176	856	\N	\N
+2066	1492	203	584	\N	\N
+2067	4838	51	1448	\N	\N
+2068	4056	62	626	\N	\N
+2069	5434	51	804	\N	\N
+2070	5225	62	1335	\N	\N
+2071	3617	176	645	\N	\N
+2072	2422	62	1043	\N	\N
+2073	1085	176	1307	\N	\N
+2074	990	201	880	\N	\N
+2075	4863	139	918	\N	\N
+2076	1509	62	1298	\N	\N
+2077	1892	51	937	\N	\N
+2078	4370	51	1152	\N	\N
+2079	4736	135	1281	\N	\N
+2080	906	139	1556	\N	\N
+2081	2025	51	860	\N	\N
+2082	4810	176	1010	\N	\N
+2083	862	13	1281	\N	\N
+2084	276	51	1184	\N	\N
+2085	4264	134	1274	\N	\N
+2086	842	19	1455	\N	\N
+2087	255	62	856	\N	\N
+2088	2286	62	1173	\N	\N
+2089	4051	51	1084	\N	\N
+2090	753	181	693	\N	\N
+2091	3926	139	1281	\N	\N
+2092	509	204	944	\N	\N
+2093	4481	154	1216	\N	\N
+2094	3987	135	1235	\N	\N
+2095	2506	51	684	\N	\N
+2096	1184	19	1298	\N	\N
+2097	2219	176	1307	\N	\N
+2098	1362	142	656	\N	\N
+2099	946	197	937	\N	\N
+2100	4481	62	1281	\N	\N
+2101	3715	51	1497	\N	\N
+2102	2058	181	1307	\N	\N
+2103	3669	176	671	\N	\N
+2104	3932	133	1176	\N	\N
+2105	300	51	1448	\N	\N
+2106	1873	176	1071	\N	\N
+2107	1030	67	1198	\N	\N
+2108	5436	51	937	\N	\N
+2109	3726	51	893	\N	\N
+2110	3634	58	791	\N	\N
+2111	726	74	367	\N	\N
+2112	5485	62	1335	\N	\N
+2113	3897	59	684	\N	\N
+2114	4310	181	665	\N	\N
+2115	5543	37	1335	\N	\N
+2116	2621	176	665	\N	\N
+2117	2475	176	1195	\N	\N
+2118	1341	176	937	\N	\N
+2119	1610	62	1195	\N	\N
+2120	280	181	1010	\N	\N
+2121	5516	163	918	\N	\N
+2122	4026	181	517	\N	\N
+2123	2274	62	1006	\N	\N
+2124	199	62	656	\N	\N
+2125	1791	137	1222	\N	\N
+2126	342	133	641	\N	\N
+2127	4760	51	1298	\N	\N
+2128	5095	176	553	\N	\N
+2129	4188	59	1195	\N	\N
+2130	4129	51	1418	\N	\N
+2131	1425	51	937	\N	\N
+2132	4879	51	1195	\N	\N
+2133	965	13	288	\N	\N
+2134	1393	62	974	\N	\N
+2135	4135	20	918	\N	\N
+2136	245	51	391	\N	\N
+2137	2491	201	1437	\N	\N
+2138	1036	176	937	\N	\N
+2139	351	51	684	\N	\N
+2140	1416	166	937	\N	\N
+2141	4257	176	965	\N	\N
+2142	4869	62	1195	\N	\N
+2143	676	51	1481	\N	\N
+2144	2635	51	791	\N	\N
+2145	1550	32	918	\N	\N
+2146	4376	22	1098	\N	\N
+2147	4480	181	1517	\N	\N
+2148	4306	13	918	\N	\N
+2149	1032	130	916	\N	\N
+2150	4694	35	918	\N	\N
+2151	2761	185	944	\N	\N
+2152	4758	158	606	\N	\N
+2153	372	15	818	\N	\N
+2154	5227	59	1281	\N	\N
+2155	692	51	1006	\N	\N
+2156	1452	147	537	\N	\N
+2157	4530	32	1006	\N	\N
+2158	5529	136	1281	\N	\N
+2159	1051	86	531	\N	\N
+2160	1653	212	1154	\N	\N
+2161	5461	136	684	\N	\N
+2162	83	147	1557	\N	\N
+2163	1197	51	1481	\N	\N
+2164	4912	131	1281	\N	\N
+2165	3583	176	449	\N	\N
+2166	49	176	665	\N	\N
+2167	711	176	665	\N	\N
+2168	5468	108	944	\N	\N
+2169	1496	176	1240	\N	\N
+2170	2099	51	1513	\N	\N
+2171	1494	176	877	\N	\N
+2172	4017	197	684	\N	\N
+2173	2768	176	1561	\N	\N
+2174	4094	181	1154	\N	\N
+2175	2262	62	529	\N	\N
+2176	5516	163	724	\N	\N
+2177	1333	62	1006	\N	\N
+2178	2781	65	1335	\N	\N
+2179	675	51	1096	\N	\N
+2180	440	163	1307	\N	\N
+2181	2116	118	1337	\N	\N
+2182	3918	51	1094	\N	\N
+2183	5093	58	779	\N	\N
+2184	1309	189	112	\N	\N
+2185	2220	176	1561	\N	\N
+2186	2536	37	918	\N	\N
+2187	1070	212	863	\N	\N
+2188	4364	51	1122	\N	\N
+2189	2219	176	1339	\N	\N
+2190	4725	134	1281	\N	\N
+2191	665	139	796	\N	\N
+2192	2136	102	1198	\N	\N
+2193	5148	131	856	\N	\N
+2194	4449	127	25	\N	\N
+2195	1067	51	1455	\N	\N
+2196	4995	176	693	\N	\N
+2197	3745	51	196	\N	\N
+2198	3590	86	941	\N	\N
+2199	1547	176	1307	\N	\N
+2200	4530	32	684	\N	\N
+2201	5400	176	656	\N	\N
+2202	3856	176	1412	\N	\N
+2203	907	45	458	\N	\N
+2204	1487	179	1064	\N	\N
+2205	4160	116	684	\N	\N
+2206	1017	103	1010	\N	\N
+2207	4682	19	656	\N	\N
+2208	2075	51	1335	\N	\N
+2209	1467	212	533	\N	\N
+2210	1472	68	531	\N	\N
+2211	4376	51	1075	\N	\N
+2212	4175	181	1054	\N	\N
+2213	4785	62	760	\N	\N
+2214	3660	62	856	\N	\N
+2215	4430	51	1335	\N	\N
+2216	2554	68	1087	\N	\N
+2217	5415	135	516	\N	\N
+2218	1195	19	1135	\N	\N
+2219	470	145	364	\N	\N
+2220	5353	51	656	\N	\N
+2221	361	51	218	\N	\N
+2222	1263	147	941	\N	\N
+2223	5289	44	1298	\N	\N
+2224	4256	32	684	\N	\N
+2225	2065	135	995	\N	\N
+2226	3662	204	1017	\N	\N
+2227	4510	133	641	\N	\N
+2228	887	131	856	\N	\N
+2229	2260	154	1307	\N	\N
+2230	839	37	1348	\N	\N
+2231	3915	54	1006	\N	\N
+2232	4844	185	944	\N	\N
+2233	869	163	665	\N	\N
+2234	767	181	1109	\N	\N
+2235	1252	51	1536	\N	\N
+2236	1124	181	944	\N	\N
+2237	596	176	1307	\N	\N
+2238	149	51	989	\N	\N
+2239	38	176	665	\N	\N
+2240	897	176	1240	\N	\N
+2241	1717	212	1154	\N	\N
+2242	5556	51	1335	\N	\N
+2243	859	51	684	\N	\N
+2244	4144	186	1412	\N	\N
+2245	2437	62	1239	\N	\N
+2246	1428	22	733	\N	\N
+2247	1032	202	517	\N	\N
+2248	5115	51	1281	\N	\N
+2249	100	181	517	\N	\N
+2250	385	51	1298	\N	\N
+2251	110	153	1504	\N	\N
+2252	207	134	995	\N	\N
+2253	3710	176	959	\N	\N
+2254	2382	176	847	\N	\N
+2255	3629	62	684	\N	\N
+2256	4237	58	1075	\N	\N
+2257	2310	176	899	\N	\N
+2258	62	35	937	\N	\N
+2259	1559	51	1281	\N	\N
+2260	2276	51	791	\N	\N
+2261	395	51	656	\N	\N
+2262	4804	51	684	\N	\N
+2263	5202	204	1563	\N	\N
+2264	4590	164	1556	\N	\N
+2265	4740	176	1298	\N	\N
+2266	4147	176	1370	\N	\N
+2267	5397	68	941	\N	\N
+2268	3724	51	1335	\N	\N
+2269	847	197	718	\N	\N
+2270	3663	62	1335	\N	\N
+2271	455	51	1281	\N	\N
+2272	1995	176	1334	\N	\N
+2273	94	140	787	\N	\N
+2274	2436	44	1448	\N	\N
+2275	1571	51	1215	\N	\N
+2276	2463	176	1140	\N	\N
+2277	4306	125	918	\N	\N
+2278	1008	176	863	\N	\N
+2279	826	62	1347	\N	\N
+2280	4141	19	860	\N	\N
+2281	2375	51	1481	\N	\N
+2282	1928	3	650	\N	\N
+2283	3724	51	893	\N	\N
+2284	358	62	1335	\N	\N
+2285	4356	178	1089	\N	\N
+2286	4907	19	1075	\N	\N
+2287	183	204	1307	\N	\N
+2288	2516	51	918	\N	\N
+2289	1800	19	684	\N	\N
+2290	1251	204	1563	\N	\N
+2291	5354	176	1324	\N	\N
+2292	4858	62	918	\N	\N
+2293	1581	176	923	\N	\N
+2294	2048	4	1454	\N	\N
+2295	3608	69	941	\N	\N
+2296	475	147	941	\N	\N
+2297	1113	185	1338	\N	\N
+2298	861	204	1307	\N	\N
+2299	2143	139	1298	\N	\N
+2300	1014	51	937	\N	\N
+2301	5324	176	945	\N	\N
+2302	4302	62	529	\N	\N
+2303	2159	182	497	\N	\N
+2304	2753	52	791	\N	\N
+2305	4564	51	937	\N	\N
+2306	3665	160	1309	\N	\N
+2307	321	51	791	\N	\N
+2308	1977	155	554	\N	\N
+2309	4299	2	893	\N	\N
+2310	4292	51	1239	\N	\N
+2311	4258	135	1006	\N	\N
+2312	4166	79	693	\N	\N
+2313	555	62	1075	\N	\N
+2314	1908	59	937	\N	\N
+2315	4860	62	918	\N	\N
+2316	4128	51	937	\N	\N
+2317	848	88	966	\N	\N
+2318	3660	62	1281	\N	\N
+2319	1446	84	1307	\N	\N
+2320	4352	176	396	\N	\N
+2321	836	62	1536	\N	\N
+2322	3777	84	1307	\N	\N
+2323	1298	51	818	\N	\N
+2324	1241	69	736	\N	\N
+2325	369	13	1298	\N	\N
+2326	4750	145	364	\N	\N
+2327	5397	111	944	\N	\N
+2328	5239	131	1281	\N	\N
+2329	5050	51	195	\N	\N
+2330	5112	154	664	\N	\N
+2331	2177	51	1335	\N	\N
+2332	2069	176	1090	\N	\N
+2333	1712	147	463	\N	\N
+2334	5571	51	1335	\N	\N
+2335	5520	159	1362	\N	\N
+2336	2294	13	1184	\N	\N
+2337	4688	74	718	\N	\N
+2338	859	51	1084	\N	\N
+2339	5343	179	1338	\N	\N
+2340	2080	176	693	\N	\N
+2341	1552	176	1338	\N	\N
+2342	1367	13	684	\N	\N
+2343	2520	134	1288	\N	\N
+2344	1143	178	533	\N	\N
+2345	5065	51	345	\N	\N
+2346	5346	37	1298	\N	\N
+2347	2259	62	1006	\N	\N
+2348	2111	181	1089	\N	\N
+2349	3984	111	684	\N	\N
+2350	129	176	795	\N	\N
+2351	262	46	856	\N	\N
+2352	5468	176	944	\N	\N
+2353	4627	176	726	\N	\N
+2354	5452	51	1239	\N	\N
+2355	941	154	1556	\N	\N
+2356	4935	147	1306	\N	\N
+2357	2371	51	1481	\N	\N
+2358	1980	13	607	\N	\N
+2359	3740	51	937	\N	\N
+2360	1589	176	1286	\N	\N
+2361	5357	68	493	\N	\N
+2362	612	86	698	\N	\N
+2363	126	62	804	\N	\N
+2364	686	176	665	\N	\N
+2365	46	62	1184	\N	\N
+2366	4015	13	311	\N	\N
+2367	1519	68	531	\N	\N
+2368	1119	176	1046	\N	\N
+2369	2492	196	741	\N	\N
+2370	5426	58	791	\N	\N
+2371	3965	87	698	\N	\N
+2372	526	62	1075	\N	\N
+2373	1407	37	1084	\N	\N
+2374	2082	51	1184	\N	\N
+2375	3594	4	1461	\N	\N
+2376	4965	167	1030	\N	\N
+2377	3607	69	692	\N	\N
+2378	310	212	1567	\N	\N
+2379	657	51	791	\N	\N
+2380	4606	176	918	\N	\N
+2381	5159	67	1306	\N	\N
+2382	2409	176	457	\N	\N
+2383	1990	35	908	\N	\N
+2384	1308	189	405	\N	\N
+2385	807	37	1006	\N	\N
+2386	1809	13	1075	\N	\N
+2387	2550	62	1197	\N	\N
+2388	134	47	1184	\N	\N
+2389	4249	176	1303	\N	\N
+2390	441	186	863	\N	\N
+2391	46	149	1087	\N	\N
+2392	4787	4	1350	\N	\N
+2393	1002	176	665	\N	\N
+2394	700	51	656	\N	\N
+2395	443	137	656	\N	\N
+2396	5014	181	665	\N	\N
+2397	4877	51	656	\N	\N
+2398	43	68	1337	\N	\N
+2399	4888	51	1075	\N	\N
+2400	826	62	715	\N	\N
+2401	5149	13	1455	\N	\N
+2402	793	37	825	\N	\N
+2403	249	47	733	\N	\N
+2404	4000	181	863	\N	\N
+2405	4870	62	1481	\N	\N
+2406	5135	69	941	\N	\N
+2407	2083	142	937	\N	\N
+2408	1051	68	531	\N	\N
+2409	2760	185	944	\N	\N
+2410	593	179	1064	\N	\N
+2411	4552	13	174	\N	\N
+2412	1495	176	37	\N	\N
+2413	2553	62	1006	\N	\N
+2414	2147	62	1084	\N	\N
+2415	5167	51	595	\N	\N
+2416	2343	142	856	\N	\N
+2417	5565	62	1075	\N	\N
+2418	2150	13	744	\N	\N
+2419	372	15	1096	\N	\N
+2420	4510	163	923	\N	\N
+2421	4913	51	1281	\N	\N
+2422	5323	51	1298	\N	\N
+2423	2628	181	517	\N	\N
+2424	3863	140	1084	\N	\N
+2425	4089	62	1335	\N	\N
+2426	674	51	1481	\N	\N
+2427	5511	175	944	\N	\N
+2428	915	211	944	\N	\N
+2429	418	171	517	\N	\N
+2430	4061	9	791	\N	\N
+2431	4823	176	863	\N	\N
+2432	2528	176	1084	\N	\N
+2433	4873	13	1335	\N	\N
+2434	3591	204	1298	\N	\N
+2435	4358	198	1484	\N	\N
+2436	4534	51	656	\N	\N
+2437	224	62	1084	\N	\N
+2438	5112	204	1104	\N	\N
+2439	73	88	861	\N	\N
+2440	5371	51	1265	\N	\N
+2441	2783	51	1455	\N	\N
+2442	4553	51	1335	\N	\N
+2443	1881	140	645	\N	\N
+2444	5317	51	656	\N	\N
+2445	3662	154	918	\N	\N
+2446	46	62	918	\N	\N
+2447	4306	13	989	\N	\N
+2448	1305	51	718	\N	\N
+2449	4608	176	563	\N	\N
+2450	4	68	692	\N	\N
+2451	5445	51	937	\N	\N
+2452	3601	197	1298	\N	\N
+2453	954	62	1335	\N	\N
+2454	3682	142	1279	\N	\N
+2455	1046	51	937	\N	\N
+2456	270	44	1298	\N	\N
+2457	838	62	718	\N	\N
+2458	893	13	656	\N	\N
+2459	4718	62	1184	\N	\N
+2460	462	133	581	\N	\N
+2461	2044	176	665	\N	\N
+2462	1668	181	257	\N	\N
+2463	1346	181	1281	\N	\N
+2464	1729	31	1084	\N	\N
+2465	366	19	989	\N	\N
+2466	2013	176	1489	\N	\N
+2467	4144	186	1240	\N	\N
+2468	5374	32	1189	\N	\N
+2469	4836	19	791	\N	\N
+2470	839	62	718	\N	\N
+2471	1291	62	1239	\N	\N
+2472	840	62	1006	\N	\N
+2473	161	212	516	\N	\N
+2474	5021	62	577	\N	\N
+2475	2310	176	856	\N	\N
+2476	1703	51	1272	\N	\N
+2477	1980	3	849	\N	\N
+2478	519	62	1480	\N	\N
+2479	2370	51	726	\N	\N
+2480	612	45	1223	\N	\N
+2481	5400	176	1367	\N	\N
+2597	3804	62	656	\N	\N
+2482	1367	181	944	\N	\N
+2483	2782	32	937	\N	\N
+2484	747	167	1353	\N	\N
+2485	2528	176	656	\N	\N
+2486	2561	13	1281	\N	\N
+2487	1732	51	1362	\N	\N
+2488	1739	201	1349	\N	\N
+2489	2189	62	656	\N	\N
+2490	4295	176	728	\N	\N
+2491	612	59	1298	\N	\N
+2492	1017	51	1281	\N	\N
+2493	3643	51	1184	\N	\N
+2494	5163	62	1502	\N	\N
+2495	2051	116	918	\N	\N
+2496	5446	212	598	\N	\N
+2497	5523	51	684	\N	\N
+2498	5514	51	1335	\N	\N
+2499	4310	13	289	\N	\N
+2500	5014	58	656	\N	\N
+2501	5409	181	561	\N	\N
+2502	4412	51	684	\N	\N
+2503	1138	58	1321	\N	\N
+2504	3661	135	1281	\N	\N
+2505	4116	62	467	\N	\N
+2506	834	62	119	\N	\N
+2507	2106	82	446	\N	\N
+2508	663	51	1184	\N	\N
+2509	1233	179	23	\N	\N
+2510	749	6	439	\N	\N
+2511	5533	51	1502	\N	\N
+2512	4128	51	1195	\N	\N
+2513	2409	176	1298	\N	\N
+2514	5503	19	1455	\N	\N
+2515	3840	51	1075	\N	\N
+2516	1687	32	911	\N	\N
+2517	1078	176	1527	\N	\N
+2518	4041	86	698	\N	\N
+2519	3754	22	684	\N	\N
+2520	4489	181	1077	\N	\N
+2521	2363	176	1481	\N	\N
+2522	184	62	684	\N	\N
+2523	1957	37	684	\N	\N
+2524	5159	62	918	\N	\N
+2525	1615	22	733	\N	\N
+2526	95	88	966	\N	\N
+2527	395	62	1298	\N	\N
+2528	1018	131	641	\N	\N
+2529	3997	176	1338	\N	\N
+2530	2371	51	1195	\N	\N
+2531	817	176	923	\N	\N
+2532	5551	37	989	\N	\N
+2533	2476	140	1106	\N	\N
+2534	1812	147	941	\N	\N
+2535	288	122	1152	\N	\N
+2536	3754	24	684	\N	\N
+2537	5412	139	918	\N	\N
+2538	1621	176	1010	\N	\N
+2539	1964	142	1298	\N	\N
+2540	4079	2	1154	\N	\N
+2541	5472	86	941	\N	\N
+2542	2233	62	1006	\N	\N
+2543	4428	204	1307	\N	\N
+2544	670	62	1195	\N	\N
+2545	4027	181	517	\N	\N
+2546	877	156	856	\N	\N
+2547	1883	19	791	\N	\N
+2548	915	62	918	\N	\N
+2549	676	51	1096	\N	\N
+2550	1130	51	684	\N	\N
+2551	5566	179	1338	\N	\N
+2552	477	204	1199	\N	\N
+2553	3609	194	693	\N	\N
+2554	1757	163	665	\N	\N
+2555	1719	32	637	\N	\N
+2556	2165	176	829	\N	\N
+2557	4439	44	656	\N	\N
+2558	776	62	1281	\N	\N
+2559	1579	51	156	\N	\N
+2560	219	62	1043	\N	\N
+2561	2185	51	1249	\N	\N
+2562	599	51	178	\N	\N
+2563	1150	19	684	\N	\N
+2564	2288	51	937	\N	\N
+2565	1454	68	861	\N	\N
+2566	693	62	1411	\N	\N
+2567	1565	62	1084	\N	\N
+2568	2117	174	1307	\N	\N
+2569	1799	51	684	\N	\N
+2570	5545	134	1239	\N	\N
+2571	2766	51	1184	\N	\N
+2572	4564	51	684	\N	\N
+2573	4838	51	1281	\N	\N
+2574	2452	74	1542	\N	\N
+2575	1736	167	1421	\N	\N
+2576	2149	178	695	\N	\N
+2577	737	198	665	\N	\N
+2578	4042	126	648	\N	\N
+2579	252	13	1281	\N	\N
+2580	5410	51	937	\N	\N
+2581	4534	51	1298	\N	\N
+2582	839	37	718	\N	\N
+2583	1907	59	937	\N	\N
+2584	3809	13	1222	\N	\N
+2585	4526	62	605	\N	\N
+2586	915	166	941	\N	\N
+2587	234	62	656	\N	\N
+2588	2782	32	684	\N	\N
+2589	5357	68	578	\N	\N
+2590	350	176	862	\N	\N
+2591	383	46	1184	\N	\N
+2592	4568	51	684	\N	\N
+2593	2168	68	531	\N	\N
+2594	5041	51	1298	\N	\N
+2595	3812	62	1428	\N	\N
+2596	2324	22	937	\N	\N
+2598	698	181	1353	\N	\N
+2599	2142	173	656	\N	\N
+2600	1916	145	894	\N	\N
+2601	2416	2	1281	\N	\N
+2602	4040	62	1481	\N	\N
+2603	915	68	907	\N	\N
+2604	975	176	693	\N	\N
+2605	3796	176	533	\N	\N
+2606	5488	51	1006	\N	\N
+2607	3971	51	893	\N	\N
+2608	4594	176	451	\N	\N
+2609	498	208	1295	\N	\N
+2610	2169	62	1480	\N	\N
+2611	5414	51	1184	\N	\N
+2612	1661	47	1481	\N	\N
+2613	4432	51	1335	\N	\N
+2614	2235	68	941	\N	\N
+2615	249	154	1281	\N	\N
+2616	4316	51	860	\N	\N
+2617	4453	3	1133	\N	\N
+2618	2491	201	771	\N	\N
+2619	1359	35	1424	\N	\N
+2620	5339	51	684	\N	\N
+2621	4363	51	791	\N	\N
+2622	2525	176	994	\N	\N
+2623	249	139	1281	\N	\N
+2624	2133	62	918	\N	\N
+2625	1196	62	1135	\N	\N
+2626	1457	145	861	\N	\N
+2627	1761	135	1079	\N	\N
+2628	2510	201	1338	\N	\N
+2629	4929	62	1281	\N	\N
+2630	3728	79	370	\N	\N
+2631	805	9	1140	\N	\N
+2632	2727	176	671	\N	\N
+2633	2487	176	1338	\N	\N
+2634	5513	62	656	\N	\N
+2635	4012	51	1455	\N	\N
+2636	4366	51	1043	\N	\N
+2637	252	173	856	\N	\N
+2638	4369	62	860	\N	\N
+2639	5371	35	637	\N	\N
+2640	1503	147	1306	\N	\N
+2641	84	51	1362	\N	\N
+2642	197	51	684	\N	\N
+2643	776	62	1389	\N	\N
+2644	1355	125	858	\N	\N
+2645	1138	58	1133	\N	\N
+2646	4288	48	1084	\N	\N
+2647	4701	135	1152	\N	\N
+2648	1057	181	895	\N	\N
+2649	4486	62	1281	\N	\N
+2650	3811	51	1122	\N	\N
+2651	3864	135	1516	\N	\N
+2652	5028	95	1262	\N	\N
+2653	4005	51	1455	\N	\N
+2654	1808	68	214	\N	\N
+2655	3864	140	1367	\N	\N
+2656	1578	51	250	\N	\N
+2657	174	176	334	\N	\N
+2658	1724	62	1006	\N	\N
+2659	899	62	1043	\N	\N
+2660	2016	51	937	\N	\N
+2661	1100	179	1154	\N	\N
+2662	2238	62	656	\N	\N
+2663	1406	62	1411	\N	\N
+2664	2373	19	1481	\N	\N
+2665	936	131	856	\N	\N
+2666	4536	13	656	\N	\N
+2667	4114	176	665	\N	\N
+2668	975	22	1195	\N	\N
+2669	7	181	1307	\N	\N
+2670	1897	51	76	\N	\N
+2671	2568	32	1075	\N	\N
+2672	87	59	1195	\N	\N
+2673	4318	212	1463	\N	\N
+2674	4725	140	733	\N	\N
+2675	1152	176	1046	\N	\N
+2676	609	46	856	\N	\N
+2677	141	176	437	\N	\N
+2678	3811	51	791	\N	\N
+2679	5015	176	1307	\N	\N
+2680	1085	62	656	\N	\N
+2681	4857	140	891	\N	\N
+2682	965	204	656	\N	\N
+2683	5459	58	73	\N	\N
+2684	1851	51	656	\N	\N
+2685	4042	126	1051	\N	\N
+2686	612	173	656	\N	\N
+2687	492	68	692	\N	\N
+2688	1149	13	1298	\N	\N
+2689	1272	62	937	\N	\N
+2690	1665	176	1286	\N	\N
+2691	2402	176	1190	\N	\N
+2692	1812	68	941	\N	\N
+2693	1527	19	768	\N	\N
+2694	172	62	351	\N	\N
+2695	4169	62	684	\N	\N
+2696	1512	62	1481	\N	\N
+2697	3595	86	941	\N	\N
+2698	1787	15	825	\N	\N
+2699	4564	51	1335	\N	\N
+2700	4205	62	789	\N	\N
+2701	4848	188	1488	\N	\N
+2702	1304	13	656	\N	\N
+2703	5127	135	860	\N	\N
+2704	4292	181	1240	\N	\N
+2705	4380	51	684	\N	\N
+2706	1337	139	1281	\N	\N
+2707	5312	62	684	\N	\N
+2708	717	212	1412	\N	\N
+2709	4625	38	1486	\N	\N
+2710	605	179	511	\N	\N
+2711	4847	51	1481	\N	\N
+2712	1751	4	1465	\N	\N
+2713	4368	133	1298	\N	\N
+2714	5127	135	1043	\N	\N
+2715	1466	51	1335	\N	\N
+2716	2468	69	692	\N	\N
+2717	840	62	1057	\N	\N
+2718	1099	51	1367	\N	\N
+2719	1255	62	684	\N	\N
+2720	5244	201	1011	\N	\N
+2721	5139	47	1335	\N	\N
+2722	211	51	1424	\N	\N
+2723	4090	13	1455	\N	\N
+2724	190	51	726	\N	\N
+2725	1827	122	1336	\N	\N
+2726	4199	194	531	\N	\N
+2727	4855	135	937	\N	\N
+2728	2264	51	1298	\N	\N
+2729	1807	62	860	\N	\N
+2730	2246	83	1483	\N	\N
+2731	1034	199	220	\N	\N
+2732	480	62	1184	\N	\N
+2733	4268	135	1298	\N	\N
+2734	1031	211	937	\N	\N
+2735	1053	176	1010	\N	\N
+2736	933	140	1152	\N	\N
+2737	85	87	531	\N	\N
+2738	2510	62	989	\N	\N
+2739	1018	133	910	\N	\N
+2740	547	140	1288	\N	\N
+2741	4412	51	1335	\N	\N
+2742	4985	51	1455	\N	\N
+2743	2581	58	318	\N	\N
+2744	4460	140	743	\N	\N
+2745	1342	86	54	\N	\N
+2746	350	86	922	\N	\N
+2747	1112	51	60	\N	\N
+2748	5402	48	1239	\N	\N
+2749	4926	176	1010	\N	\N
+2750	5554	68	1306	\N	\N
+2751	4414	43	718	\N	\N
+2752	4229	51	918	\N	\N
+2753	2226	51	1253	\N	\N
+2754	1429	147	1306	\N	\N
+2755	2770	176	1529	\N	\N
+2756	2093	37	937	\N	\N
+2757	2632	176	579	\N	\N
+2758	1278	134	937	\N	\N
+2759	5086	68	185	\N	\N
+2760	340	47	1239	\N	\N
+2761	1326	135	827	\N	\N
+2762	1407	62	1411	\N	\N
+2763	1944	115	864	\N	\N
+2764	4708	122	918	\N	\N
+2765	3817	51	791	\N	\N
+2766	1611	62	1006	\N	\N
+2767	4901	179	1338	\N	\N
+2768	4299	176	1338	\N	\N
+2769	1719	35	1071	\N	\N
+2770	3894	47	1184	\N	\N
+2771	885	133	641	\N	\N
+2772	298	62	860	\N	\N
+2773	481	173	941	\N	\N
+2774	46	37	1184	\N	\N
+2775	4261	201	683	\N	\N
+2776	539	81	488	\N	\N
+2777	1753	20	529	\N	\N
+2778	4115	62	467	\N	\N
+2779	1343	176	500	\N	\N
+2780	692	167	693	\N	\N
+2781	2291	212	436	\N	\N
+2782	1027	160	342	\N	\N
+2783	4681	190	892	\N	\N
+2784	930	212	863	\N	\N
+2785	4608	176	420	\N	\N
+2786	1774	176	1307	\N	\N
+2787	2540	201	1563	\N	\N
+2788	2236	181	516	\N	\N
+2789	2316	179	863	\N	\N
+2790	692	176	693	\N	\N
+2791	1668	62	1122	\N	\N
+2792	161	212	24	\N	\N
+2793	828	176	1442	\N	\N
+2794	245	163	1307	\N	\N
+2795	1593	62	1281	\N	\N
+2796	4075	59	1195	\N	\N
+2797	2781	27	1195	\N	\N
+2798	4141	15	1152	\N	\N
+2799	2402	176	1139	\N	\N
+2800	1866	32	989	\N	\N
+2801	1307	189	1491	\N	\N
+2802	327	176	1005	\N	\N
+2803	4412	51	937	\N	\N
+2804	4583	35	645	\N	\N
+2805	4249	62	1075	\N	\N
+2806	4738	67	692	\N	\N
+2807	4337	51	1239	\N	\N
+2808	2190	19	744	\N	\N
+2809	1866	51	1075	\N	\N
+2810	2479	176	1338	\N	\N
+2811	2432	51	641	\N	\N
+2812	1560	75	441	\N	\N
+2813	2558	67	1198	\N	\N
+2814	4532	162	1195	\N	\N
+2815	1333	62	1348	\N	\N
+2816	1629	176	944	\N	\N
+2817	4329	176	665	\N	\N
+2818	4618	187	1430	\N	\N
+2819	4292	51	746	\N	\N
+2820	4250	51	791	\N	\N
+2821	4530	32	656	\N	\N
+2822	1673	62	1281	\N	\N
+2823	4092	176	795	\N	\N
+2824	5397	111	941	\N	\N
+2825	4727	139	1281	\N	\N
+2826	5050	51	71	\N	\N
+2827	2344	51	1513	\N	\N
+2828	864	13	1281	\N	\N
+2829	1372	147	1296	\N	\N
+2830	5220	51	1043	\N	\N
+2831	4356	178	1507	\N	\N
+2832	4240	62	989	\N	\N
+2833	1593	181	1307	\N	\N
+2834	4559	178	533	\N	\N
+2835	622	176	965	\N	\N
+2836	4162	170	531	\N	\N
+2837	1066	51	1455	\N	\N
+2838	2488	37	1084	\N	\N
+2839	2181	51	1335	\N	\N
+2840	5371	51	1249	\N	\N
+2841	1435	35	1272	\N	\N
+2842	2147	102	1084	\N	\N
+2843	1614	44	1281	\N	\N
+2844	1522	51	181	\N	\N
+2845	1269	51	312	\N	\N
+2846	309	51	1184	\N	\N
+2847	3948	134	798	\N	\N
+2848	1109	62	1367	\N	\N
+2849	5340	176	1217	\N	\N
+2850	4379	51	684	\N	\N
+2851	1198	19	1481	\N	\N
+2852	350	147	922	\N	\N
+2853	5141	154	991	\N	\N
+2854	748	176	1412	\N	\N
+2855	985	51	989	\N	\N
+2856	4387	134	1071	\N	\N
+2857	996	212	1199	\N	\N
+2858	4034	163	1484	\N	\N
+2859	2369	51	1481	\N	\N
+2860	1105	51	684	\N	\N
+2861	2552	178	554	\N	\N
+2862	1408	35	1272	\N	\N
+2863	1068	176	1307	\N	\N
+2864	2048	4	1004	\N	\N
+2865	4883	62	1006	\N	\N
+2866	4009	176	1561	\N	\N
+2867	4220	68	522	\N	\N
+2868	452	51	1281	\N	\N
+2869	3690	111	473	\N	\N
+2870	78	32	1274	\N	\N
+2871	1388	51	1455	\N	\N
+2872	4036	163	1307	\N	\N
+2873	221	62	860	\N	\N
+2874	4126	177	1367	\N	\N
+2875	930	197	656	\N	\N
+2876	4876	13	989	\N	\N
+2877	781	51	1128	\N	\N
+2878	803	51	656	\N	\N
+2879	2249	166	944	\N	\N
+2880	341	131	1247	\N	\N
+2881	930	137	656	\N	\N
+2882	1017	103	1307	\N	\N
+2883	4471	51	1272	\N	\N
+2884	250	19	1281	\N	\N
+2885	4478	62	918	\N	\N
+2886	2633	176	684	\N	\N
+2887	637	62	1075	\N	\N
+2888	1677	176	804	\N	\N
+2889	5167	51	611	\N	\N
+2890	5115	51	1448	\N	\N
+2891	54	37	1298	\N	\N
+2892	1125	142	856	\N	\N
+2893	4134	212	863	\N	\N
+2894	4403	51	937	\N	\N
+2895	1090	179	1255	\N	\N
+2896	554	171	1240	\N	\N
+2897	4583	35	911	\N	\N
+2898	104	62	1043	\N	\N
+2899	3739	51	280	\N	\N
+2900	5067	173	1370	\N	\N
+2901	4779	199	1408	\N	\N
+2902	4037	176	693	\N	\N
+2903	3879	135	1195	\N	\N
+2904	1424	186	441	\N	\N
+2905	932	179	1240	\N	\N
+2906	205	179	480	\N	\N
+2907	504	74	1542	\N	\N
+2908	5218	68	529	\N	\N
+2909	2753	181	693	\N	\N
+2910	4864	133	1392	\N	\N
+2911	931	166	944	\N	\N
+2912	2349	176	1199	\N	\N
+2913	1445	67	692	\N	\N
+2914	5287	58	804	\N	\N
+2915	2179	52	791	\N	\N
+2916	1394	62	553	\N	\N
+2917	557	62	1253	\N	\N
+2918	4721	58	656	\N	\N
+2919	5369	62	1281	\N	\N
+2920	5157	181	1048	\N	\N
+2921	4484	51	641	\N	\N
+2922	5064	133	641	\N	\N
+2923	238	62	684	\N	\N
+2924	777	51	1014	\N	\N
+2925	1888	51	1335	\N	\N
+2926	5152	51	684	\N	\N
+2927	367	176	1307	\N	\N
+2928	2325	127	161	\N	\N
+2929	5092	154	1362	\N	\N
+2930	5373	32	656	\N	\N
+2931	1376	176	834	\N	\N
+2932	2245	68	942	\N	\N
+2933	1085	62	918	\N	\N
+2934	4482	154	1513	\N	\N
+2935	1167	135	1335	\N	\N
+2936	2441	51	1006	\N	\N
+2937	2029	51	1367	\N	\N
+2938	4117	62	656	\N	\N
+2939	1487	149	1063	\N	\N
+2940	2079	167	1370	\N	\N
+2941	1326	135	749	\N	\N
+2942	4958	69	941	\N	\N
+2943	4252	176	1320	\N	\N
+2944	1168	176	1418	\N	\N
+2945	4112	176	1338	\N	\N
+2946	2278	51	1281	\N	\N
+2947	205	179	466	\N	\N
+2948	2136	185	665	\N	\N
+2949	3608	68	941	\N	\N
+2950	3956	181	863	\N	\N
+2951	1712	112	533	\N	\N
+2952	103	62	1239	\N	\N
+2953	4606	176	1527	\N	\N
+2954	934	176	665	\N	\N
+2955	4996	179	1338	\N	\N
+2956	1148	62	1335	\N	\N
+2957	872	51	1281	\N	\N
+2958	2111	212	1154	\N	\N
+2959	3710	176	1112	\N	\N
+2960	2507	19	989	\N	\N
+2961	3667	181	1317	\N	\N
+2962	1539	62	860	\N	\N
+2963	741	51	69	\N	\N
+2964	2336	176	1199	\N	\N
+2965	710	62	684	\N	\N
+2966	103	130	916	\N	\N
+2967	4530	35	1298	\N	\N
+2968	1510	37	607	\N	\N
+2969	2047	59	836	\N	\N
+2970	4349	194	693	\N	\N
+2971	2598	176	669	\N	\N
+2972	899	212	1044	\N	\N
+2973	4008	176	1561	\N	\N
+2974	1043	176	795	\N	\N
+2975	164	176	913	\N	\N
+2976	5051	51	937	\N	\N
+2977	978	176	795	\N	\N
+2978	999	51	937	\N	\N
+2979	397	62	656	\N	\N
+2980	2618	176	944	\N	\N
+2981	1562	41	726	\N	\N
+2982	5157	74	684	\N	\N
+2983	5103	51	684	\N	\N
+2984	4530	35	1006	\N	\N
+2985	3884	154	664	\N	\N
+2986	4997	212	809	\N	\N
+2987	4302	62	1043	\N	\N
+2988	1078	176	564	\N	\N
+2989	1376	176	656	\N	\N
+2990	2595	176	749	\N	\N
+2991	1532	176	1006	\N	\N
+2992	1018	133	1281	\N	\N
+2993	955	35	656	\N	\N
+2994	5293	15	1455	\N	\N
+2995	1986	51	937	\N	\N
+2996	1543	51	1043	\N	\N
+2997	3770	176	1046	\N	\N
+2998	203	179	584	\N	\N
+2999	988	38	656	\N	\N
+3000	4516	58	918	\N	\N
+3001	357	51	1216	\N	\N
+3002	652	212	809	\N	\N
+3003	4141	15	529	\N	\N
+3004	5026	212	1351	\N	\N
+3005	3623	62	1043	\N	\N
+3006	4876	13	656	\N	\N
+3007	561	176	1046	\N	\N
+3008	868	51	352	\N	\N
+3009	3862	74	1006	\N	\N
+3010	511	51	989	\N	\N
+3011	2243	62	1184	\N	\N
+3012	2258	162	723	\N	\N
+3013	799	37	1281	\N	\N
+3014	1532	171	698	\N	\N
+3015	4854	68	692	\N	\N
+3016	1193	133	1281	\N	\N
+3017	5270	51	937	\N	\N
+3018	4180	66	649	\N	\N
+3019	189	51	4	\N	\N
+3020	3976	179	944	\N	\N
+3021	4843	176	1412	\N	\N
+3022	1284	62	1084	\N	\N
+3023	5270	58	1122	\N	\N
+3024	2274	62	1298	\N	\N
+3025	3786	79	693	\N	\N
+3026	291	62	1298	\N	\N
+3027	2374	51	726	\N	\N
+3028	1277	51	1510	\N	\N
+3029	4215	74	656	\N	\N
+3030	2122	19	656	\N	\N
+3031	172	62	351	\N	\N
+3032	66	134	937	\N	\N
+3033	211	51	635	\N	\N
+3034	796	147	941	\N	\N
+3035	5119	181	923	\N	\N
+3036	400	62	1298	\N	\N
+3037	5449	212	454	\N	\N
+3038	154	62	1335	\N	\N
+3039	5390	147	1306	\N	\N
+3040	169	62	529	\N	\N
+3041	1547	176	693	\N	\N
+3042	3949	62	684	\N	\N
+3043	4342	19	989	\N	\N
+3044	5447	212	809	\N	\N
+3045	1635	51	989	\N	\N
+3046	4833	179	168	\N	\N
+3047	619	19	684	\N	\N
+3048	3952	187	148	\N	\N
+3049	3858	135	1084	\N	\N
+3050	3785	176	621	\N	\N
+3051	1190	37	656	\N	\N
+3052	5525	62	989	\N	\N
+3053	602	37	937	\N	\N
+3054	5167	51	860	\N	\N
+3055	395	37	656	\N	\N
+3056	4433	51	684	\N	\N
+3057	4232	51	918	\N	\N
+3058	1699	62	1239	\N	\N
+3059	2378	69	233	\N	\N
+3060	921	147	937	\N	\N
+3061	16	212	684	\N	\N
+3062	1958	19	918	\N	\N
+3063	1013	67	187	\N	\N
+3064	612	204	1209	\N	\N
+3065	749	19	915	\N	\N
+3066	1394	75	477	\N	\N
+3067	5372	35	1272	\N	\N
+3068	1378	51	1152	\N	\N
+3069	484	86	13	\N	\N
+3070	2142	19	791	\N	\N
+3071	488	62	236	\N	\N
+3072	3586	51	1298	\N	\N
+3073	5496	51	971	\N	\N
+3074	396	62	1298	\N	\N
+3075	3797	51	1536	\N	\N
+3076	610	32	656	\N	\N
+3077	1286	37	289	\N	\N
+3078	5106	204	665	\N	\N
+3079	1664	62	1122	\N	\N
+3080	990	186	1046	\N	\N
+3081	247	163	1307	\N	\N
+3082	3637	176	1335	\N	\N
+3083	4055	62	684	\N	\N
+3084	4058	62	529	\N	\N
+3085	3681	176	1367	\N	\N
+3086	5021	62	860	\N	\N
+3087	938	51	169	\N	\N
+3088	184	62	1335	\N	\N
+3089	156	62	1428	\N	\N
+3090	3665	154	1556	\N	\N
+3091	4751	135	604	\N	\N
+3092	2395	62	1335	\N	\N
+3093	3660	197	1075	\N	\N
+3094	2631	212	1240	\N	\N
+3095	2252	147	879	\N	\N
+3096	3894	204	1199	\N	\N
+3097	4814	51	1195	\N	\N
+3098	1615	51	1281	\N	\N
+3099	43	7	1337	\N	\N
+3100	4931	51	1362	\N	\N
+3101	4404	51	937	\N	\N
+3102	4864	133	757	\N	\N
+3103	4244	176	1041	\N	\N
+3104	1822	48	1502	\N	\N
+3105	1742	189	1561	\N	\N
+3106	1137	44	1493	\N	\N
+3107	896	212	441	\N	\N
+3108	4381	51	684	\N	\N
+3109	1026	179	465	\N	\N
+3110	4509	37	1084	\N	\N
+3111	1112	51	65	\N	\N
+3112	5201	201	934	\N	\N
+3113	1328	179	494	\N	\N
+3114	4830	135	918	\N	\N
+3115	4941	62	893	\N	\N
+3116	4137	67	808	\N	\N
+3117	3597	204	630	\N	\N
+3118	4857	176	1331	\N	\N
+3119	5319	51	684	\N	\N
+3120	5344	51	937	\N	\N
+3121	1288	51	791	\N	\N
+3122	706	30	1502	\N	\N
+3123	1962	142	937	\N	\N
+3124	5548	140	1288	\N	\N
+3125	5457	176	726	\N	\N
+3126	2149	176	665	\N	\N
+3127	1532	45	1207	\N	\N
+3128	5140	62	918	\N	\N
+3129	4168	62	1195	\N	\N
+3130	4146	13	1298	\N	\N
+3131	4195	181	1043	\N	\N
+3132	4423	139	860	\N	\N
+3133	2102	51	1362	\N	\N
+3134	1781	51	1006	\N	\N
+3135	1868	176	863	\N	\N
+3136	1129	176	944	\N	\N
+3137	3739	51	1195	\N	\N
+3138	1035	171	1295	\N	\N
+3139	5305	62	1502	\N	\N
+3140	3938	155	1473	\N	\N
+3141	1267	51	684	\N	\N
+3142	1083	2	1086	\N	\N
+3143	5482	51	1298	\N	\N
+3144	2051	116	641	\N	\N
+3145	5243	200	665	\N	\N
+3146	5027	3	1195	\N	\N
+3147	4267	51	641	\N	\N
+3148	1187	176	1307	\N	\N
+3149	289	62	684	\N	\N
+3150	4336	212	1412	\N	\N
+3151	5284	51	1216	\N	\N
+3152	5544	106	1046	\N	\N
+3153	5167	51	501	\N	\N
+3154	4226	58	1075	\N	\N
+3155	4995	167	944	\N	\N
+3156	5538	185	561	\N	\N
+3157	1654	176	1286	\N	\N
+3158	311	212	1567	\N	\N
+3159	2616	176	1561	\N	\N
+3160	818	212	944	\N	\N
+3161	884	133	856	\N	\N
+3162	4193	45	937	\N	\N
+3163	2232	62	1335	\N	\N
+3164	888	156	856	\N	\N
+3165	1411	51	1006	\N	\N
+3166	4604	176	1469	\N	\N
+3167	558	19	315	\N	\N
+3168	70	179	1166	\N	\N
+3169	1565	176	502	\N	\N
+3170	2065	140	995	\N	\N
+3171	4145	140	856	\N	\N
+3172	641	212	612	\N	\N
+3173	4459	32	684	\N	\N
+3174	2040	62	656	\N	\N
+3175	2225	176	1307	\N	\N
+3176	1897	176	937	\N	\N
+3177	5254	51	937	\N	\N
+3178	909	201	934	\N	\N
+3179	1051	147	531	\N	\N
+3180	3874	51	1195	\N	\N
+3181	1616	62	1057	\N	\N
+3182	1435	48	1272	\N	\N
+3183	1501	212	438	\N	\N
+3184	5376	67	861	\N	\N
+3185	2347	140	746	\N	\N
+3186	3956	51	1043	\N	\N
+3187	1195	29	1455	\N	\N
+3188	164	176	1178	\N	\N
+3189	1078	201	1527	\N	\N
+3190	2526	176	1278	\N	\N
+3191	5234	51	383	\N	\N
+3192	4134	86	1009	\N	\N
+3193	1758	35	637	\N	\N
+3194	1813	181	517	\N	\N
+3195	51	67	941	\N	\N
+3196	3795	13	1043	\N	\N
+3197	5485	62	893	\N	\N
+3198	4379	51	937	\N	\N
+3199	5061	62	989	\N	\N
+3200	1532	176	1010	\N	\N
+3201	2354	176	1225	\N	\N
+3202	5067	62	1362	\N	\N
+3203	2022	51	1536	\N	\N
+3204	632	51	1513	\N	\N
+3205	1974	139	656	\N	\N
+3206	3952	187	206	\N	\N
+3207	2409	176	1077	\N	\N
+3208	3574	4	1461	\N	\N
+3209	205	179	455	\N	\N
+3210	3719	179	1154	\N	\N
+3211	1390	176	841	\N	\N
+3212	2014	134	984	\N	\N
+3213	1387	51	684	\N	\N
+3214	4551	43	1006	\N	\N
+3215	2632	176	494	\N	\N
+3216	446	186	441	\N	\N
+3217	5421	62	684	\N	\N
+3218	3651	32	656	\N	\N
+3219	3781	135	1210	\N	\N
+3220	1036	176	1481	\N	\N
+3221	5157	51	656	\N	\N
+3222	1515	187	133	\N	\N
+3223	255	133	1281	\N	\N
+3224	2588	51	937	\N	\N
+3225	1929	86	861	\N	\N
+3226	3686	176	665	\N	\N
+3227	5186	201	936	\N	\N
+3228	4249	51	1075	\N	\N
+3229	3772	85	1502	\N	\N
+3230	2332	176	641	\N	\N
+3231	4370	51	1043	\N	\N
+3232	78	51	645	\N	\N
+3233	4308	181	665	\N	\N
+3234	5074	91	664	\N	\N
+3235	3625	202	1101	\N	\N
+3236	1133	176	1077	\N	\N
+3237	4643	178	1089	\N	\N
+3238	539	165	664	\N	\N
+3239	5184	201	1564	\N	\N
+3240	1125	135	918	\N	\N
+3241	4713	190	892	\N	\N
+3242	2221	51	1152	\N	\N
+3243	2147	212	1154	\N	\N
+3244	1104	212	1240	\N	\N
+3245	3767	68	941	\N	\N
+3246	1662	62	1448	\N	\N
+3247	3675	181	1240	\N	\N
+3248	4680	167	176	\N	\N
+3249	4385	51	804	\N	\N
+3250	5048	67	493	\N	\N
+3251	4078	203	596	\N	\N
+3252	5486	51	1222	\N	\N
+3253	346	62	804	\N	\N
+3254	4200	135	1195	\N	\N
+3255	1680	62	1281	\N	\N
+3256	1999	134	645	\N	\N
+3257	960	203	1055	\N	\N
+3258	1589	37	641	\N	\N
+3259	70	179	1240	\N	\N
+3260	5230	51	818	\N	\N
+3261	2260	154	898	\N	\N
+3262	1025	51	1281	\N	\N
+3263	4403	51	684	\N	\N
+3264	1255	176	1338	\N	\N
+3265	3871	147	1306	\N	\N
+3266	233	62	656	\N	\N
+3267	5562	203	327	\N	\N
+3268	1475	58	656	\N	\N
+3269	54	37	791	\N	\N
+3270	1896	48	684	\N	\N
+3271	2105	86	1153	\N	\N
+3272	547	140	645	\N	\N
+3273	4459	35	1298	\N	\N
+3274	955	167	665	\N	\N
+3275	4650	176	1561	\N	\N
+3276	2611	175	863	\N	\N
+3277	3696	37	791	\N	\N
+3278	4979	203	228	\N	\N
+3279	1489	51	319	\N	\N
+3280	3590	204	1307	\N	\N
+3281	3739	51	196	\N	\N
+3282	5029	176	1298	\N	\N
+3283	715	212	684	\N	\N
+3284	4571	135	918	\N	\N
+3285	2775	176	1286	\N	\N
+3286	2191	51	856	\N	\N
+3287	4417	86	1420	\N	\N
+3404	2317	201	1563	\N	\N
+3288	1340	201	1484	\N	\N
+3289	80	51	529	\N	\N
+3290	4283	62	1335	\N	\N
+3291	1456	69	1088	\N	\N
+3292	249	154	735	\N	\N
+3293	1815	154	664	\N	\N
+3294	4927	176	1338	\N	\N
+3295	1817	181	1154	\N	\N
+3296	1639	37	1362	\N	\N
+3297	397	62	1298	\N	\N
+3298	1904	59	1195	\N	\N
+3299	395	37	1006	\N	\N
+3300	5572	181	584	\N	\N
+3301	578	111	863	\N	\N
+3302	2202	176	1240	\N	\N
+3303	1254	201	963	\N	\N
+3304	737	204	1307	\N	\N
+3305	4830	135	1184	\N	\N
+3306	4809	13	1222	\N	\N
+3307	1859	181	665	\N	\N
+3308	2149	46	918	\N	\N
+3309	5315	68	941	\N	\N
+3310	4323	58	684	\N	\N
+3311	1142	186	612	\N	\N
+3312	4405	51	1195	\N	\N
+3313	1111	51	1253	\N	\N
+3314	4234	51	1006	\N	\N
+3315	17	67	808	\N	\N
+3316	1435	48	1424	\N	\N
+3317	4298	51	1335	\N	\N
+3318	599	62	1335	\N	\N
+3319	2286	176	1476	\N	\N
+3320	721	181	1421	\N	\N
+3321	5379	176	665	\N	\N
+3322	5323	51	1006	\N	\N
+3323	4921	19	684	\N	\N
+3324	4560	51	1481	\N	\N
+3325	1072	62	656	\N	\N
+3326	4572	176	1455	\N	\N
+3327	4429	51	1281	\N	\N
+3328	1330	176	909	\N	\N
+3329	495	145	922	\N	\N
+3330	885	131	641	\N	\N
+3331	1089	136	656	\N	\N
+3332	1730	59	1335	\N	\N
+3333	4374	15	937	\N	\N
+3334	424	51	777	\N	\N
+3335	5434	51	937	\N	\N
+3336	1521	44	1455	\N	\N
+3337	4405	51	1335	\N	\N
+3338	333	94	742	\N	\N
+3339	127	212	1199	\N	\N
+3340	5319	51	1335	\N	\N
+3341	1953	140	1244	\N	\N
+3342	2776	51	791	\N	\N
+3343	268	51	656	\N	\N
+3344	436	58	1298	\N	\N
+3345	1788	51	1281	\N	\N
+3346	91	176	863	\N	\N
+3347	1552	181	863	\N	\N
+3348	1195	62	1298	\N	\N
+3349	3597	204	632	\N	\N
+3350	5567	51	1335	\N	\N
+3351	1033	202	512	\N	\N
+3352	4445	179	803	\N	\N
+3353	1443	51	918	\N	\N
+3354	3878	51	937	\N	\N
+3355	1470	2	531	\N	\N
+3356	249	163	1307	\N	\N
+3357	1284	12	1516	\N	\N
+3358	472	62	684	\N	\N
+3359	5501	47	1184	\N	\N
+3360	1463	105	628	\N	\N
+3361	4118	51	1043	\N	\N
+3362	2165	176	1114	\N	\N
+3363	630	134	1288	\N	\N
+3364	3986	62	1222	\N	\N
+3365	5355	179	1338	\N	\N
+3366	4254	51	989	\N	\N
+3367	1088	51	684	\N	\N
+3368	2436	44	1281	\N	\N
+3369	5372	51	766	\N	\N
+3370	4753	176	533	\N	\N
+3371	578	194	863	\N	\N
+3372	1598	145	531	\N	\N
+3373	2348	176	1307	\N	\N
+3374	4583	35	1272	\N	\N
+3375	2595	176	1505	\N	\N
+3376	350	181	642	\N	\N
+3377	5196	201	1563	\N	\N
+3378	1565	176	584	\N	\N
+3379	557	62	684	\N	\N
+3380	4672	51	1084	\N	\N
+3381	1950	62	684	\N	\N
+3382	3960	201	1338	\N	\N
+3383	5078	51	64	\N	\N
+3384	2151	212	1412	\N	\N
+3385	4674	62	1084	\N	\N
+3386	4928	68	531	\N	\N
+3387	1098	62	684	\N	\N
+3388	4	194	693	\N	\N
+3389	5308	22	1516	\N	\N
+3390	1190	37	1298	\N	\N
+3391	256	51	1006	\N	\N
+3392	4883	62	1298	\N	\N
+3393	2011	133	641	\N	\N
+3394	1530	51	1298	\N	\N
+3395	5063	123	516	\N	\N
+3396	1690	176	1139	\N	\N
+3397	1548	68	583	\N	\N
+3398	4190	35	1272	\N	\N
+3399	4757	51	1195	\N	\N
+3400	2216	44	860	\N	\N
+3401	2477	142	856	\N	\N
+3402	2182	176	1154	\N	\N
+3403	5055	146	861	\N	\N
+3405	1793	181	442	\N	\N
+3406	5427	140	1220	\N	\N
+3407	4491	181	1089	\N	\N
+3408	4631	62	1335	\N	\N
+3409	135	47	1184	\N	\N
+3410	4472	35	1274	\N	\N
+3411	4266	46	856	\N	\N
+3412	3877	59	1195	\N	\N
+3413	5266	19	1411	\N	\N
+3414	1539	44	552	\N	\N
+3415	4021	181	1334	\N	\N
+3416	5115	204	665	\N	\N
+3417	4234	51	656	\N	\N
+3418	4415	37	684	\N	\N
+3419	4569	62	1239	\N	\N
+3420	4967	69	1087	\N	\N
+3421	4810	51	1448	\N	\N
+3422	1206	69	692	\N	\N
+3423	2165	176	676	\N	\N
+3424	3615	176	1010	\N	\N
+3425	4999	159	910	\N	\N
+3426	232	186	665	\N	\N
+3427	90	37	333	\N	\N
+3428	250	154	734	\N	\N
+3429	335	95	606	\N	\N
+3430	1309	189	408	\N	\N
+3431	1548	86	861	\N	\N
+3432	2211	62	726	\N	\N
+3433	1419	201	795	\N	\N
+3434	1640	51	1006	\N	\N
+3435	1985	50	989	\N	\N
+3436	1223	15	1502	\N	\N
+3437	1154	58	937	\N	\N
+3438	3617	176	1274	\N	\N
+3439	160	212	863	\N	\N
+3440	4331	134	1335	\N	\N
+3441	779	51	1075	\N	\N
+3442	3705	176	904	\N	\N
+3443	1300	179	944	\N	\N
+3444	1784	51	1152	\N	\N
+3445	3803	176	1455	\N	\N
+3446	5316	68	941	\N	\N
+3447	678	51	151	\N	\N
+3448	427	51	1481	\N	\N
+3449	854	68	941	\N	\N
+3450	4933	139	1006	\N	\N
+3451	1589	181	1307	\N	\N
+3452	1539	62	485	\N	\N
+3453	5403	111	944	\N	\N
+3454	1893	51	937	\N	\N
+3455	873	62	860	\N	\N
+3456	2144	176	1033	\N	\N
+3457	327	176	917	\N	\N
+3458	5542	51	1281	\N	\N
+3459	3869	176	1412	\N	\N
+3460	289	62	937	\N	\N
+3461	708	212	472	\N	\N
+3462	4570	37	656	\N	\N
+3463	3859	58	656	\N	\N
+3464	1011	62	1006	\N	\N
+3465	965	181	919	\N	\N
+3466	829	18	971	\N	\N
+3467	5559	51	656	\N	\N
+3468	847	51	1298	\N	\N
+3469	830	51	740	\N	\N
+3470	5229	51	1481	\N	\N
+3471	3660	181	1307	\N	\N
+3472	5320	58	1411	\N	\N
+3473	168	176	524	\N	\N
+3474	1325	51	893	\N	\N
+3475	93	81	861	\N	\N
+3476	1595	147	537	\N	\N
+3477	4563	51	1481	\N	\N
+3478	5371	35	784	\N	\N
+3479	3587	204	1307	\N	\N
+3480	2548	108	1552	\N	\N
+3481	1455	194	693	\N	\N
+3482	4418	142	860	\N	\N
+3483	5549	51	893	\N	\N
+3484	106	181	517	\N	\N
+3485	778	181	461	\N	\N
+3486	5372	51	1272	\N	\N
+3487	5370	181	923	\N	\N
+3488	1045	86	692	\N	\N
+3489	4593	51	656	\N	\N
+3490	5167	51	516	\N	\N
+3491	2557	62	1298	\N	\N
+3492	156	51	1428	\N	\N
+3493	1065	51	1455	\N	\N
+3494	4343	136	656	\N	\N
+3495	2037	62	656	\N	\N
+3496	5512	212	693	\N	\N
+3497	4433	51	937	\N	\N
+3498	888	133	856	\N	\N
+3499	1613	51	1152	\N	\N
+3500	252	62	1281	\N	\N
+3501	746	181	1353	\N	\N
+3502	1596	171	652	\N	\N
+3503	1682	176	944	\N	\N
+3504	794	62	1502	\N	\N
+3505	127	102	918	\N	\N
+3506	3977	179	1199	\N	\N
+3507	2304	176	1363	\N	\N
+3508	1091	212	561	\N	\N
+3509	2263	62	1335	\N	\N
+3510	2104	62	1298	\N	\N
+3511	344	62	804	\N	\N
+3512	224	212	1085	\N	\N
+3513	931	68	941	\N	\N
+3514	1083	212	1412	\N	\N
+3515	930	181	944	\N	\N
+3516	4461	131	937	\N	\N
+3517	4246	51	1502	\N	\N
+3518	1256	51	263	\N	\N
+3519	4460	140	1150	\N	\N
+3520	5227	59	1075	\N	\N
+3521	256	51	656	\N	\N
+3522	1193	129	856	\N	\N
+3523	1682	62	1539	\N	\N
+3524	610	32	1184	\N	\N
+3525	3948	176	1218	\N	\N
+3526	4700	147	692	\N	\N
+3527	245	160	287	\N	\N
+3528	257	69	1087	\N	\N
+3529	486	212	1370	\N	\N
+3530	5548	140	645	\N	\N
+3531	3601	86	1306	\N	\N
+3532	5217	147	531	\N	\N
+3533	466	145	631	\N	\N
+3534	4687	62	462	\N	\N
+3535	888	2	856	\N	\N
+3536	4553	51	684	\N	\N
+3537	4341	19	989	\N	\N
+3538	1435	35	911	\N	\N
+3539	5169	51	1281	\N	\N
+3540	4628	140	937	\N	\N
+3541	4156	19	1298	\N	\N
+3542	4004	51	1455	\N	\N
+3543	306	181	1089	\N	\N
+3544	5259	62	893	\N	\N
+3545	2474	51	1367	\N	\N
+3546	824	62	1057	\N	\N
+3547	5352	51	1152	\N	\N
+3548	2050	181	1338	\N	\N
+3549	2619	181	1353	\N	\N
+3550	3775	51	893	\N	\N
+3551	325	51	83	\N	\N
+3552	1626	176	989	\N	\N
+3553	453	163	1362	\N	\N
+3554	1751	4	1162	\N	\N
+3555	3879	51	937	\N	\N
+3556	179	139	1281	\N	\N
+3557	5422	175	483	\N	\N
+3558	4551	43	718	\N	\N
+3559	4820	14	516	\N	\N
+3560	1562	59	971	\N	\N
+3561	4028	181	901	\N	\N
+3562	1015	62	529	\N	\N
+3563	1935	51	431	\N	\N
+3564	4609	176	830	\N	\N
+3565	871	51	856	\N	\N
+3566	4527	32	489	\N	\N
+3567	2419	62	1411	\N	\N
+3568	2053	51	1043	\N	\N
+3569	788	185	944	\N	\N
+3570	4368	181	863	\N	\N
+3571	3952	187	299	\N	\N
+3572	4846	129	1039	\N	\N
+3573	1260	181	56	\N	\N
+3574	1193	157	1281	\N	\N
+3575	9	62	1006	\N	\N
+3576	2582	68	692	\N	\N
+3577	3944	212	1412	\N	\N
+3578	4387	134	911	\N	\N
+3579	5495	13	656	\N	\N
+3580	1168	176	1043	\N	\N
+3581	548	176	923	\N	\N
+3582	164	139	911	\N	\N
+3583	1793	51	460	\N	\N
+3584	4775	19	804	\N	\N
+3585	4453	3	772	\N	\N
+3586	107	181	502	\N	\N
+3587	4133	51	1006	\N	\N
+3588	4873	13	836	\N	\N
+3589	481	147	941	\N	\N
+3590	587	201	1563	\N	\N
+3591	1590	181	252	\N	\N
+3592	339	127	993	\N	\N
+3593	2170	212	1199	\N	\N
+3594	2013	176	1490	\N	\N
+3595	2052	48	1479	\N	\N
+3596	2282	204	1089	\N	\N
+3597	2255	176	621	\N	\N
+3598	1780	68	1306	\N	\N
+3599	723	176	665	\N	\N
+3600	2354	176	839	\N	\N
+3601	1515	187	217	\N	\N
+3602	2351	176	1199	\N	\N
+3603	1142	179	1255	\N	\N
+3604	1952	62	709	\N	\N
+3605	3591	204	693	\N	\N
+3606	1208	68	692	\N	\N
+3607	131	62	1043	\N	\N
+3608	211	51	1272	\N	\N
+3609	1874	13	1298	\N	\N
+3610	4461	176	441	\N	\N
+3611	1265	51	893	\N	\N
+3612	3951	37	1239	\N	\N
+3613	4458	51	937	\N	\N
+3614	799	67	941	\N	\N
+3615	957	111	941	\N	\N
+3616	1040	51	656	\N	\N
+3617	2225	176	1298	\N	\N
+3618	1945	51	937	\N	\N
+3619	5408	181	1240	\N	\N
+3620	532	51	276	\N	\N
+3621	5444	181	1199	\N	\N
+3622	2545	176	1046	\N	\N
+3623	4547	51	937	\N	\N
+3624	5112	181	923	\N	\N
+3625	5561	51	684	\N	\N
+3626	1345	176	704	\N	\N
+3627	1403	212	1567	\N	\N
+3628	4030	181	1043	\N	\N
+3629	5488	51	656	\N	\N
+3630	3710	176	706	\N	\N
+3631	1073	212	1267	\N	\N
+3632	3623	114	1043	\N	\N
+3633	4750	147	1254	\N	\N
+3634	187	58	374	\N	\N
+3635	5144	68	861	\N	\N
+3636	2486	181	1046	\N	\N
+3637	1034	199	341	\N	\N
+3638	588	135	1195	\N	\N
+3639	1139	181	1161	\N	\N
+3640	798	62	918	\N	\N
+3641	4468	176	269	\N	\N
+3642	2338	47	968	\N	\N
+3643	1324	93	1483	\N	\N
+3644	247	161	1184	\N	\N
+3645	3921	67	693	\N	\N
+3646	3742	51	937	\N	\N
+3647	277	86	813	\N	\N
+3648	965	181	666	\N	\N
+3649	4083	37	1195	\N	\N
+3650	1365	51	684	\N	\N
+3651	3780	51	1464	\N	\N
+3652	4006	51	1184	\N	\N
+3653	1218	62	1084	\N	\N
+3654	660	139	1062	\N	\N
+3655	4973	149	1153	\N	\N
+3656	3900	31	893	\N	\N
+3657	892	13	656	\N	\N
+3658	4806	13	490	\N	\N
+3659	2062	51	1367	\N	\N
+3660	1270	152	606	\N	\N
+3661	78	51	637	\N	\N
+3662	4308	155	1185	\N	\N
+3663	4867	37	383	\N	\N
+3664	1615	44	989	\N	\N
+3665	1321	51	1335	\N	\N
+3666	1992	19	684	\N	\N
+3667	4612	176	562	\N	\N
+3668	4028	68	692	\N	\N
+3669	5020	167	1517	\N	\N
+3670	3881	59	1195	\N	\N
+3671	2141	19	1298	\N	\N
+3672	1381	19	656	\N	\N
+3673	1162	51	1006	\N	\N
+3674	45	37	918	\N	\N
+3675	3900	62	893	\N	\N
+3676	918	147	941	\N	\N
+3677	398	51	94	\N	\N
+3678	2182	62	804	\N	\N
+3679	720	212	1338	\N	\N
+3680	1566	19	1281	\N	\N
+3681	815	62	918	\N	\N
+3682	1829	176	1368	\N	\N
+3683	4888	51	1362	\N	\N
+3684	1494	62	1160	\N	\N
+3685	363	158	606	\N	\N
+3686	2284	204	944	\N	\N
+3687	1704	35	1424	\N	\N
+3688	1932	32	575	\N	\N
+3689	737	51	1362	\N	\N
+3690	125	171	987	\N	\N
+3691	643	51	592	\N	\N
+3692	4527	32	576	\N	\N
+3693	1038	32	1481	\N	\N
+3694	4390	32	937	\N	\N
+3695	3657	176	895	\N	\N
+3696	4966	95	1084	\N	\N
+3697	221	62	1152	\N	\N
+3698	802	37	1006	\N	\N
+3699	164	139	1071	\N	\N
+3700	5060	69	720	\N	\N
+3701	5016	176	661	\N	\N
+3702	2126	128	1551	\N	\N
+3703	4708	47	1174	\N	\N
+3704	1025	51	989	\N	\N
+3705	459	203	693	\N	\N
+3706	4898	62	856	\N	\N
+3707	592	179	1064	\N	\N
+3708	455	154	1362	\N	\N
+3709	3721	203	693	\N	\N
+3710	5231	51	1195	\N	\N
+3711	4976	179	1154	\N	\N
+3712	4808	89	267	\N	\N
+3713	5508	62	684	\N	\N
+3714	4408	181	1561	\N	\N
+3715	1995	176	1297	\N	\N
+3716	5201	201	1005	\N	\N
+3717	1090	179	1338	\N	\N
+3718	544	131	1356	\N	\N
+3719	3683	51	641	\N	\N
+3720	1168	176	693	\N	\N
+3721	4161	62	656	\N	\N
+3722	4017	51	1335	\N	\N
+3723	639	197	684	\N	\N
+3724	286	69	941	\N	\N
+3725	840	62	718	\N	\N
+3726	1205	69	941	\N	\N
+3727	3577	35	791	\N	\N
+3728	2041	181	1199	\N	\N
+3729	3879	59	1195	\N	\N
+3730	1000	51	1481	\N	\N
+3731	251	163	1235	\N	\N
+3732	4035	68	30	\N	\N
+3733	2260	19	989	\N	\N
+3734	3992	13	937	\N	\N
+3735	4229	51	1075	\N	\N
+3736	97	135	995	\N	\N
+3737	2084	51	1481	\N	\N
+3738	1098	62	1335	\N	\N
+3739	3988	135	1235	\N	\N
+3740	2605	68	531	\N	\N
+3741	4613	176	1010	\N	\N
+3742	4347	194	693	\N	\N
+3743	2606	139	1239	\N	\N
+3744	1392	62	501	\N	\N
+3745	309	51	1362	\N	\N
+3746	4520	105	864	\N	\N
+3747	4667	51	1184	\N	\N
+3748	2367	146	1557	\N	\N
+3749	269	86	1420	\N	\N
+3750	4467	176	1286	\N	\N
+3751	2600	2	1335	\N	\N
+3752	3745	51	285	\N	\N
+3753	5371	35	911	\N	\N
+3754	2465	181	1421	\N	\N
+3755	4598	176	1449	\N	\N
+3756	1414	58	1298	\N	\N
+3757	5468	194	694	\N	\N
+3758	4554	163	665	\N	\N
+3759	1242	69	1375	\N	\N
+3760	4088	19	1455	\N	\N
+3761	1969	139	1298	\N	\N
+3762	3816	51	730	\N	\N
+3763	4176	51	1084	\N	\N
+3764	2257	62	1298	\N	\N
+3765	2010	51	804	\N	\N
+3766	348	176	1418	\N	\N
+3767	2335	51	989	\N	\N
+3768	3718	179	1154	\N	\N
+3769	5288	51	656	\N	\N
+3770	959	133	641	\N	\N
+3771	4180	66	1001	\N	\N
+3772	4432	51	1195	\N	\N
+3773	138	204	632	\N	\N
+3774	17	68	808	\N	\N
+3775	4480	51	1362	\N	\N
+3776	3713	179	944	\N	\N
+3777	1873	176	1359	\N	\N
+3778	1486	176	347	\N	\N
+3779	895	37	490	\N	\N
+3780	2595	176	827	\N	\N
+3781	893	19	656	\N	\N
+3782	1982	51	154	\N	\N
+3783	1630	176	1046	\N	\N
+3784	2144	176	676	\N	\N
+3785	432	212	533	\N	\N
+3786	4459	167	665	\N	\N
+3787	1134	62	1043	\N	\N
+3788	918	67	187	\N	\N
+3789	291	62	1006	\N	\N
+3790	1703	51	645	\N	\N
+3791	1006	74	1273	\N	\N
+3792	3658	176	1255	\N	\N
+3793	5159	142	989	\N	\N
+3794	3974	47	1239	\N	\N
+3795	1322	51	684	\N	\N
+3796	1383	51	1335	\N	\N
+3797	4598	176	1187	\N	\N
+3798	1141	51	656	\N	\N
+3799	658	135	1062	\N	\N
+3800	1811	58	1298	\N	\N
+3801	4293	51	937	\N	\N
+3802	5034	179	435	\N	\N
+3803	1214	62	860	\N	\N
+3804	1461	44	1298	\N	\N
+3805	2530	9	758	\N	\N
+3806	5548	140	1071	\N	\N
+3807	3662	51	1281	\N	\N
+3808	1616	62	1006	\N	\N
+3809	1087	178	863	\N	\N
+3810	3952	187	205	\N	\N
+3811	1054	51	1298	\N	\N
+3812	4187	181	1561	\N	\N
+3813	4003	163	1402	\N	\N
+3814	4297	62	937	\N	\N
+3815	4208	176	1020	\N	\N
+3816	4125	51	1228	\N	\N
+3817	1748	51	1075	\N	\N
+3818	421	37	684	\N	\N
+3819	522	51	1536	\N	\N
+3820	5210	51	1216	\N	\N
+3821	1985	50	1281	\N	\N
+3822	1682	197	684	\N	\N
+3823	537	51	684	\N	\N
+3824	329	51	1006	\N	\N
+3825	1432	201	820	\N	\N
+3826	1320	13	656	\N	\N
+3827	952	179	693	\N	\N
+3828	1882	176	913	\N	\N
+3829	2530	167	445	\N	\N
+3830	133	37	1043	\N	\N
+3831	2351	176	693	\N	\N
+3832	2051	173	424	\N	\N
+3833	4594	186	1492	\N	\N
+3834	5576	40	989	\N	\N
+3835	690	51	1335	\N	\N
+3836	209	62	490	\N	\N
+3837	4275	167	1257	\N	\N
+3838	2005	176	1307	\N	\N
+3839	4950	51	937	\N	\N
+3840	5190	201	890	\N	\N
+3841	4560	51	1195	\N	\N
+3842	1765	181	692	\N	\N
+3843	249	19	989	\N	\N
+3844	4127	51	1298	\N	\N
+3845	4593	51	1006	\N	\N
+3846	4160	124	684	\N	\N
+3847	2363	176	656	\N	\N
+3848	4707	127	34	\N	\N
+3849	4660	176	507	\N	\N
+3850	5290	15	791	\N	\N
+3851	1453	147	631	\N	\N
+3852	1533	37	825	\N	\N
+3853	1016	62	1335	\N	\N
+3854	665	139	1311	\N	\N
+3855	1316	176	533	\N	\N
+3856	4069	51	1335	\N	\N
+3857	2414	176	665	\N	\N
+3858	4064	35	1184	\N	\N
+3859	4626	181	895	\N	\N
+3860	225	212	1411	\N	\N
+3861	5548	140	787	\N	\N
+3862	3665	154	1298	\N	\N
+3863	1513	62	989	\N	\N
+3864	4808	19	131	\N	\N
+3865	1439	68	569	\N	\N
+3866	158	21	791	\N	\N
+3867	5288	51	1298	\N	\N
+3868	684	176	994	\N	\N
+3869	2112	208	1295	\N	\N
+3870	5167	51	602	\N	\N
+3871	5383	62	1281	\N	\N
+3872	2008	176	1046	\N	\N
+3873	5256	51	656	\N	\N
+3874	1598	147	31	\N	\N
+3875	112	62	1298	\N	\N
+3876	4381	51	937	\N	\N
+3877	209	37	860	\N	\N
+3878	5136	51	937	\N	\N
+3879	1798	176	1255	\N	\N
+3880	2004	176	665	\N	\N
+3881	1380	37	656	\N	\N
+3882	2173	62	1455	\N	\N
+3883	2488	37	937	\N	\N
+3884	5015	19	1298	\N	\N
+3885	1881	140	1178	\N	\N
+3886	501	51	1335	\N	\N
+3887	78	51	1272	\N	\N
+3888	4471	51	766	\N	\N
+3889	4244	176	764	\N	\N
+3890	1577	19	1481	\N	\N
+3891	4734	176	665	\N	\N
+3892	4816	62	119	\N	\N
+3893	5368	176	923	\N	\N
+3894	4877	51	1298	\N	\N
+3895	4222	68	29	\N	\N
+3896	1969	139	684	\N	\N
+3897	417	176	494	\N	\N
+3898	716	212	693	\N	\N
+3899	4857	176	856	\N	\N
+3900	656	51	1428	\N	\N
+3901	1982	51	158	\N	\N
+3902	3747	51	937	\N	\N
+3903	408	145	861	\N	\N
+3904	4244	176	854	\N	\N
+3905	5537	198	882	\N	\N
+3906	1523	194	698	\N	\N
+3907	132	13	525	\N	\N
+3908	2204	176	877	\N	\N
+3909	395	51	1298	\N	\N
+3910	5337	51	656	\N	\N
+3911	2268	140	918	\N	\N
+3912	2267	51	684	\N	\N
+3913	1715	32	529	\N	\N
+3914	4504	89	1528	\N	\N
+3915	1958	181	1089	\N	\N
+3916	1153	51	1464	\N	\N
+3917	3803	181	1133	\N	\N
+3918	2149	176	945	\N	\N
+3919	4264	176	1070	\N	\N
+3920	2511	86	61	\N	\N
+3921	5143	181	895	\N	\N
+3922	254	129	41	\N	\N
+3923	3952	187	297	\N	\N
+3924	1541	13	656	\N	\N
+3925	5277	163	1307	\N	\N
+3926	1028	51	1281	\N	\N
+3927	4535	51	641	\N	\N
+3928	249	154	733	\N	\N
+3929	5576	40	1281	\N	\N
+3930	1723	204	1370	\N	\N
+3931	3595	86	943	\N	\N
+3932	4755	176	917	\N	\N
+3933	4079	62	937	\N	\N
+3934	982	179	1064	\N	\N
+3935	4568	51	937	\N	\N
+3936	5364	179	504	\N	\N
+3937	2207	98	1262	\N	\N
+3938	2614	51	1075	\N	\N
+3939	1578	51	159	\N	\N
+3940	970	176	795	\N	\N
+3941	206	51	1513	\N	\N
+3942	1384	51	1335	\N	\N
+3943	2069	176	1232	\N	\N
+3944	243	154	1307	\N	\N
+3945	2283	62	1195	\N	\N
+3946	4348	194	693	\N	\N
+3947	1209	62	656	\N	\N
+3948	1063	212	1060	\N	\N
+3949	1212	62	937	\N	\N
+3950	5528	51	1281	\N	\N
+3951	996	212	944	\N	\N
+3952	1866	51	1281	\N	\N
+3953	872	204	1307	\N	\N
+3954	4920	32	1184	\N	\N
+3955	2108	37	237	\N	\N
+3956	5014	176	1298	\N	\N
+3957	3890	62	1281	\N	\N
+3958	4835	176	1412	\N	\N
+3959	8	62	656	\N	\N
+3960	5214	68	583	\N	\N
+3961	2613	176	1286	\N	\N
+3962	2492	196	840	\N	\N
+3963	2234	62	918	\N	\N
+3964	784	51	1084	\N	\N
+3965	1614	22	733	\N	\N
+3966	1007	176	684	\N	\N
+3967	253	131	1281	\N	\N
+3968	1857	163	944	\N	\N
+3969	1206	68	693	\N	\N
+3970	354	51	1184	\N	\N
+3971	4602	176	1561	\N	\N
+3972	42	62	1335	\N	\N
+3973	207	134	645	\N	\N
+3974	4076	19	1455	\N	\N
+3975	1452	194	539	\N	\N
+3976	1881	139	645	\N	\N
+3977	4516	58	1184	\N	\N
+3978	4828	51	1281	\N	\N
+3979	574	62	974	\N	\N
+3980	569	140	1509	\N	\N
+3981	5259	62	937	\N	\N
+3982	870	163	1307	\N	\N
+3983	1990	35	630	\N	\N
+3984	3884	51	1448	\N	\N
+3985	1107	176	1338	\N	\N
+3986	3930	139	1281	\N	\N
+3987	3637	176	804	\N	\N
+3988	1025	136	1281	\N	\N
+3989	907	62	553	\N	\N
+3990	4896	51	777	\N	\N
+3991	2118	141	918	\N	\N
+3992	4511	51	116	\N	\N
+3993	1124	19	684	\N	\N
+3994	1036	176	1195	\N	\N
+3995	205	179	519	\N	\N
+3996	1658	167	1010	\N	\N
+3997	1078	176	830	\N	\N
+3998	1706	51	1298	\N	\N
+3999	5303	13	1428	\N	\N
+4000	3870	59	937	\N	\N
+4001	1830	47	656	\N	\N
+4002	3952	187	208	\N	\N
+4003	970	51	918	\N	\N
+4004	5468	86	941	\N	\N
+4005	156	37	1428	\N	\N
+4006	702	212	561	\N	\N
+4007	3160	176	923	\N	\N
+4008	499	135	604	\N	\N
+4009	2443	134	1219	\N	\N
+4010	5132	176	1234	\N	\N
+4011	419	181	1286	\N	\N
+4012	1681	51	1448	\N	\N
+4013	922	68	941	\N	\N
+4014	2353	13	1481	\N	\N
+4015	1703	51	635	\N	\N
+4016	1345	176	1190	\N	\N
+4017	921	68	937	\N	\N
+4018	211	51	1179	\N	\N
+4019	4367	51	1043	\N	\N
+4020	1131	176	944	\N	\N
+4021	1039	179	1335	\N	\N
+4022	5514	51	684	\N	\N
+4023	4987	147	1337	\N	\N
+4024	5192	134	1556	\N	\N
+4025	861	204	989	\N	\N
+4026	54	37	1075	\N	\N
+4027	3932	131	1176	\N	\N
+4028	3875	139	1195	\N	\N
+4029	4339	44	791	\N	\N
+4030	4588	68	1198	\N	\N
+4031	843	51	791	\N	\N
+4032	94	140	995	\N	\N
+4033	2402	176	1140	\N	\N
+4034	689	167	1089	\N	\N
+4035	4783	176	665	\N	\N
+4036	3996	62	684	\N	\N
+4037	1533	62	1502	\N	\N
+4038	1020	67	1198	\N	\N
+4039	1032	130	652	\N	\N
+4040	3790	163	1524	\N	\N
+4041	95	88	698	\N	\N
+4042	891	129	1448	\N	\N
+4043	2512	176	874	\N	\N
+4044	1945	51	684	\N	\N
+4045	1108	184	655	\N	\N
+4046	173	44	791	\N	\N
+4047	934	62	1281	\N	\N
+4048	607	51	197	\N	\N
+4049	1980	181	1046	\N	\N
+4050	4578	79	376	\N	\N
+4051	5337	51	1298	\N	\N
+4052	1873	176	911	\N	\N
+4053	839	37	1057	\N	\N
+4054	2141	19	656	\N	\N
+4055	3679	51	259	\N	\N
+4056	4344	13	1075	\N	\N
+4057	4231	51	656	\N	\N
+4058	3904	19	918	\N	\N
+4059	2259	62	718	\N	\N
+4060	5510	180	453	\N	\N
+4061	3593	13	887	\N	\N
+4062	4968	194	1551	\N	\N
+4063	4266	46	1039	\N	\N
+4064	1833	62	1428	\N	\N
+4065	1319	22	791	\N	\N
+4066	1997	134	787	\N	\N
+4067	988	62	656	\N	\N
+4068	367	13	1298	\N	\N
+4069	2567	176	1240	\N	\N
+4070	1190	62	656	\N	\N
+4071	386	163	1362	\N	\N
+4072	805	9	841	\N	\N
+4073	706	15	974	\N	\N
+4074	4778	139	656	\N	\N
+4075	382	62	656	\N	\N
+4076	4973	203	1154	\N	\N
+4077	263	62	1122	\N	\N
+4078	581	179	1255	\N	\N
+4079	3597	69	979	\N	\N
+4080	2226	51	620	\N	\N
+4081	4731	176	1297	\N	\N
+4082	3631	51	1480	\N	\N
+4083	3671	13	937	\N	\N
+4084	2751	62	1006	\N	\N
+4085	4394	44	1052	\N	\N
+4086	4545	80	1457	\N	\N
+4087	3752	16	937	\N	\N
+4088	1911	59	1195	\N	\N
+4089	2208	6	649	\N	\N
+4090	4876	13	836	\N	\N
+4091	2339	47	1184	\N	\N
+4092	1819	62	1335	\N	\N
+4093	3959	111	1307	\N	\N
+4094	2467	66	656	\N	\N
+4095	860	51	183	\N	\N
+4096	5091	179	1338	\N	\N
+4097	2223	176	693	\N	\N
+4098	836	68	869	\N	\N
+4099	1258	51	1095	\N	\N
+4100	499	135	1268	\N	\N
+4101	5206	140	759	\N	\N
+4102	4077	176	655	\N	\N
+4103	2205	181	1154	\N	\N
+4104	820	44	1216	\N	\N
+4105	4516	58	1298	\N	\N
+4106	4380	51	937	\N	\N
+4107	4363	51	1122	\N	\N
+4108	4251	74	1043	\N	\N
+4109	1423	51	1281	\N	\N
+4110	1704	35	637	\N	\N
+4111	4299	71	684	\N	\N
+4112	350	94	1483	\N	\N
+4113	544	131	591	\N	\N
+4114	4763	46	641	\N	\N
+4115	1153	48	1502	\N	\N
+4116	1373	86	941	\N	\N
+4117	5327	181	1089	\N	\N
+4118	1149	13	1006	\N	\N
+4119	961	62	656	\N	\N
+4120	549	135	911	\N	\N
+4121	94	140	1288	\N	\N
+4122	2328	127	253	\N	\N
+4123	4861	176	923	\N	\N
+4124	3920	181	1561	\N	\N
+4125	5398	35	989	\N	\N
+4126	5021	62	529	\N	\N
+4127	2477	142	1039	\N	\N
+4128	1702	35	1272	\N	\N
+4129	1901	58	1122	\N	\N
+4130	4910	62	1335	\N	\N
+4131	1785	51	1152	\N	\N
+4132	4818	62	1075	\N	\N
+4133	1529	86	692	\N	\N
+4134	381	46	856	\N	\N
+4135	3911	176	1430	\N	\N
+4136	799	67	692	\N	\N
+4137	5552	25	1032	\N	\N
+4138	137	176	914	\N	\N
+4139	831	58	1239	\N	\N
+4140	5165	176	564	\N	\N
+4141	2390	179	477	\N	\N
+4142	3739	51	193	\N	\N
+4143	871	160	1307	\N	\N
+4144	280	51	1298	\N	\N
+4145	778	51	656	\N	\N
+4146	2252	194	880	\N	\N
+4147	1169	51	1006	\N	\N
+4148	3736	51	282	\N	\N
+4149	3910	51	1281	\N	\N
+4150	4994	176	1089	\N	\N
+4151	4565	51	1335	\N	\N
+4152	4805	176	1484	\N	\N
+4153	5468	176	1047	\N	\N
+4154	3619	114	941	\N	\N
+4155	4530	32	1298	\N	\N
+4156	4404	51	1335	\N	\N
+4157	557	62	1335	\N	\N
+4158	78	32	645	\N	\N
+4159	516	140	1288	\N	\N
+4160	861	53	1141	\N	\N
+4161	4019	139	1281	\N	\N
+4162	2136	154	944	\N	\N
+4163	1088	51	1335	\N	\N
+4164	865	154	665	\N	\N
+4165	1020	86	1198	\N	\N
+4166	710	19	684	\N	\N
+4167	2149	46	1362	\N	\N
+4168	3706	140	1288	\N	\N
+4169	5176	58	516	\N	\N
+4170	2189	62	1006	\N	\N
+4171	4302	62	582	\N	\N
+4172	2531	186	671	\N	\N
+4173	1975	139	856	\N	\N
+4174	2334	51	989	\N	\N
+4175	5564	37	1335	\N	\N
+4176	5257	51	684	\N	\N
+4177	800	51	791	\N	\N
+4178	2437	62	1043	\N	\N
+4179	4739	62	1480	\N	\N
+4180	33	68	692	\N	\N
+4181	3594	4	951	\N	\N
+4182	1664	62	1075	\N	\N
+4183	4242	59	937	\N	\N
+4184	4447	176	1263	\N	\N
+4185	1057	62	1043	\N	\N
+4186	2621	176	1286	\N	\N
+4187	1879	51	1152	\N	\N
+4188	1934	176	693	\N	\N
+4189	1195	62	1135	\N	\N
+4190	4956	51	1281	\N	\N
+4191	5016	176	1307	\N	\N
+4192	4380	51	804	\N	\N
+4193	1211	51	791	\N	\N
+4194	2148	19	1329	\N	\N
+4195	4499	176	1297	\N	\N
+4196	4367	51	860	\N	\N
+4197	319	62	860	\N	\N
+4198	535	201	1172	\N	\N
+4199	4270	19	918	\N	\N
+4200	855	181	923	\N	\N
+4201	781	167	1433	\N	\N
+4202	5474	62	1006	\N	\N
+4203	3724	62	893	\N	\N
+4204	1407	37	1411	\N	\N
+4205	1493	75	477	\N	\N
+4206	384	51	656	\N	\N
+4207	609	46	923	\N	\N
+4208	4751	135	1268	\N	\N
+4209	2124	19	656	\N	\N
+4210	336	62	1006	\N	\N
+4211	1005	176	1156	\N	\N
+4212	1030	86	1198	\N	\N
+4213	4041	51	1207	\N	\N
+4214	2387	176	671	\N	\N
+4215	793	62	1103	\N	\N
+4216	4719	44	1298	\N	\N
+4217	1689	176	534	\N	\N
+4218	4685	51	656	\N	\N
+4219	5362	181	241	\N	\N
+4220	4345	194	693	\N	\N
+4221	4747	62	684	\N	\N
+4222	396	62	83	\N	\N
+4223	4995	176	1089	\N	\N
+4224	1144	179	494	\N	\N
+4225	915	68	941	\N	\N
+4226	200	193	1307	\N	\N
+4227	4475	204	693	\N	\N
+4228	841	164	1556	\N	\N
+4229	1714	74	918	\N	\N
+4230	2460	167	429	\N	\N
+4231	4611	176	1561	\N	\N
+4232	3660	176	1286	\N	\N
+4233	230	201	1561	\N	\N
+4234	5187	140	681	\N	\N
+4235	2087	19	1075	\N	\N
+4236	5412	135	918	\N	\N
+4237	2327	204	737	\N	\N
+4238	795	147	186	\N	\N
+4239	2485	176	1307	\N	\N
+4240	4622	86	1198	\N	\N
+4241	1064	51	1455	\N	\N
+4242	808	62	1298	\N	\N
+4243	5046	176	929	\N	\N
+4244	3761	51	684	\N	\N
+4245	1853	142	1075	\N	\N
+4246	1195	15	1135	\N	\N
+4247	103	62	1043	\N	\N
+4248	1417	166	482	\N	\N
+4249	154	62	1428	\N	\N
+4250	5222	51	1298	\N	\N
+4251	2548	2	132	\N	\N
+4252	1914	80	1484	\N	\N
+4253	4188	59	937	\N	\N
+4254	152	62	937	\N	\N
+4255	5156	176	693	\N	\N
+4256	1027	140	1281	\N	\N
+4257	1494	62	553	\N	\N
+4258	3711	176	441	\N	\N
+4259	5571	51	1418	\N	\N
+4260	4719	58	1298	\N	\N
+4261	1096	156	856	\N	\N
+4262	2349	176	944	\N	\N
+4263	4694	35	656	\N	\N
+4264	1302	62	1239	\N	\N
+4265	5029	176	1307	\N	\N
+4266	1647	51	791	\N	\N
+4267	918	68	937	\N	\N
+4268	2341	7	1561	\N	\N
+4269	2389	179	1338	\N	\N
+4270	1632	175	1286	\N	\N
+4271	911	131	1281	\N	\N
+4272	1322	51	937	\N	\N
+4273	5463	176	1455	\N	\N
+4274	311	62	1536	\N	\N
+4275	4414	43	1006	\N	\N
+4276	4368	48	877	\N	\N
+4277	5280	142	860	\N	\N
+4278	1937	51	641	\N	\N
+4279	4782	37	684	\N	\N
+4280	1349	149	227	\N	\N
+4281	693	37	1411	\N	\N
+4282	886	44	791	\N	\N
+4283	1837	62	1281	\N	\N
+4284	2341	147	1557	\N	\N
+4285	738	176	484	\N	\N
+4286	1663	197	1455	\N	\N
+4287	290	62	1006	\N	\N
+4288	917	68	941	\N	\N
+4289	1242	74	989	\N	\N
+4290	2095	51	1323	\N	\N
+4291	4875	13	656	\N	\N
+4292	2101	204	809	\N	\N
+4293	4058	62	877	\N	\N
+4294	5058	19	918	\N	\N
+4295	2519	48	1335	\N	\N
+4296	1459	51	1335	\N	\N
+4297	1359	35	637	\N	\N
+4298	1163	51	791	\N	\N
+4299	344	37	1084	\N	\N
+4300	2513	176	1367	\N	\N
+4301	1163	51	1075	\N	\N
+4302	5258	62	656	\N	\N
+4303	5257	51	1195	\N	\N
+4304	331	1	860	\N	\N
+4305	456	135	1281	\N	\N
+4306	2489	51	893	\N	\N
+4307	1589	62	1281	\N	\N
+4308	4473	185	1281	\N	\N
+4309	3952	187	207	\N	\N
+4310	2415	176	1307	\N	\N
+4311	1046	51	684	\N	\N
+4312	4323	212	863	\N	\N
+4313	2013	176	1328	\N	\N
+4314	1214	154	561	\N	\N
+4315	875	62	565	\N	\N
+4316	1475	58	1298	\N	\N
+4317	5092	51	1281	\N	\N
+4318	4202	98	1362	\N	\N
+4319	1637	176	621	\N	\N
+4320	2499	181	1463	\N	\N
+4321	344	62	1084	\N	\N
+4322	5544	19	656	\N	\N
+4323	5180	201	855	\N	\N
+4324	1994	176	1307	\N	\N
+4325	1564	51	448	\N	\N
+4326	243	163	1484	\N	\N
+4327	2419	62	1239	\N	\N
+4328	3935	44	1281	\N	\N
+4329	5048	67	531	\N	\N
+4330	1367	167	944	\N	\N
+4331	2308	32	1523	\N	\N
+4332	1751	4	1418	\N	\N
+4333	5382	51	1272	\N	\N
+4334	2321	122	1539	\N	\N
+4335	252	19	1281	\N	\N
+4336	5158	51	804	\N	\N
+4337	665	139	924	\N	\N
+4338	854	147	941	\N	\N
+4339	556	62	1335	\N	\N
+4340	5492	135	791	\N	\N
+4341	5557	135	856	\N	\N
+4342	392	62	1298	\N	\N
+4343	464	51	1281	\N	\N
+4344	1950	62	937	\N	\N
+4345	2309	212	923	\N	\N
+4346	3586	58	335	\N	\N
+4347	5181	201	1563	\N	\N
+4348	233	176	1307	\N	\N
+4349	3745	51	282	\N	\N
+4350	1283	62	684	\N	\N
+4351	1922	62	1281	\N	\N
+4352	105	62	684	\N	\N
+4353	2288	181	944	\N	\N
+4354	4586	147	538	\N	\N
+4355	3819	62	1428	\N	\N
+4356	5292	15	1135	\N	\N
+4357	4277	62	1239	\N	\N
+4358	4739	62	1184	\N	\N
+4359	3955	134	1202	\N	\N
+4360	3988	131	1039	\N	\N
+4361	1839	201	1531	\N	\N
+4362	4484	51	1281	\N	\N
+4363	1872	176	944	\N	\N
+4364	1287	176	693	\N	\N
+4365	5106	181	923	\N	\N
+4366	5516	51	989	\N	\N
+4367	4090	19	1455	\N	\N
+4368	4485	62	641	\N	\N
+4369	912	102	656	\N	\N
+4370	274	135	656	\N	\N
+4371	2097	51	1362	\N	\N
+4372	829	22	971	\N	\N
+4373	2588	51	1195	\N	\N
+4374	185	136	1298	\N	\N
+4375	3732	51	1195	\N	\N
+4376	4728	131	1281	\N	\N
+4377	2144	176	1434	\N	\N
+4378	4691	62	1222	\N	\N
+4379	5426	58	1075	\N	\N
+4380	2163	176	1307	\N	\N
+4381	2572	62	1538	\N	\N
+4382	1718	179	1338	\N	\N
+4383	2776	32	1455	\N	\N
+4384	5269	201	1563	\N	\N
+4385	738	176	551	\N	\N
+4386	1683	181	1126	\N	\N
+4387	175	62	1075	\N	\N
+4388	4310	152	1184	\N	\N
+4389	409	51	684	\N	\N
+4390	4330	62	1298	\N	\N
+4391	582	51	1273	\N	\N
+4392	799	126	570	\N	\N
+4393	710	176	1338	\N	\N
+4394	1157	51	937	\N	\N
+4395	25	37	989	\N	\N
+4396	2147	22	1455	\N	\N
+4397	1117	135	1298	\N	\N
+4398	5460	176	1195	\N	\N
+4399	3747	51	1195	\N	\N
+4400	4720	58	656	\N	\N
+4401	4264	140	645	\N	\N
+4402	270	44	656	\N	\N
+4403	4532	162	1367	\N	\N
+4404	4472	35	911	\N	\N
+4405	364	95	606	\N	\N
+4406	4375	13	838	\N	\N
+4407	2555	145	692	\N	\N
+4408	895	62	490	\N	\N
+4409	4028	181	517	\N	\N
+4410	3878	59	1195	\N	\N
+4411	5309	176	665	\N	\N
+4412	5158	51	937	\N	\N
+4413	2549	181	171	\N	\N
+4414	576	62	1043	\N	\N
+4415	1001	51	1281	\N	\N
+4416	612	58	1455	\N	\N
+4417	5345	176	693	\N	\N
+4418	4700	68	692	\N	\N
+4419	16	212	693	\N	\N
+4420	1395	179	580	\N	\N
+4421	4399	176	1046	\N	\N
+4422	2126	128	1406	\N	\N
+4423	3651	51	656	\N	\N
+4424	2589	51	937	\N	\N
+4425	5215	147	531	\N	\N
+4426	1751	176	1297	\N	\N
+4427	1918	19	1147	\N	\N
+4428	4656	176	647	\N	\N
+4429	4888	51	1513	\N	\N
+4430	4405	51	937	\N	\N
+4431	529	51	1195	\N	\N
+4432	4689	51	918	\N	\N
+4433	721	169	1421	\N	\N
+4434	2297	13	729	\N	\N
+4435	34	203	693	\N	\N
+4436	1069	62	1006	\N	\N
+4437	5013	176	1255	\N	\N
+4438	418	190	494	\N	\N
+4439	1997	134	995	\N	\N
+4440	4775	158	863	\N	\N
+4441	1137	62	1281	\N	\N
+4442	5108	139	1298	\N	\N
+4443	829	22	836	\N	\N
+4444	2338	204	1116	\N	\N
+4445	1719	32	1424	\N	\N
+4446	817	62	1298	\N	\N
+4447	5199	181	1561	\N	\N
+4448	710	181	584	\N	\N
+4449	3754	22	1195	\N	\N
+4450	2516	51	1558	\N	\N
+4451	4090	19	791	\N	\N
+4452	594	164	1425	\N	\N
+4453	78	35	1179	\N	\N
+4454	1477	58	1298	\N	\N
+4455	1175	14	516	\N	\N
+4456	4723	51	1298	\N	\N
+4457	452	154	1362	\N	\N
+4458	1311	189	125	\N	\N
+4459	1098	51	1335	\N	\N
+4460	481	81	1047	\N	\N
+4461	755	167	1353	\N	\N
+4462	3915	54	718	\N	\N
+4463	612	2	1006	\N	\N
+4464	4841	185	1412	\N	\N
+4465	1521	51	1298	\N	\N
+4466	3916	19	1461	\N	\N
+4467	5009	51	1006	\N	\N
+4468	1834	192	160	\N	\N
+4469	4974	179	1154	\N	\N
+4470	4863	140	918	\N	\N
+4471	4859	62	918	\N	\N
+4472	1758	35	1274	\N	\N
+4473	1509	62	1006	\N	\N
+4474	1027	139	98	\N	\N
+4475	4724	131	656	\N	\N
+4476	3807	51	1281	\N	\N
+4477	4791	185	944	\N	\N
+4478	1602	208	539	\N	\N
+4479	440	163	1010	\N	\N
+4480	3585	51	1006	\N	\N
+4481	4770	13	718	\N	\N
+4482	70	179	1338	\N	\N
+4483	2481	176	337	\N	\N
+4484	4221	68	532	\N	\N
+4485	4337	51	490	\N	\N
+4486	1287	33	1298	\N	\N
+4487	2109	68	1120	\N	\N
+4488	2228	16	726	\N	\N
+4489	690	51	684	\N	\N
+4490	1488	68	861	\N	\N
+4491	928	166	944	\N	\N
+4492	178	194	638	\N	\N
+4493	4549	135	937	\N	\N
+4494	4912	133	989	\N	\N
+4495	694	204	558	\N	\N
+4496	2515	51	893	\N	\N
+4497	4321	59	1195	\N	\N
+4498	827	136	1281	\N	\N
+4499	5097	179	944	\N	\N
+4500	1159	51	937	\N	\N
+4501	4589	67	1474	\N	\N
+4502	4938	165	1306	\N	\N
+4503	5378	176	923	\N	\N
+4504	1211	51	1281	\N	\N
+4505	1512	44	1367	\N	\N
+4506	4070	147	1277	\N	\N
+4507	5459	58	80	\N	\N
+4508	3754	19	1195	\N	\N
+4509	1721	51	1050	\N	\N
+4510	897	62	529	\N	\N
+4511	1405	176	1484	\N	\N
+4512	2330	15	825	\N	\N
+4513	304	67	1306	\N	\N
+4514	1085	37	918	\N	\N
+4515	2147	102	804	\N	\N
+4516	5291	44	1135	\N	\N
+4517	1676	176	863	\N	\N
+4518	278	51	1521	\N	\N
+4519	1118	16	1367	\N	\N
+4520	634	51	141	\N	\N
+4521	4458	51	1335	\N	\N
+4522	4456	176	958	\N	\N
+4523	1449	32	937	\N	\N
+4524	5418	51	804	\N	\N
+4525	5360	152	856	\N	\N
+4526	479	139	918	\N	\N
+4527	1499	181	693	\N	\N
+4528	5401	51	684	\N	\N
+4529	4490	62	1281	\N	\N
+4530	5571	51	804	\N	\N
+4531	1663	74	1298	\N	\N
+4532	386	163	786	\N	\N
+4533	4087	37	937	\N	\N
+4534	5151	37	1335	\N	\N
+4535	3878	157	1195	\N	\N
+4536	1027	156	356	\N	\N
+4537	2523	176	1278	\N	\N
+4538	4215	204	693	\N	\N
+4539	409	51	1195	\N	\N
+4540	3966	176	1362	\N	\N
+4541	1470	67	531	\N	\N
+4542	1532	86	692	\N	\N
+4543	1580	51	1513	\N	\N
+4544	880	133	856	\N	\N
+4545	2021	51	1536	\N	\N
+4546	5064	51	989	\N	\N
+4547	1254	201	1191	\N	\N
+4548	2584	62	684	\N	\N
+4549	1080	176	665	\N	\N
+4550	4210	19	1084	\N	\N
+4551	2212	212	812	\N	\N
+4552	5192	134	1545	\N	\N
+4553	5233	51	1096	\N	\N
+4554	3903	201	1046	\N	\N
+4555	3984	111	1307	\N	\N
+4556	4362	51	1122	\N	\N
+4557	1124	19	937	\N	\N
+4558	4757	181	737	\N	\N
+4559	1939	51	1184	\N	\N
+4560	5128	185	665	\N	\N
+4561	4264	176	1158	\N	\N
+4562	4186	147	583	\N	\N
+4563	4476	200	1307	\N	\N
+4564	1581	176	945	\N	\N
+4565	1218	181	1154	\N	\N
+4566	4657	176	1561	\N	\N
+4567	4613	176	1484	\N	\N
+4568	1562	52	726	\N	\N
+4569	980	51	937	\N	\N
+4570	146	62	1006	\N	\N
+4571	332	74	918	\N	\N
+4572	321	51	1075	\N	\N
+4573	2519	51	684	\N	\N
+4574	861	204	1142	\N	\N
+4575	1853	176	677	\N	\N
+4576	5308	181	1240	\N	\N
+4577	4574	51	1239	\N	\N
+4578	4050	13	1239	\N	\N
+4579	2216	62	1043	\N	\N
+4580	1436	122	490	\N	\N
+4581	4891	23	918	\N	\N
+4582	1570	51	1513	\N	\N
+4583	4744	158	606	\N	\N
+4584	5067	204	1370	\N	\N
+4585	4237	58	918	\N	\N
+4586	2258	133	1357	\N	\N
+4587	4228	44	552	\N	\N
+4588	638	37	804	\N	\N
+4589	4295	139	693	\N	\N
+4590	5527	51	1281	\N	\N
+4591	2091	51	989	\N	\N
+4592	4111	51	1480	\N	\N
+4593	1447	147	941	\N	\N
+4594	13	152	1391	\N	\N
+4595	2224	176	1298	\N	\N
+4596	2510	176	1338	\N	\N
+4597	1283	62	1335	\N	\N
+4598	1052	173	1281	\N	\N
+4599	4592	188	693	\N	\N
+4600	4870	37	384	\N	\N
+4601	2066	135	856	\N	\N
+4602	364	32	1281	\N	\N
+4603	4887	181	665	\N	\N
+4604	623	176	1307	\N	\N
+4605	3619	166	944	\N	\N
+4606	2513	176	675	\N	\N
+4607	481	81	499	\N	\N
+4608	135	204	1199	\N	\N
+4609	4470	62	937	\N	\N
+4610	4071	204	769	\N	\N
+4611	386	163	1513	\N	\N
+4612	1400	51	684	\N	\N
+4613	4454	4	675	\N	\N
+4614	3879	59	937	\N	\N
+4615	5350	51	1298	\N	\N
+4616	4298	51	684	\N	\N
+4617	1732	51	1281	\N	\N
+4618	5478	176	1298	\N	\N
+4619	4764	46	856	\N	\N
+4620	2215	62	937	\N	\N
+4621	1499	51	1184	\N	\N
+4622	962	179	1154	\N	\N
+4623	5221	51	1298	\N	\N
+4624	1207	68	692	\N	\N
+4625	486	51	1362	\N	\N
+4626	4219	68	522	\N	\N
+4627	1402	62	641	\N	\N
+4628	1442	68	692	\N	\N
+4629	5231	51	818	\N	\N
+4630	4817	62	1075	\N	\N
+4631	4793	2	1261	\N	\N
+4632	5233	51	1481	\N	\N
+4633	398	62	1298	\N	\N
+4634	3591	95	1306	\N	\N
+4635	4813	32	516	\N	\N
+4636	3993	44	508	\N	\N
+4637	2489	51	1335	\N	\N
+4638	208	135	1288	\N	\N
+4639	4311	204	665	\N	\N
+4640	164	176	1180	\N	\N
+4641	301	179	1154	\N	\N
+4642	2397	82	728	\N	\N
+4643	3939	51	733	\N	\N
+4644	4127	86	692	\N	\N
+4645	5434	51	684	\N	\N
+4646	4201	130	652	\N	\N
+4647	3884	51	1281	\N	\N
+4648	3905	181	1561	\N	\N
+4649	3872	19	1367	\N	\N
+4650	612	181	1208	\N	\N
+4651	1727	19	768	\N	\N
+4652	4595	176	852	\N	\N
+4653	5078	51	310	\N	\N
+4654	791	136	1298	\N	\N
+4655	5405	58	1455	\N	\N
+4656	2299	176	959	\N	\N
+4657	621	139	924	\N	\N
+4658	829	22	726	\N	\N
+4659	165	170	494	\N	\N
+4660	2516	58	1075	\N	\N
+4661	2527	98	544	\N	\N
+4662	1596	171	916	\N	\N
+4663	3884	204	656	\N	\N
+4779	1562	51	1481	\N	\N
+4664	3931	167	251	\N	\N
+4665	1177	19	1281	\N	\N
+4666	4231	51	1006	\N	\N
+4667	2528	176	937	\N	\N
+4668	4434	51	684	\N	\N
+4669	5502	159	55	\N	\N
+4670	2194	62	1404	\N	\N
+4671	1562	51	971	\N	\N
+4672	5357	86	493	\N	\N
+4673	4566	51	1481	\N	\N
+4674	1709	176	1154	\N	\N
+4675	2028	51	656	\N	\N
+4676	5504	51	893	\N	\N
+4677	2085	51	1075	\N	\N
+4678	2196	51	684	\N	\N
+4679	4726	156	733	\N	\N
+4680	5323	51	656	\N	\N
+4681	5264	58	1122	\N	\N
+4682	1105	51	1006	\N	\N
+4683	707	181	1338	\N	\N
+4684	4733	176	665	\N	\N
+4685	1234	179	470	\N	\N
+4686	163	51	1281	\N	\N
+4687	4828	46	856	\N	\N
+4688	1471	68	531	\N	\N
+4689	614	173	698	\N	\N
+4690	2097	51	918	\N	\N
+4691	2409	176	1286	\N	\N
+4692	589	51	918	\N	\N
+4693	1662	181	923	\N	\N
+4694	3900	31	1335	\N	\N
+4695	1173	19	684	\N	\N
+4696	262	37	856	\N	\N
+4697	2504	212	1416	\N	\N
+4698	194	37	1043	\N	\N
+4699	2548	154	1556	\N	\N
+4700	2010	51	684	\N	\N
+4701	3756	202	1295	\N	\N
+4702	2160	176	1010	\N	\N
+4703	2031	44	791	\N	\N
+4704	5106	62	1448	\N	\N
+4705	4451	62	656	\N	\N
+4706	3618	37	91	\N	\N
+4707	4411	13	791	\N	\N
+4708	902	51	791	\N	\N
+4709	3715	163	734	\N	\N
+4710	1476	44	656	\N	\N
+4711	1745	212	1398	\N	\N
+4712	3694	176	1561	\N	\N
+4713	5094	181	1075	\N	\N
+4714	5360	181	665	\N	\N
+4715	18	68	808	\N	\N
+4716	389	63	825	\N	\N
+4717	2036	62	656	\N	\N
+4718	4601	176	1561	\N	\N
+4719	3724	51	684	\N	\N
+4720	3860	176	441	\N	\N
+4721	467	147	631	\N	\N
+4722	3722	35	784	\N	\N
+4723	4351	51	1298	\N	\N
+4724	4766	176	1307	\N	\N
+4725	4542	203	620	\N	\N
+4726	4264	140	637	\N	\N
+4727	1662	62	1281	\N	\N
+4728	2398	192	728	\N	\N
+4729	1858	181	931	\N	\N
+4730	4566	51	1195	\N	\N
+4731	3921	165	1559	\N	\N
+4732	1806	62	684	\N	\N
+4733	1532	58	656	\N	\N
+4734	1665	46	856	\N	\N
+4735	4852	176	693	\N	\N
+4736	2044	62	656	\N	\N
+4737	3795	13	684	\N	\N
+4738	1075	152	858	\N	\N
+4739	285	69	1088	\N	\N
+4740	4198	51	1152	\N	\N
+4741	4087	51	1195	\N	\N
+4742	5150	154	1513	\N	\N
+4743	3738	51	1195	\N	\N
+4744	5478	176	918	\N	\N
+4745	1137	37	1493	\N	\N
+4746	4761	51	1298	\N	\N
+4747	4743	173	1195	\N	\N
+4748	4425	51	448	\N	\N
+4749	1476	44	1298	\N	\N
+4750	143	19	1075	\N	\N
+4751	4563	62	1195	\N	\N
+4752	3619	114	944	\N	\N
+4753	486	51	1075	\N	\N
+4754	3622	37	16	\N	\N
+4755	4090	13	1298	\N	\N
+4756	1270	19	1281	\N	\N
+4757	782	160	1019	\N	\N
+4758	143	62	918	\N	\N
+4759	2111	212	608	\N	\N
+4760	304	62	1184	\N	\N
+4761	4156	19	656	\N	\N
+4762	2098	51	656	\N	\N
+4763	66	134	1298	\N	\N
+4764	4198	51	1043	\N	\N
+4765	4356	178	1508	\N	\N
+4766	3675	176	1338	\N	\N
+4767	4382	51	804	\N	\N
+4768	98	181	517	\N	\N
+4769	315	51	1253	\N	\N
+4770	2416	51	1493	\N	\N
+4771	1379	35	1535	\N	\N
+4772	5213	68	861	\N	\N
+4773	234	62	918	\N	\N
+4774	726	74	367	\N	\N
+4775	3725	37	684	\N	\N
+4776	468	204	1484	\N	\N
+4777	1839	201	681	\N	\N
+4778	4862	139	918	\N	\N
+4780	3650	62	684	\N	\N
+4781	5468	151	1306	\N	\N
+4782	1836	167	1435	\N	\N
+4783	513	136	656	\N	\N
+4784	4871	37	656	\N	\N
+4785	5151	176	1338	\N	\N
+4786	2492	196	1326	\N	\N
+4787	284	137	1298	\N	\N
+4788	2348	176	944	\N	\N
+4789	5056	156	1281	\N	\N
+4790	2216	62	529	\N	\N
+4791	3762	25	1073	\N	\N
+4792	4625	38	918	\N	\N
+4793	5157	74	1006	\N	\N
+4794	3925	147	1306	\N	\N
+4795	1569	51	1096	\N	\N
+4796	4206	176	1080	\N	\N
+4797	4193	22	1516	\N	\N
+4798	1747	176	832	\N	\N
+4799	328	51	656	\N	\N
+4800	1496	62	553	\N	\N
+4801	1174	62	818	\N	\N
+4802	2572	147	1249	\N	\N
+4803	4578	79	376	\N	\N
+4804	4685	51	768	\N	\N
+4805	2773	176	994	\N	\N
+4806	243	13	1281	\N	\N
+4807	4461	176	502	\N	\N
+4808	5024	99	733	\N	\N
+4809	2368	51	1481	\N	\N
+4810	3878	51	1195	\N	\N
+4811	612	2	718	\N	\N
+4812	830	204	833	\N	\N
+4813	793	37	1502	\N	\N
+4814	3968	82	160	\N	\N
+4815	2497	62	804	\N	\N
+4816	4087	51	937	\N	\N
+4817	1665	62	856	\N	\N
+4818	5236	51	1281	\N	\N
+4819	481	68	499	\N	\N
+4820	4731	176	1334	\N	\N
+4821	2165	176	1434	\N	\N
+4822	262	181	1307	\N	\N
+4823	1615	51	989	\N	\N
+4824	3900	34	893	\N	\N
+4825	1830	212	693	\N	\N
+4826	1896	48	937	\N	\N
+4827	1194	51	937	\N	\N
+4828	4472	35	1424	\N	\N
+4829	567	44	1230	\N	\N
+4830	4732	176	665	\N	\N
+4831	416	179	693	\N	\N
+4832	28	62	656	\N	\N
+4833	2147	176	1418	\N	\N
+4834	1934	181	1421	\N	\N
+4835	1856	181	778	\N	\N
+4836	2402	176	1000	\N	\N
+4837	2453	19	1184	\N	\N
+4838	1140	176	863	\N	\N
+4839	2434	13	791	\N	\N
+4840	4492	212	1154	\N	\N
+4841	4036	163	665	\N	\N
+4842	3870	135	1195	\N	\N
+4843	1979	204	1338	\N	\N
+4844	4466	62	684	\N	\N
+4845	3891	167	923	\N	\N
+4846	4519	51	1480	\N	\N
+4847	1350	24	1367	\N	\N
+4848	417	176	533	\N	\N
+4849	1345	176	1139	\N	\N
+4850	245	51	357	\N	\N
+4851	4776	176	684	\N	\N
+4852	380	181	863	\N	\N
+4853	1790	54	1298	\N	\N
+4854	5	181	79	\N	\N
+4855	5489	51	1298	\N	\N
+4856	497	201	1255	\N	\N
+4857	207	134	1288	\N	\N
+4858	1563	62	1298	\N	\N
+4859	4236	51	918	\N	\N
+4860	5243	204	1307	\N	\N
+4861	1118	31	1084	\N	\N
+4862	136	204	1199	\N	\N
+4863	4954	86	1338	\N	\N
+4864	1830	51	756	\N	\N
+4865	1944	212	665	\N	\N
+4866	1807	204	19	\N	\N
+4867	3684	176	693	\N	\N
+4868	1867	181	895	\N	\N
+4869	667	142	1062	\N	\N
+4870	4530	2	531	\N	\N
+4871	2548	181	52	\N	\N
+4872	207	134	787	\N	\N
+4873	4328	62	1411	\N	\N
+4874	2280	91	664	\N	\N
+4875	4225	15	656	\N	\N
+4876	5578	181	1338	\N	\N
+4877	974	149	1337	\N	\N
+4878	4273	201	1563	\N	\N
+4879	1687	35	784	\N	\N
+4880	511	197	641	\N	\N
+4881	5512	176	693	\N	\N
+4882	1980	3	1527	\N	\N
+4883	981	51	1281	\N	\N
+4884	4862	140	1184	\N	\N
+4885	2356	32	1535	\N	\N
+4886	5549	51	1335	\N	\N
+4887	1057	37	1043	\N	\N
+4888	4847	58	971	\N	\N
+4889	4676	135	615	\N	\N
+4890	1027	160	287	\N	\N
+4891	1900	176	693	\N	\N
+4892	1072	62	1006	\N	\N
+4893	3715	163	1284	\N	\N
+4894	4111	51	791	\N	\N
+4895	2607	176	795	\N	\N
+4896	261	51	1006	\N	\N
+4897	2216	44	529	\N	\N
+4898	4193	19	684	\N	\N
+4899	2769	176	852	\N	\N
+4900	855	43	1281	\N	\N
+4901	2125	62	475	\N	\N
+4902	1281	57	1527	\N	\N
+4903	4400	186	1046	\N	\N
+4904	4141	176	1338	\N	\N
+4905	2215	62	684	\N	\N
+4906	5530	160	1362	\N	\N
+4907	1858	181	673	\N	\N
+4908	4264	140	1354	\N	\N
+4909	4566	51	937	\N	\N
+4910	549	135	1071	\N	\N
+4911	1385	135	1119	\N	\N
+4912	1457	68	861	\N	\N
+4913	704	58	804	\N	\N
+4914	5257	51	1335	\N	\N
+4915	2358	58	656	\N	\N
+4916	5530	51	1281	\N	\N
+4917	4323	176	533	\N	\N
+4918	643	51	889	\N	\N
+4919	3876	59	1195	\N	\N
+4920	4148	62	918	\N	\N
+4921	108	62	1335	\N	\N
+4922	3601	86	941	\N	\N
+4923	377	62	656	\N	\N
+4924	4430	51	684	\N	\N
+4925	1892	181	944	\N	\N
+4926	984	186	1046	\N	\N
+4927	1124	2	937	\N	\N
+4928	4338	19	1075	\N	\N
+4929	578	147	861	\N	\N
+4930	1954	58	1075	\N	\N
+4931	876	133	856	\N	\N
+4932	5296	59	1016	\N	\N
+4933	1267	51	1067	\N	\N
+4934	1485	68	861	\N	\N
+4935	4521	190	864	\N	\N
+4936	3585	51	1298	\N	\N
+4937	1308	189	401	\N	\N
+4938	4810	176	1338	\N	\N
+4939	4277	176	533	\N	\N
+4940	1757	163	1307	\N	\N
+4941	2492	196	1518	\N	\N
+4942	3597	204	636	\N	\N
+4943	1316	176	863	\N	\N
+4944	4457	112	665	\N	\N
+4945	721	212	1412	\N	\N
+4946	1149	13	1455	\N	\N
+4947	4365	51	1122	\N	\N
+4948	1694	62	1043	\N	\N
+4949	823	212	1307	\N	\N
+4950	2559	86	1198	\N	\N
+4951	1164	62	684	\N	\N
+4952	5370	62	1281	\N	\N
+4953	2007	176	895	\N	\N
+4954	4471	51	911	\N	\N
+4955	2773	176	1307	\N	\N
+4956	2413	176	1307	\N	\N
+4957	2434	13	1455	\N	\N
+4958	1117	142	684	\N	\N
+4959	3891	51	1448	\N	\N
+4960	1819	62	684	\N	\N
+4961	4785	62	1499	\N	\N
+4962	2584	181	1046	\N	\N
+4963	2565	62	656	\N	\N
+4964	2277	51	791	\N	\N
+4965	4804	212	1046	\N	\N
+4966	1904	59	937	\N	\N
+4967	3996	181	584	\N	\N
+4968	349	127	1391	\N	\N
+4969	5143	62	1043	\N	\N
+4970	1898	35	656	\N	\N
+4971	1620	142	860	\N	\N
+4972	425	182	162	\N	\N
+4973	810	62	1298	\N	\N
+4974	4284	62	1075	\N	\N
+4975	3590	37	656	\N	\N
+4976	366	158	606	\N	\N
+4977	575	201	1338	\N	\N
+4978	319	62	529	\N	\N
+4979	4858	62	1184	\N	\N
+4980	887	131	1281	\N	\N
+4981	1367	181	1338	\N	\N
+4982	4544	204	728	\N	\N
+4983	3782	51	448	\N	\N
+4984	202	58	1075	\N	\N
+4985	4675	212	1302	\N	\N
+4986	2101	51	1298	\N	\N
+4987	749	19	1181	\N	\N
+4988	167	135	1069	\N	\N
+4989	2409	176	1339	\N	\N
+4990	3725	37	893	\N	\N
+4991	1775	15	791	\N	\N
+4992	4249	212	815	\N	\N
+4993	243	160	1307	\N	\N
+4994	4054	62	1281	\N	\N
+4995	2748	19	989	\N	\N
+4996	1057	37	529	\N	\N
+4997	644	51	1455	\N	\N
+4998	3761	51	1335	\N	\N
+4999	5275	135	1239	\N	\N
+5000	4022	51	656	\N	\N
+5001	2601	176	665	\N	\N
+5002	4083	62	1335	\N	\N
+5003	2266	176	1286	\N	\N
+5004	1539	44	1052	\N	\N
+5005	1862	32	1184	\N	\N
+5006	1011	51	1298	\N	\N
+5007	5335	62	1298	\N	\N
+5008	1963	139	918	\N	\N
+5009	1027	154	989	\N	\N
+5010	4032	68	692	\N	\N
+5011	2076	51	860	\N	\N
+5012	3915	43	1006	\N	\N
+5013	589	58	1184	\N	\N
+5014	3928	135	656	\N	\N
+5015	2402	176	1035	\N	\N
+5016	4014	51	1335	\N	\N
+5017	995	176	863	\N	\N
+5018	2228	16	971	\N	\N
+5019	1161	62	804	\N	\N
+5020	739	176	1422	\N	\N
+5021	3594	121	1043	\N	\N
+5022	5100	212	1463	\N	\N
+5023	4747	176	693	\N	\N
+5024	5183	201	1564	\N	\N
+5025	1196	62	1298	\N	\N
+5026	4310	181	1199	\N	\N
+5027	2764	148	550	\N	\N
+5028	1317	147	531	\N	\N
+5029	1308	189	111	\N	\N
+5030	2279	62	684	\N	\N
+5031	2076	51	1335	\N	\N
+5032	5231	51	1096	\N	\N
+5033	1663	197	1006	\N	\N
+5034	1161	62	1222	\N	\N
+5035	3972	158	684	\N	\N
+5036	2265	62	490	\N	\N
+5037	1341	176	1481	\N	\N
+5038	1980	13	1343	\N	\N
+5039	2556	62	1006	\N	\N
+5040	4395	176	693	\N	\N
+5041	1336	176	937	\N	\N
+5042	533	139	726	\N	\N
+5043	76	135	1298	\N	\N
+5044	2052	48	915	\N	\N
+5045	1462	140	1281	\N	\N
+5046	1650	51	686	\N	\N
+5047	4090	13	791	\N	\N
+5048	3699	51	937	\N	\N
+5049	4272	201	1563	\N	\N
+5050	1166	51	791	\N	\N
+5051	2501	181	1463	\N	\N
+5052	5045	35	645	\N	\N
+5053	2010	51	937	\N	\N
+5054	3996	181	1161	\N	\N
+5055	713	19	1415	\N	\N
+5056	3994	51	1043	\N	\N
+5057	2158	176	477	\N	\N
+5058	1166	212	809	\N	\N
+5059	2473	26	1084	\N	\N
+5060	1687	32	1272	\N	\N
+5061	4819	163	944	\N	\N
+5062	926	68	424	\N	\N
+5063	1804	136	791	\N	\N
+5064	1149	19	1455	\N	\N
+5065	1598	147	537	\N	\N
+5066	3665	154	1184	\N	\N
+5067	4438	35	1006	\N	\N
+5068	590	51	1335	\N	\N
+5069	3787	133	1195	\N	\N
+5070	1726	37	1335	\N	\N
+5071	2251	62	989	\N	\N
+5072	4401	51	937	\N	\N
+5073	1539	62	462	\N	\N
+5074	2781	62	684	\N	\N
+5075	871	204	665	\N	\N
+5076	2081	140	1481	\N	\N
+5077	3889	62	1281	\N	\N
+5078	4297	62	1335	\N	\N
+5079	397	51	1298	\N	\N
+5080	1637	176	584	\N	\N
+5081	2255	176	693	\N	\N
+5082	1278	176	944	\N	\N
+5083	127	212	944	\N	\N
+5084	2754	62	1281	\N	\N
+5085	5384	46	856	\N	\N
+5086	1116	51	656	\N	\N
+5087	2294	19	1184	\N	\N
+5088	2465	167	1421	\N	\N
+5089	4600	176	918	\N	\N
+5090	2034	51	1006	\N	\N
+5091	1937	51	1281	\N	\N
+5092	452	51	641	\N	\N
+5093	3884	181	923	\N	\N
+5094	4257	176	1399	\N	\N
+5095	5276	136	656	\N	\N
+5096	1335	145	510	\N	\N
+5097	451	163	1199	\N	\N
+5098	5005	51	684	\N	\N
+5099	2180	62	1335	\N	\N
+5100	2045	13	918	\N	\N
+5101	1666	147	361	\N	\N
+5102	59	51	1497	\N	\N
+5103	3795	13	937	\N	\N
+5104	2061	158	664	\N	\N
+5105	1409	51	1272	\N	\N
+5106	2299	176	1140	\N	\N
+5107	958	86	1084	\N	\N
+5108	290	62	1298	\N	\N
+5109	457	154	1362	\N	\N
+5110	3905	108	1561	\N	\N
+5111	353	51	1084	\N	\N
+5112	2759	51	989	\N	\N
+5113	370	59	791	\N	\N
+5114	4192	79	693	\N	\N
+5115	4526	44	553	\N	\N
+5116	1098	51	684	\N	\N
+5117	3693	176	1561	\N	\N
+5118	2046	19	918	\N	\N
+5119	3597	198	636	\N	\N
+5120	1760	205	760	\N	\N
+5121	965	181	90	\N	\N
+5122	2517	176	1046	\N	\N
+5123	2227	181	863	\N	\N
+5124	5392	13	1006	\N	\N
+5125	5225	62	684	\N	\N
+5126	1150	19	1455	\N	\N
+5127	4760	178	665	\N	\N
+5128	1942	51	1367	\N	\N
+5129	4387	134	645	\N	\N
+5130	2330	15	974	\N	\N
+5131	1465	176	502	\N	\N
+5132	2319	62	1298	\N	\N
+5133	915	68	424	\N	\N
+5134	4701	140	1152	\N	\N
+5135	112	62	656	\N	\N
+5136	4630	5	533	\N	\N
+5137	2483	62	684	\N	\N
+5138	1068	51	1006	\N	\N
+5139	4152	176	1010	\N	\N
+5140	1877	176	1338	\N	\N
+5141	2424	135	1281	\N	\N
+5142	4261	201	1333	\N	\N
+5143	4547	51	684	\N	\N
+5144	2323	13	1184	\N	\N
+5145	976	176	1338	\N	\N
+5146	356	200	944	\N	\N
+5147	4014	51	684	\N	\N
+5148	3640	37	506	\N	\N
+5149	805	9	1211	\N	\N
+5150	516	140	911	\N	\N
+5151	65	212	1412	\N	\N
+5152	5494	51	937	\N	\N
+5153	5430	10	1343	\N	\N
+5154	4090	9	791	\N	\N
+5155	4824	51	1006	\N	\N
+5156	826	62	1006	\N	\N
+5157	1319	100	1248	\N	\N
+5158	4563	51	937	\N	\N
+5159	2048	176	441	\N	\N
+5160	4847	51	726	\N	\N
+5161	80	51	893	\N	\N
+5162	1997	134	645	\N	\N
+5163	861	154	846	\N	\N
+5164	2389	179	496	\N	\N
+5165	4338	155	1301	\N	\N
+5166	706	15	825	\N	\N
+5167	312	13	791	\N	\N
+5168	4322	4	684	\N	\N
+5169	314	181	665	\N	\N
+5170	942	51	1335	\N	\N
+5171	5163	62	1043	\N	\N
+5172	2287	181	1010	\N	\N
+5173	4401	51	684	\N	\N
+5174	275	62	656	\N	\N
+5175	988	37	656	\N	\N
+5176	2579	176	1065	\N	\N
+5177	78	35	1358	\N	\N
+5178	2296	59	1195	\N	\N
+5179	44	68	1306	\N	\N
+5180	857	102	656	\N	\N
+5181	406	37	640	\N	\N
+5182	683	176	1307	\N	\N
+5183	2435	186	950	\N	\N
+5184	11	31	1367	\N	\N
+5185	898	201	1054	\N	\N
+5186	4912	131	856	\N	\N
+5187	1459	212	533	\N	\N
+5188	1971	176	1412	\N	\N
+5189	5150	51	641	\N	\N
+5190	1721	2	1152	\N	\N
+5191	2543	176	1274	\N	\N
+5192	2483	176	1338	\N	\N
+5193	4086	181	1154	\N	\N
+5194	1526	50	1298	\N	\N
+5195	2316	182	863	\N	\N
+5196	1566	158	606	\N	\N
+5197	1443	68	941	\N	\N
+5198	2753	181	684	\N	\N
+5199	5277	163	665	\N	\N
+5200	1604	147	531	\N	\N
+5201	4132	37	1006	\N	\N
+5202	1266	58	1321	\N	\N
+5203	4689	51	658	\N	\N
+5204	5078	51	309	\N	\N
+5205	4873	19	836	\N	\N
+5206	2052	48	1360	\N	\N
+5207	1586	176	1286	\N	\N
+5208	5397	69	941	\N	\N
+5209	546	62	529	\N	\N
+5210	2374	51	1195	\N	\N
+5211	5338	51	1424	\N	\N
+5212	4159	62	1043	\N	\N
+5213	1565	176	621	\N	\N
+5214	1284	12	726	\N	\N
+5215	2117	174	863	\N	\N
+5216	878	19	1281	\N	\N
+5217	428	176	611	\N	\N
+5218	4382	51	684	\N	\N
+5219	2321	62	1536	\N	\N
+5220	1261	62	419	\N	\N
+5221	5484	51	937	\N	\N
+5222	2443	140	797	\N	\N
+5223	3784	176	477	\N	\N
+5224	5509	181	944	\N	\N
+5225	4381	51	804	\N	\N
+5226	374	181	40	\N	\N
+5227	3758	176	1119	\N	\N
+5228	5024	99	641	\N	\N
+5229	821	51	1362	\N	\N
+5230	1888	212	533	\N	\N
+5231	2081	135	726	\N	\N
+5232	283	179	693	\N	\N
+5233	677	51	818	\N	\N
+5234	690	51	804	\N	\N
+5235	1586	181	1307	\N	\N
+5236	1881	140	911	\N	\N
+5237	5045	35	1424	\N	\N
+5238	1407	62	1084	\N	\N
+5239	4544	47	1372	\N	\N
+5240	4134	59	656	\N	\N
+5241	706	30	825	\N	\N
+5242	4707	127	36	\N	\N
+5243	2595	139	749	\N	\N
+5244	1881	176	1169	\N	\N
+5245	4757	181	1403	\N	\N
+5246	1751	4	883	\N	\N
+5247	4625	51	657	\N	\N
+5248	4021	181	1280	\N	\N
+5249	3625	202	653	\N	\N
+5250	5271	19	684	\N	\N
+5251	1881	176	647	\N	\N
+5252	3737	51	1195	\N	\N
+5253	5243	51	918	\N	\N
+5254	1176	37	989	\N	\N
+5255	487	204	1563	\N	\N
+5256	1595	68	537	\N	\N
+5257	9	62	1298	\N	\N
+5258	255	2	856	\N	\N
+5259	2785	176	375	\N	\N
+5260	4969	51	1298	\N	\N
+5261	3868	135	1195	\N	\N
+5262	2543	176	637	\N	\N
+5263	2249	62	918	\N	\N
+5264	2196	51	1335	\N	\N
+5265	4914	62	877	\N	\N
+5266	1308	189	404	\N	\N
+5267	646	62	1335	\N	\N
+5268	56	142	1239	\N	\N
+5269	5271	19	804	\N	\N
+5270	2313	179	22	\N	\N
+5271	5572	51	684	\N	\N
+5272	5492	140	1210	\N	\N
+5273	2592	19	167	\N	\N
+5274	2481	176	273	\N	\N
+5275	4014	51	937	\N	\N
+5276	1096	133	856	\N	\N
+5277	1357	51	1298	\N	\N
+5278	4719	58	656	\N	\N
+5279	4970	50	1335	\N	\N
+5280	4750	147	1335	\N	\N
+5281	687	51	1367	\N	\N
+5282	1086	62	1006	\N	\N
+5283	4800	9	1298	\N	\N
+5284	797	74	1542	\N	\N
+5285	591	179	1064	\N	\N
+5286	4263	48	937	\N	\N
+5287	1696	51	656	\N	\N
+5288	477	62	1184	\N	\N
+5289	2188	51	1281	\N	\N
+5290	5038	51	1335	\N	\N
+5291	2409	176	994	\N	\N
+5292	1132	176	944	\N	\N
+5293	2026	176	1006	\N	\N
+5294	148	176	795	\N	\N
+5295	1450	68	1198	\N	\N
+5296	4459	185	1307	\N	\N
+5297	5443	51	656	\N	\N
+5298	4463	181	529	\N	\N
+5299	2047	59	1128	\N	\N
+5300	4565	62	1335	\N	\N
+5301	1027	154	1362	\N	\N
+5302	4138	51	1281	\N	\N
+5303	4709	176	1199	\N	\N
+5304	143	51	1184	\N	\N
+5305	3923	212	453	\N	\N
+5306	4308	181	1200	\N	\N
+5307	1529	86	698	\N	\N
+5308	484	168	78	\N	\N
+5309	252	163	1150	\N	\N
+5310	1631	156	349	\N	\N
+5311	2493	176	1383	\N	\N
+5312	3772	85	1239	\N	\N
+5313	5114	181	923	\N	\N
+5314	2193	176	988	\N	\N
+5315	5522	51	1281	\N	\N
+5316	5134	181	1487	\N	\N
+5317	2251	67	692	\N	\N
+5318	366	176	923	\N	\N
+5319	1410	35	784	\N	\N
+5320	4596	176	1529	\N	\N
+5321	4280	6	1561	\N	\N
+5322	2262	68	479	\N	\N
+5323	215	200	665	\N	\N
+5324	1839	201	934	\N	\N
+5325	4875	13	937	\N	\N
+5326	440	51	1281	\N	\N
+5327	4719	44	656	\N	\N
+5328	2338	47	161	\N	\N
+5329	743	181	693	\N	\N
+5330	585	13	1122	\N	\N
+5331	1176	62	989	\N	\N
+5332	918	147	194	\N	\N
+5333	3754	16	1195	\N	\N
+5334	2379	208	667	\N	\N
+5335	4593	51	1298	\N	\N
+5336	4440	51	893	\N	\N
+5337	2493	176	1519	\N	\N
+5338	1535	62	684	\N	\N
+5339	251	163	1039	\N	\N
+5340	2493	176	1036	\N	\N
+5341	2324	13	1195	\N	\N
+5342	4514	130	1293	\N	\N
+5343	2175	12	1411	\N	\N
+5344	5366	51	1075	\N	\N
+5345	4443	19	804	\N	\N
+5346	1873	176	1511	\N	\N
+5347	5438	179	1297	\N	\N
+5348	2548	181	52	\N	\N
+5349	29	51	1043	\N	\N
+5350	2541	36	584	\N	\N
+5351	1428	44	1281	\N	\N
+5352	1823	51	918	\N	\N
+5353	666	139	1311	\N	\N
+5354	5178	51	804	\N	\N
+5355	4277	190	584	\N	\N
+5356	5419	51	937	\N	\N
+5357	4360	37	1335	\N	\N
+5358	5018	37	989	\N	\N
+5359	5522	51	989	\N	\N
+5360	4765	51	1043	\N	\N
+5361	1137	44	641	\N	\N
+5362	190	51	1367	\N	\N
+5363	515	204	1199	\N	\N
+5364	227	176	1307	\N	\N
+5365	5566	179	1154	\N	\N
+5366	749	202	652	\N	\N
+5367	953	51	1043	\N	\N
+5368	4463	122	601	\N	\N
+5369	4095	37	1195	\N	\N
+5370	4626	62	1411	\N	\N
+5371	4387	134	995	\N	\N
+5372	4081	62	1335	\N	\N
+5373	983	55	989	\N	\N
+5374	4127	204	809	\N	\N
+5375	4299	62	893	\N	\N
+5376	4792	51	684	\N	\N
+5377	1033	171	421	\N	\N
+5378	3733	51	285	\N	\N
+5379	808	62	718	\N	\N
+5380	534	74	1542	\N	\N
+5381	612	171	1561	\N	\N
+5382	1792	51	893	\N	\N
+5383	5019	176	1297	\N	\N
+5384	1004	51	1273	\N	\N
+5385	344	62	937	\N	\N
+5386	4467	62	1281	\N	\N
+5387	5136	51	1195	\N	\N
+5388	3590	62	656	\N	\N
+5389	4413	51	937	\N	\N
+5390	1458	50	989	\N	\N
+5391	1483	176	81	\N	\N
+5392	2783	51	791	\N	\N
+5393	4775	19	1195	\N	\N
+5394	1933	176	1307	\N	\N
+5395	1042	19	1075	\N	\N
+5396	5330	13	289	\N	\N
+5397	5355	179	410	\N	\N
+5398	4839	51	1281	\N	\N
+5399	427	51	818	\N	\N
+5400	5071	35	918	\N	\N
+5401	4373	51	1043	\N	\N
+5402	2428	19	1298	\N	\N
+5403	45	62	921	\N	\N
+5404	3708	134	645	\N	\N
+5405	5405	179	863	\N	\N
+5406	980	51	1195	\N	\N
+5407	3726	51	684	\N	\N
+5408	249	19	1281	\N	\N
+5409	4527	35	489	\N	\N
+5410	4658	176	1561	\N	\N
+5411	3974	51	684	\N	\N
+5412	4000	62	684	\N	\N
+5413	5161	37	937	\N	\N
+5414	846	51	656	\N	\N
+5415	5464	51	1195	\N	\N
+5416	4504	51	1038	\N	\N
+5417	766	62	1389	\N	\N
+5418	2051	116	1362	\N	\N
+5419	2338	127	161	\N	\N
+5420	3921	208	1563	\N	\N
+5421	2140	186	1046	\N	\N
+5422	1032	202	652	\N	\N
+5423	5058	19	656	\N	\N
+5424	1444	68	941	\N	\N
+5425	4365	51	791	\N	\N
+5426	1356	74	805	\N	\N
+5427	1921	4	1293	\N	\N
+5428	4989	51	1298	\N	\N
+5429	249	198	1010	\N	\N
+5430	1886	135	856	\N	\N
+5431	2227	212	502	\N	\N
+5432	162	181	517	\N	\N
+5433	1125	139	641	\N	\N
+5434	407	62	656	\N	\N
+5435	3979	51	72	\N	\N
+5436	2154	176	477	\N	\N
+5437	758	183	1367	\N	\N
+5438	2428	19	656	\N	\N
+5439	5021	62	490	\N	\N
+5440	4796	145	510	\N	\N
+5441	4972	179	1154	\N	\N
+5442	2533	140	791	\N	\N
+5443	4327	51	937	\N	\N
+5444	4196	62	937	\N	\N
+5445	1565	176	477	\N	\N
+5446	1664	181	1077	\N	\N
+5447	201	170	494	\N	\N
+5448	3966	176	724	\N	\N
+5449	264	74	684	\N	\N
+5450	660	135	1062	\N	\N
+5451	3873	59	937	\N	\N
+5452	2423	51	1335	\N	\N
+5453	1952	62	789	\N	\N
+5454	5264	51	937	\N	\N
+5455	391	51	1497	\N	\N
+5456	2326	47	146	\N	\N
+5457	4914	62	529	\N	\N
+5458	896	181	494	\N	\N
+5459	2375	51	726	\N	\N
+5460	1952	62	732	\N	\N
+5461	1599	201	1338	\N	\N
+5462	4521	108	864	\N	\N
+5463	4677	98	1460	\N	\N
+5464	5307	142	607	\N	\N
+5465	4361	58	641	\N	\N
+5466	1313	164	398	\N	\N
+5467	1032	130	1182	\N	\N
+5468	2601	176	1307	\N	\N
+5469	1193	131	1281	\N	\N
+5470	3659	145	188	\N	\N
+5471	1240	111	937	\N	\N
+5472	1998	140	995	\N	\N
+5473	1737	51	877	\N	\N
+5474	1193	139	1281	\N	\N
+5475	1184	176	1298	\N	\N
+5476	2280	204	1199	\N	\N
+5477	5401	51	1335	\N	\N
+5478	4392	35	489	\N	\N
+5479	3657	176	1338	\N	\N
+5480	4232	51	1006	\N	\N
+5481	5322	51	1298	\N	\N
+5482	1712	70	1237	\N	\N
+5483	1354	184	1281	\N	\N
+5484	4446	142	684	\N	\N
+5485	5563	51	684	\N	\N
+5486	5117	51	1281	\N	\N
+5487	2209	139	1458	\N	\N
+5488	1331	51	86	\N	\N
+5489	1118	24	1084	\N	\N
+5490	5521	51	1335	\N	\N
+5491	1587	62	1281	\N	\N
+5492	1185	19	1298	\N	\N
+5493	4397	51	1043	\N	\N
+5494	5363	62	1184	\N	\N
+5495	8	62	1298	\N	\N
+5496	5244	201	1311	\N	\N
+5497	4799	51	1335	\N	\N
+5498	1681	181	819	\N	\N
+5499	1496	68	861	\N	\N
+5500	4720	44	1298	\N	\N
+5501	4981	190	1076	\N	\N
+5502	4189	62	684	\N	\N
+5503	675	51	818	\N	\N
+5504	2409	176	1427	\N	\N
+5505	639	59	1335	\N	\N
+5506	4884	135	937	\N	\N
+5507	4836	19	918	\N	\N
+5508	5322	51	918	\N	\N
+5509	2402	176	774	\N	\N
+5510	2090	62	989	\N	\N
+5511	5064	163	1010	\N	\N
+5512	1688	62	529	\N	\N
+5513	1253	13	26	\N	\N
+5514	2488	37	684	\N	\N
+5515	1955	201	936	\N	\N
+5516	220	35	684	\N	\N
+5517	245	163	1010	\N	\N
+5518	806	62	1298	\N	\N
+5519	1083	212	1343	\N	\N
+5520	346	62	937	\N	\N
+5521	1277	51	1510	\N	\N
+5522	1036	176	656	\N	\N
+5523	4698	203	693	\N	\N
+5524	261	51	1455	\N	\N
+5525	2563	179	11	\N	\N
+5526	2122	152	989	\N	\N
+5527	2369	2	1195	\N	\N
+5528	4654	176	1204	\N	\N
+5529	5418	51	1335	\N	\N
+5530	56	186	441	\N	\N
+5531	23	51	1335	\N	\N
+5532	1614	44	989	\N	\N
+5533	4795	13	1335	\N	\N
+5534	4130	19	989	\N	\N
+5535	2011	131	641	\N	\N
+5536	5262	58	607	\N	\N
+5537	4333	13	893	\N	\N
+5538	4149	51	656	\N	\N
+5539	1336	176	1084	\N	\N
+5540	4627	176	1516	\N	\N
+5541	847	194	698	\N	\N
+5542	4375	167	1127	\N	\N
+5543	2610	176	1077	\N	\N
+5544	1204	194	693	\N	\N
+5545	3884	204	665	\N	\N
+5546	3672	176	672	\N	\N
+5547	2537	58	1122	\N	\N
+5548	7	181	1286	\N	\N
+5549	1348	35	1424	\N	\N
+5550	275	62	1298	\N	\N
+5551	2531	176	1278	\N	\N
+5552	5486	51	1084	\N	\N
+5553	765	51	1367	\N	\N
+5554	2329	47	146	\N	\N
+5555	4615	176	416	\N	\N
+5556	2753	51	791	\N	\N
+5557	4343	136	1006	\N	\N
+5558	4337	51	860	\N	\N
+5559	5341	75	944	\N	\N
+5560	4753	212	511	\N	\N
+5561	4943	131	1281	\N	\N
+5562	2631	181	1231	\N	\N
+5563	4436	37	1461	\N	\N
+5564	1266	54	1321	\N	\N
+5565	2113	171	986	\N	\N
+5566	1801	51	1006	\N	\N
+5567	2409	176	1307	\N	\N
+5568	920	166	941	\N	\N
+5569	22	62	1062	\N	\N
+5570	5013	176	895	\N	\N
+5571	5373	32	1184	\N	\N
+5572	847	74	1006	\N	\N
+5573	847	197	1006	\N	\N
+5574	46	142	989	\N	\N
+5575	1027	154	733	\N	\N
+5576	617	181	395	\N	\N
+5577	4241	176	572	\N	\N
+5578	4197	51	989	\N	\N
+5579	4376	22	964	\N	\N
+5580	3805	155	606	\N	\N
+5581	780	7	698	\N	\N
+5582	805	9	1190	\N	\N
+5583	5142	179	494	\N	\N
+5584	5132	176	1459	\N	\N
+5585	535	201	590	\N	\N
+5586	4269	62	893	\N	\N
+5587	4491	51	1084	\N	\N
+5588	5263	51	684	\N	\N
+5589	5123	51	1075	\N	\N
+5590	970	51	1184	\N	\N
+5591	247	163	665	\N	\N
+5592	5266	19	607	\N	\N
+5593	702	212	612	\N	\N
+5594	5371	32	1272	\N	\N
+5595	4368	133	1135	\N	\N
+5596	1312	189	398	\N	\N
+5597	2279	181	1240	\N	\N
+5598	343	51	860	\N	\N
+5599	3874	59	937	\N	\N
+5600	4375	51	838	\N	\N
+5601	2420	37	860	\N	\N
+5602	4487	212	517	\N	\N
+5603	4563	62	1335	\N	\N
+5604	3590	50	656	\N	\N
+5605	2204	176	1046	\N	\N
+5606	5040	135	791	\N	\N
+5607	2412	176	977	\N	\N
+5608	439	135	693	\N	\N
+5609	348	176	684	\N	\N
+5610	4291	51	989	\N	\N
+5611	2025	51	59	\N	\N
+5612	2043	19	918	\N	\N
+5613	3849	58	1195	\N	\N
+5614	1906	59	1195	\N	\N
+5615	393	37	893	\N	\N
+5616	2023	51	1335	\N	\N
+5617	400	62	656	\N	\N
+5618	612	114	1298	\N	\N
+5619	2391	179	1255	\N	\N
+5620	1598	147	531	\N	\N
+5621	5350	176	684	\N	\N
+5622	1437	88	49	\N	\N
+5623	4233	51	1006	\N	\N
+5624	4809	13	1084	\N	\N
+5625	4062	51	1184	\N	\N
+5626	914	68	194	\N	\N
+5627	908	182	517	\N	\N
+5628	1365	51	937	\N	\N
+5629	4625	51	1098	\N	\N
+5630	1894	51	937	\N	\N
+5631	25	51	989	\N	\N
+5632	4138	51	1448	\N	\N
+5633	1800	16	937	\N	\N
+5634	2524	189	1346	\N	\N
+5635	2781	65	893	\N	\N
+5636	671	37	383	\N	\N
+5637	402	51	684	\N	\N
+5638	1139	62	684	\N	\N
+5639	1545	51	1216	\N	\N
+5640	1168	176	621	\N	\N
+5641	703	51	937	\N	\N
+5642	1496	68	583	\N	\N
+5643	5534	104	1066	\N	\N
+5644	4369	181	863	\N	\N
+5645	2361	51	447	\N	\N
+5646	120	2	1561	\N	\N
+5647	141	176	904	\N	\N
+5648	4335	51	1298	\N	\N
+5649	4760	51	1006	\N	\N
+5650	2255	176	937	\N	\N
+5651	1738	201	1503	\N	\N
+5652	5458	51	1323	\N	\N
+5653	4770	13	1135	\N	\N
+5654	2494	19	791	\N	\N
+5655	5387	46	856	\N	\N
+5656	5006	176	1082	\N	\N
+5657	2253	67	861	\N	\N
+5658	1695	64	656	\N	\N
+5659	2518	19	1152	\N	\N
+5660	2071	212	1338	\N	\N
+5661	5304	62	1502	\N	\N
+5662	1941	176	1046	\N	\N
+5663	3889	37	351	\N	\N
+5664	2091	86	664	\N	\N
+5665	4932	131	527	\N	\N
+5666	2400	191	809	\N	\N
+5667	1212	45	937	\N	\N
+5668	4033	163	1010	\N	\N
+5669	2278	51	989	\N	\N
+5670	1202	62	1298	\N	\N
+5671	786	19	1006	\N	\N
+5672	2216	62	490	\N	\N
+5673	2368	19	1195	\N	\N
+5674	897	62	1043	\N	\N
+5675	1016	62	684	\N	\N
+5676	481	68	941	\N	\N
+5677	2483	181	944	\N	\N
+5678	1635	51	733	\N	\N
+5679	180	147	629	\N	\N
+5680	1928	4	588	\N	\N
+5681	5283	58	1298	\N	\N
+5682	5021	62	875	\N	\N
+5683	4253	74	1253	\N	\N
+5684	2113	130	1293	\N	\N
+5685	2469	69	662	\N	\N
+5686	4292	19	974	\N	\N
+5687	1200	62	791	\N	\N
+5688	2582	62	1043	\N	\N
+5689	426	58	746	\N	\N
+5690	4911	62	918	\N	\N
+5691	2152	95	918	\N	\N
+5692	1270	155	53	\N	\N
+5693	518	181	121	\N	\N
+5694	367	140	656	\N	\N
+5695	455	142	1281	\N	\N
+5696	5260	62	937	\N	\N
+5697	4146	13	791	\N	\N
+5698	1732	51	1184	\N	\N
+5699	1347	200	665	\N	\N
+5700	1279	62	937	\N	\N
+5701	2013	176	1140	\N	\N
+5702	1672	62	1281	\N	\N
+5703	218	51	684	\N	\N
+5704	710	13	684	\N	\N
+5705	5179	134	1556	\N	\N
+5706	3977	179	693	\N	\N
+5707	2418	51	1184	\N	\N
+5708	4963	68	692	\N	\N
+5709	880	2	1039	\N	\N
+5710	1494	75	459	\N	\N
+5711	4139	179	1064	\N	\N
+5712	245	160	343	\N	\N
+5713	1643	204	863	\N	\N
+5714	2132	51	1184	\N	\N
+5715	5368	176	665	\N	\N
+5716	3870	51	937	\N	\N
+5717	619	19	804	\N	\N
+5718	4279	158	339	\N	\N
+5719	2099	51	1216	\N	\N
+5720	1309	189	109	\N	\N
+5721	4595	176	665	\N	\N
+5722	1498	186	1238	\N	\N
+5723	1493	62	529	\N	\N
+5724	3895	37	258	\N	\N
+5725	1965	142	856	\N	\N
+5726	4326	51	259	\N	\N
+5727	5548	140	995	\N	\N
+5728	16	212	1335	\N	\N
+5729	4722	51	684	\N	\N
+5730	4594	176	1548	\N	\N
+5731	105	62	893	\N	\N
+5732	551	135	1288	\N	\N
+5733	3919	181	1561	\N	\N
+5734	5091	179	1240	\N	\N
+5735	2368	51	726	\N	\N
+5736	1528	86	698	\N	\N
+5737	4412	51	1195	\N	\N
+5738	594	164	1522	\N	\N
+5739	1352	176	863	\N	\N
+5740	1003	176	1307	\N	\N
+5741	669	13	1298	\N	\N
+5742	871	62	1281	\N	\N
+5743	1668	37	256	\N	\N
+5744	212	35	1424	\N	\N
+5745	2191	51	1493	\N	\N
+5746	176	200	665	\N	\N
+5747	924	181	944	\N	\N
+5748	867	19	989	\N	\N
+5749	2585	176	923	\N	\N
+5750	1096	156	1039	\N	\N
+5751	1108	176	655	\N	\N
+5752	97	135	1450	\N	\N
+5753	5547	51	893	\N	\N
+5754	5337	51	1006	\N	\N
+5755	196	212	533	\N	\N
+5756	3945	37	937	\N	\N
+5757	2362	62	16	\N	\N
+5758	282	179	1255	\N	\N
+5759	3655	212	1154	\N	\N
+5760	4065	176	795	\N	\N
+5761	4448	62	1281	\N	\N
+5762	2497	62	937	\N	\N
+5763	950	179	693	\N	\N
+5764	1129	185	944	\N	\N
+5765	1023	176	534	\N	\N
+5766	3849	58	684	\N	\N
+5767	4208	176	221	\N	\N
+5768	4615	176	414	\N	\N
+5769	1829	176	938	\N	\N
+5770	4282	176	1105	\N	\N
+5771	1377	51	1084	\N	\N
+5772	249	139	989	\N	\N
+5773	4266	181	923	\N	\N
+5774	1240	126	937	\N	\N
+5775	836	204	1563	\N	\N
+5776	431	201	821	\N	\N
+5777	4746	176	614	\N	\N
+5778	4563	62	937	\N	\N
+5779	4762	176	1010	\N	\N
+5780	3961	111	692	\N	\N
+5781	4432	51	684	\N	\N
+5782	3733	51	196	\N	\N
+5783	4633	51	633	\N	\N
+5784	5465	137	656	\N	\N
+5785	5005	51	937	\N	\N
+5786	2530	181	445	\N	\N
+5787	1602	68	537	\N	\N
+5788	584	51	1075	\N	\N
+5789	379	62	656	\N	\N
+5790	78	35	1071	\N	\N
+5791	1206	194	693	\N	\N
+5792	1947	22	1195	\N	\N
+5793	4122	140	1556	\N	\N
+5794	2124	19	918	\N	\N
+5795	1903	59	1195	\N	\N
+5796	1879	51	1335	\N	\N
+5797	1825	176	1298	\N	\N
+5798	4692	46	856	\N	\N
+5799	2094	204	809	\N	\N
+5800	304	37	1184	\N	\N
+5801	2763	32	918	\N	\N
+5802	2426	44	1448	\N	\N
+5803	262	62	1281	\N	\N
+5804	1406	62	1418	\N	\N
+5805	4481	51	641	\N	\N
+5806	4462	88	479	\N	\N
+5807	262	197	1075	\N	\N
+5808	2216	62	860	\N	\N
+5809	805	9	1139	\N	\N
+5810	264	56	1455	\N	\N
+5811	839	51	1006	\N	\N
+5812	1805	176	665	\N	\N
+5813	3665	163	989	\N	\N
+5814	4624	58	656	\N	\N
+5815	1818	58	1418	\N	\N
+5816	5065	51	96	\N	\N
+5817	1409	51	1424	\N	\N
+5818	1305	51	1298	\N	\N
+5819	1009	19	684	\N	\N
+5820	1864	86	230	\N	\N
+5821	1462	138	1039	\N	\N
+5822	1032	171	987	\N	\N
+5823	343	2	860	\N	\N
+5824	96	181	359	\N	\N
+5825	4840	51	1448	\N	\N
+5826	5146	176	1307	\N	\N
+5827	4236	51	1006	\N	\N
+5828	1580	51	1216	\N	\N
+5829	1108	185	655	\N	\N
+5830	4374	15	684	\N	\N
+5831	78	51	1070	\N	\N
+5832	669	13	1455	\N	\N
+5833	4659	176	1561	\N	\N
+5834	4459	32	1298	\N	\N
+5835	896	62	490	\N	\N
+5836	612	45	1207	\N	\N
+5837	2416	51	856	\N	\N
+5838	3575	176	1338	\N	\N
+5839	1515	187	295	\N	\N
+5840	4369	62	1043	\N	\N
+5841	345	131	1281	\N	\N
+5842	5568	156	989	\N	\N
+5843	1406	204	957	\N	\N
+5844	2413	176	1298	\N	\N
+5845	2051	69	424	\N	\N
+5846	5260	62	684	\N	\N
+5847	56	136	1239	\N	\N
+5848	4565	51	1195	\N	\N
+5849	4576	79	1544	\N	\N
+5850	869	163	1307	\N	\N
+5851	3992	88	1337	\N	\N
+5852	4785	62	649	\N	\N
+5853	795	68	1537	\N	\N
+5854	3754	19	937	\N	\N
+5855	1529	87	698	\N	\N
+5856	4598	176	1310	\N	\N
+5857	2122	152	990	\N	\N
+5858	710	175	1240	\N	\N
+5859	1579	51	818	\N	\N
+5860	930	59	918	\N	\N
+5861	2587	51	684	\N	\N
+5862	3859	58	989	\N	\N
+5863	4205	62	649	\N	\N
+5864	4394	44	605	\N	\N
+5865	4730	176	944	\N	\N
+5866	4264	173	911	\N	\N
+5867	4690	134	1556	\N	\N
+5868	3587	62	656	\N	\N
+5869	17	2	656	\N	\N
+5870	4489	62	1122	\N	\N
+5871	3661	135	856	\N	\N
+5872	779	51	1513	\N	\N
+5873	4859	62	1184	\N	\N
+5874	976	62	1043	\N	\N
+5875	1525	176	1010	\N	\N
+5876	2123	204	667	\N	\N
+5877	4668	19	791	\N	\N
+5878	4062	186	610	\N	\N
+5879	3889	62	351	\N	\N
+5880	3574	4	951	\N	\N
+5881	1763	51	684	\N	\N
+5882	4617	187	135	\N	\N
+5883	4917	62	718	\N	\N
+5884	764	135	684	\N	\N
+5885	355	59	1075	\N	\N
+5886	4695	176	754	\N	\N
+5887	5329	154	1281	\N	\N
+5888	4340	176	790	\N	\N
+5889	5511	51	684	\N	\N
+5890	2320	122	1152	\N	\N
+5891	1096	157	856	\N	\N
+5892	4292	19	1502	\N	\N
+5893	303	194	952	\N	\N
+5894	867	19	1281	\N	\N
+5895	4148	62	94	\N	\N
+5896	1593	181	1286	\N	\N
+5897	11	31	1084	\N	\N
+5898	1586	62	1281	\N	\N
+5899	4255	51	1084	\N	\N
+5900	3885	51	1281	\N	\N
+5901	4801	51	1481	\N	\N
+5902	2144	176	800	\N	\N
+5903	1635	176	1307	\N	\N
+5904	1032	5	1295	\N	\N
+5905	2519	37	1335	\N	\N
+5906	1591	62	641	\N	\N
+5907	455	154	1513	\N	\N
+5908	5391	67	861	\N	\N
+5909	2491	201	1438	\N	\N
+5910	901	51	1281	\N	\N
+5911	377	62	918	\N	\N
+5912	3937	53	1184	\N	\N
+5913	4138	51	989	\N	\N
+5914	5462	176	639	\N	\N
+5915	753	176	944	\N	\N
+5916	1876	51	1335	\N	\N
+5917	1661	47	818	\N	\N
+5918	1265	51	1335	\N	\N
+5919	2253	68	861	\N	\N
+5920	1882	176	638	\N	\N
+5921	539	165	1506	\N	\N
+5922	2157	181	1338	\N	\N
+5923	444	131	581	\N	\N
+5924	4891	24	656	\N	\N
+5925	5532	60	1298	\N	\N
+5926	5391	67	493	\N	\N
+5927	4785	62	915	\N	\N
+5928	1516	62	1043	\N	\N
+5929	3586	58	1298	\N	\N
+5930	4169	62	1481	\N	\N
+5931	4516	51	1075	\N	\N
+5932	5338	51	645	\N	\N
+5933	4202	167	1199	\N	\N
+5934	2122	13	656	\N	\N
+5935	2778	109	864	\N	\N
+5936	164	176	788	\N	\N
+5937	2532	176	937	\N	\N
+5938	4936	147	1306	\N	\N
+5939	1191	51	1281	\N	\N
+5940	3896	176	1252	\N	\N
+5941	5167	51	559	\N	\N
+5942	2419	62	1043	\N	\N
+5943	4241	51	1281	\N	\N
+5944	745	74	684	\N	\N
+5945	3584	176	1338	\N	\N
+5946	1791	137	1418	\N	\N
+5947	2313	179	511	\N	\N
+5948	5517	62	684	\N	\N
+5949	1515	187	134	\N	\N
+5950	2029	51	836	\N	\N
+5951	2165	176	800	\N	\N
+5952	1554	181	1240	\N	\N
+5953	362	176	1439	\N	\N
+5954	1011	51	1006	\N	\N
+5955	3912	179	880	\N	\N
+5956	4233	51	656	\N	\N
+5957	5381	46	1039	\N	\N
+5958	2512	135	616	\N	\N
+5959	1055	194	1078	\N	\N
+5960	2482	186	693	\N	\N
+5961	4945	51	937	\N	\N
+5962	1744	179	435	\N	\N
+5963	4044	173	1556	\N	\N
+5964	739	176	1256	\N	\N
+5965	482	147	941	\N	\N
+5966	4237	58	1298	\N	\N
+5967	5241	125	1376	\N	\N
+5968	4352	176	1561	\N	\N
+5969	4531	32	489	\N	\N
+5970	5189	140	1556	\N	\N
+5971	1097	176	856	\N	\N
+5972	500	176	1338	\N	\N
+5973	5543	37	684	\N	\N
+5974	5302	19	918	\N	\N
+5975	5456	139	668	\N	\N
+5976	4991	68	861	\N	\N
+5977	4050	13	1043	\N	\N
+5978	48	37	1281	\N	\N
+5979	1928	3	1003	\N	\N
+5980	941	44	1281	\N	\N
+5981	3625	202	1293	\N	\N
+5982	5162	176	142	\N	\N
+5983	4134	139	656	\N	\N
+5984	1982	51	157	\N	\N
+5985	246	139	1281	\N	\N
+5986	3843	179	1240	\N	\N
+5987	1157	51	684	\N	\N
+5988	568	140	995	\N	\N
+5989	4658	176	584	\N	\N
+5990	1975	139	918	\N	\N
+5991	4880	51	556	\N	\N
+5992	2403	176	348	\N	\N
+5993	4703	149	861	\N	\N
+5994	5468	176	1156	\N	\N
+5995	1139	176	1338	\N	\N
+5996	996	2	727	\N	\N
+5997	5530	19	989	\N	\N
+5998	1269	51	66	\N	\N
+5999	2041	176	923	\N	\N
+6000	4637	46	1098	\N	\N
+6001	829	20	836	\N	\N
+6002	996	2	1198	\N	\N
+6003	3792	176	1443	\N	\N
+6004	5555	51	1281	\N	\N
+6005	3625	202	1102	\N	\N
+6006	1661	204	1104	\N	\N
+6007	2165	176	969	\N	\N
+6008	1984	37	1335	\N	\N
+6009	124	51	1298	\N	\N
+6010	4686	176	944	\N	\N
+6011	1010	176	1297	\N	\N
+6012	164	139	645	\N	\N
+6013	3988	129	1039	\N	\N
+6014	3579	62	1057	\N	\N
+6015	1082	169	1529	\N	\N
+6016	1227	62	582	\N	\N
+6017	4901	179	1240	\N	\N
+6018	839	51	718	\N	\N
+6019	1682	181	1353	\N	\N
+6020	5331	210	1027	\N	\N
+6021	2230	51	1075	\N	\N
+6022	1719	51	1274	\N	\N
+6023	553	136	1428	\N	\N
+6024	5522	163	989	\N	\N
+6025	695	190	487	\N	\N
+6026	3678	181	665	\N	\N
+6027	1866	51	1330	\N	\N
+6028	1000	51	1195	\N	\N
+6029	4619	176	1561	\N	\N
+6030	223	139	1298	\N	\N
+6031	432	51	1335	\N	\N
+6032	2421	51	184	\N	\N
+6033	480	204	1199	\N	\N
+6034	5312	181	1255	\N	\N
+6035	2256	19	1281	\N	\N
+6036	5061	116	1281	\N	\N
+6037	367	19	1298	\N	\N
+6038	4134	181	944	\N	\N
+6039	1606	62	656	\N	\N
+6040	4481	62	641	\N	\N
+6041	5365	51	1335	\N	\N
+6042	5046	176	672	\N	\N
+6043	1918	204	820	\N	\N
+6044	3724	62	684	\N	\N
+6045	511	176	1281	\N	\N
+6046	2409	176	665	\N	\N
+6047	3845	176	867	\N	\N
+6048	655	51	1362	\N	\N
+6049	246	156	98	\N	\N
+6050	1705	175	783	\N	\N
+6051	609	46	1039	\N	\N
+6052	454	163	1513	\N	\N
+6053	4286	179	533	\N	\N
+6054	2365	69	692	\N	\N
+6055	1221	62	1281	\N	\N
+6056	1352	176	584	\N	\N
+6057	1663	197	718	\N	\N
+6058	2550	176	693	\N	\N
+6059	2255	176	684	\N	\N
+6060	349	212	1463	\N	\N
+6061	4764	181	923	\N	\N
+6062	1959	51	1367	\N	\N
+6063	1125	135	856	\N	\N
+6064	87	59	937	\N	\N
+6065	1367	19	684	\N	\N
+6066	5385	32	1535	\N	\N
+6067	2149	102	941	\N	\N
+6068	3586	51	335	\N	\N
+6069	5096	201	1563	\N	\N
+6070	4851	59	1195	\N	\N
+6071	5537	201	882	\N	\N
+6072	5459	58	325	\N	\N
+6073	1344	201	1008	\N	\N
+6074	4437	185	1119	\N	\N
+6075	1102	179	1064	\N	\N
+6076	2416	51	1281	\N	\N
+6077	1073	51	656	\N	\N
+6078	4760	51	656	\N	\N
+6079	93	68	861	\N	\N
+6080	1266	54	1026	\N	\N
+6081	2179	181	809	\N	\N
+6082	4850	62	893	\N	\N
+6083	1329	179	1047	\N	\N
+6084	903	46	1039	\N	\N
+6085	5409	48	1502	\N	\N
+6086	2233	62	1298	\N	\N
+6087	4993	142	1239	\N	\N
+6088	1491	75	477	\N	\N
+6089	4702	181	1195	\N	\N
+6090	4205	62	915	\N	\N
+6091	102	212	514	\N	\N
+6092	4760	178	1030	\N	\N
+6093	1349	179	228	\N	\N
+6094	1392	62	475	\N	\N
+6095	488	62	139	\N	\N
+6096	476	176	1484	\N	\N
+6097	1118	31	1367	\N	\N
+6098	965	204	1104	\N	\N
+6099	2440	212	750	\N	\N
+6100	612	2	656	\N	\N
+6101	4572	176	791	\N	\N
+6102	3953	51	1513	\N	\N
+6103	5500	176	1252	\N	\N
+6104	1320	135	918	\N	\N
+6105	2576	86	1153	\N	\N
+6106	2764	147	549	\N	\N
+6107	1268	37	311	\N	\N
+6108	2411	176	1307	\N	\N
+6109	1366	51	1214	\N	\N
+6110	2122	19	989	\N	\N
+6111	847	86	697	\N	\N
+6112	1440	68	531	\N	\N
+6113	567	44	1103	\N	\N
+6114	4190	35	1274	\N	\N
+6115	1586	37	856	\N	\N
+6116	5171	51	684	\N	\N
+6117	1569	51	818	\N	\N
+6118	1553	13	684	\N	\N
+6119	633	204	868	\N	\N
+6120	4535	51	656	\N	\N
+6121	1306	189	128	\N	\N
+6122	253	129	856	\N	\N
+6123	1616	51	1348	\N	\N
+6124	1548	88	1153	\N	\N
+6125	713	19	1062	\N	\N
+6126	2402	176	1111	\N	\N
+6127	4522	105	1554	\N	\N
+6128	5515	181	895	\N	\N
+6129	189	51	5	\N	\N
+6130	1656	62	1281	\N	\N
+6131	2780	35	937	\N	\N
+6132	3950	62	1239	\N	\N
+6133	32	68	578	\N	\N
+6134	4490	62	656	\N	\N
+6135	4625	38	1098	\N	\N
+6136	1563	176	1307	\N	\N
+6137	5009	51	656	\N	\N
+6138	1095	58	1075	\N	\N
+6139	4873	19	768	\N	\N
+6140	4202	167	944	\N	\N
+6141	640	204	1010	\N	\N
+6142	1303	62	877	\N	\N
+6143	1120	51	656	\N	\N
+6144	258	131	1281	\N	\N
+6145	4206	176	1363	\N	\N
+6146	5217	147	29	\N	\N
+6147	2783	51	656	\N	\N
+6148	1866	35	989	\N	\N
+6149	4859	204	944	\N	\N
+6150	1607	62	213	\N	\N
+6151	5427	134	646	\N	\N
+6152	5131	67	51	\N	\N
+6153	3754	22	937	\N	\N
+6154	526	51	1075	\N	\N
+6155	4685	51	937	\N	\N
+6156	411	212	608	\N	\N
+6157	2384	176	944	\N	\N
+6158	4072	62	1195	\N	\N
+6159	5295	13	656	\N	\N
+6160	5308	51	684	\N	\N
+6161	1473	51	836	\N	\N
+6162	3708	134	1288	\N	\N
+6163	3579	62	1348	\N	\N
+6164	46	67	1306	\N	\N
+6165	211	51	637	\N	\N
+6166	1127	62	1006	\N	\N
+6167	4203	190	863	\N	\N
+6168	2498	212	1463	\N	\N
+6169	460	203	693	\N	\N
+6170	4872	62	656	\N	\N
+6171	2299	176	706	\N	\N
+6172	4486	62	641	\N	\N
+6173	4243	19	656	\N	\N
+6174	847	45	1207	\N	\N
+6175	4011	176	1370	\N	\N
+6176	752	212	517	\N	\N
+6177	2450	176	1371	\N	\N
+6178	4598	176	694	\N	\N
+6179	4064	200	665	\N	\N
+6180	5282	19	1367	\N	\N
+6181	957	68	941	\N	\N
+6182	236	176	1561	\N	\N
+6183	166	135	1271	\N	\N
+6184	4567	62	684	\N	\N
+6185	1345	176	840	\N	\N
+6186	3780	176	1046	\N	\N
+6187	141	176	500	\N	\N
+6188	4878	62	1481	\N	\N
+6189	189	74	448	\N	\N
+6190	1137	44	1448	\N	\N
+6191	1117	176	1046	\N	\N
+6192	793	62	825	\N	\N
+6193	5298	15	1135	\N	\N
+6194	4842	51	937	\N	\N
+6195	545	181	1561	\N	\N
+6196	4774	2	918	\N	\N
+6197	237	62	684	\N	\N
+6198	268	204	923	\N	\N
+6199	1401	135	1298	\N	\N
+6200	1438	88	861	\N	\N
+6201	3959	111	693	\N	\N
+6202	1943	19	989	\N	\N
+6203	204	176	944	\N	\N
+6204	88	146	664	\N	\N
+6205	942	51	937	\N	\N
+6206	1021	179	494	\N	\N
+6207	1080	178	1529	\N	\N
+6208	1319	19	1184	\N	\N
+6209	4332	62	1298	\N	\N
+6210	1305	51	656	\N	\N
+6211	3645	166	944	\N	\N
+6212	1033	198	294	\N	\N
+6213	287	51	46	\N	\N
+6214	5157	51	1298	\N	\N
+6215	705	181	1338	\N	\N
+6216	915	166	944	\N	\N
+6217	507	62	390	\N	\N
+6218	715	212	693	\N	\N
+6219	4853	37	684	\N	\N
+6220	1139	181	1240	\N	\N
+6221	5361	68	1537	\N	\N
+6222	2572	147	1277	\N	\N
+6223	1309	189	108	\N	\N
+6224	198	51	65	\N	\N
+6225	259	62	684	\N	\N
+6226	4928	147	531	\N	\N
+6227	2028	201	809	\N	\N
+6228	3617	176	1363	\N	\N
+6229	4261	201	682	\N	\N
+6230	1665	181	1286	\N	\N
+6231	167	135	1271	\N	\N
+6232	5014	176	1307	\N	\N
+6233	284	140	1298	\N	\N
+6234	5383	46	856	\N	\N
+6235	2454	62	1448	\N	\N
+6236	616	46	856	\N	\N
+6237	4323	62	1335	\N	\N
+6238	2286	62	293	\N	\N
+6239	558	19	313	\N	\N
+6240	415	32	1184	\N	\N
+6241	1873	176	637	\N	\N
+6242	1027	160	219	\N	\N
+6243	2749	62	1298	\N	\N
+6244	4649	176	1561	\N	\N
+6245	4350	178	1241	\N	\N
+6246	4304	176	769	\N	\N
+6247	2479	176	1307	\N	\N
+6248	322	51	1075	\N	\N
+6249	811	193	1307	\N	\N
+6250	4595	176	656	\N	\N
+6251	1840	38	804	\N	\N
+6252	1703	51	1274	\N	\N
+6253	1394	62	1239	\N	\N
+6254	1268	37	68	\N	\N
+6255	1271	51	1216	\N	\N
+6256	2048	176	438	\N	\N
+6257	4895	176	533	\N	\N
+6258	4308	181	920	\N	\N
+6259	1786	176	1046	\N	\N
+6260	5063	176	1338	\N	\N
+6261	1263	68	941	\N	\N
+6262	1751	4	684	\N	\N
+6263	326	176	693	\N	\N
+6264	4131	150	1306	\N	\N
+6265	1976	3	39	\N	\N
+6266	1542	51	656	\N	\N
+6267	4391	51	1006	\N	\N
+6268	2354	176	1138	\N	\N
+6269	4824	51	656	\N	\N
+6270	2164	62	989	\N	\N
+6271	5104	37	1335	\N	\N
+6272	2418	51	656	\N	\N
+6273	915	68	937	\N	\N
+6274	313	176	671	\N	\N
+6275	3574	4	777	\N	\N
+6276	130	51	1128	\N	\N
+6277	38	102	918	\N	\N
+6278	1650	51	685	\N	\N
+6279	404	51	918	\N	\N
+6280	3870	139	1195	\N	\N
+6281	1578	51	152	\N	\N
+6282	186	204	1412	\N	\N
+6283	4114	176	1339	\N	\N
+6284	627	135	1244	\N	\N
+6285	4687	62	490	\N	\N
+6286	4479	176	671	\N	\N
+6287	249	62	641	\N	\N
+6288	1956	176	1517	\N	\N
+6289	4024	212	944	\N	\N
+6290	5351	176	860	\N	\N
+6291	1345	176	1518	\N	\N
+6292	1953	140	811	\N	\N
+6293	1225	62	860	\N	\N
+6294	4015	13	189	\N	\N
+6295	2389	179	535	\N	\N
+6296	1184	181	665	\N	\N
+6297	4479	176	928	\N	\N
+6298	900	212	517	\N	\N
+6299	4969	51	1006	\N	\N
+6300	2443	140	1136	\N	\N
+6301	1145	176	693	\N	\N
+6302	3716	86	547	\N	\N
+6303	1151	179	863	\N	\N
+6304	5229	51	1096	\N	\N
+6305	5529	160	1199	\N	\N
+6306	4259	176	665	\N	\N
+6307	5035	179	435	\N	\N
+6308	5227	212	1307	\N	\N
+6309	2140	19	656	\N	\N
+6310	3646	181	1307	\N	\N
+6311	1842	135	656	\N	\N
+6312	4759	13	58	\N	\N
+6313	4932	133	856	\N	\N
+6314	249	163	665	\N	\N
+6315	4857	176	932	\N	\N
+6316	1195	19	791	\N	\N
+6317	4117	204	1307	\N	\N
+6318	4205	62	1376	\N	\N
+6319	412	51	259	\N	\N
+6320	557	37	684	\N	\N
+6321	52	62	1281	\N	\N
+6322	3596	198	632	\N	\N
+6323	5451	39	684	\N	\N
+6324	4569	62	1411	\N	\N
+6325	1345	176	1441	\N	\N
+6326	3611	51	937	\N	\N
+6327	4148	62	94	\N	\N
+6328	963	176	1298	\N	\N
+6329	3689	51	198	\N	\N
+6330	662	51	733	\N	\N
+6331	554	105	593	\N	\N
+6332	3906	51	1281	\N	\N
+6333	1417	111	482	\N	\N
+6334	1722	181	1046	\N	\N
+6335	1515	187	296	\N	\N
+6336	1111	51	1335	\N	\N
+6337	4526	62	1152	\N	\N
+6338	3601	62	656	\N	\N
+6339	9	62	656	\N	\N
+6340	3907	176	494	\N	\N
+6341	2436	44	641	\N	\N
+6342	1966	139	1335	\N	\N
+6343	4889	51	989	\N	\N
+6344	4134	176	1307	\N	\N
+6345	1541	13	918	\N	\N
+6346	4182	51	1006	\N	\N
+6347	1427	35	989	\N	\N
+6348	3937	53	1362	\N	\N
+6349	183	32	1184	\N	\N
+6350	557	37	1335	\N	\N
+6351	3728	79	379	\N	\N
+6352	1376	176	1184	\N	\N
+6353	751	51	918	\N	\N
+6354	2402	176	705	\N	\N
+6355	2560	68	1198	\N	\N
+6356	4136	176	1303	\N	\N
+6357	1762	212	1567	\N	\N
+6358	3928	136	1281	\N	\N
+6359	4785	62	1453	\N	\N
+6360	4472	35	637	\N	\N
+6361	559	9	893	\N	\N
+6362	2051	126	424	\N	\N
+6363	2172	51	1195	\N	\N
+6364	3988	156	1235	\N	\N
+6365	1532	59	1298	\N	\N
+6366	1256	51	394	\N	\N
+6367	852	147	1045	\N	\N
+6368	144	51	1113	\N	\N
+6369	2446	175	542	\N	\N
+6370	213	51	726	\N	\N
+6371	174	59	44	\N	\N
+6372	5232	51	152	\N	\N
+6373	2307	32	1513	\N	\N
+6374	5188	137	1556	\N	\N
+6375	3620	88	941	\N	\N
+6376	5036	179	435	\N	\N
+6377	4982	179	1154	\N	\N
+6378	4262	167	944	\N	\N
+6379	239	51	1239	\N	\N
+6380	248	163	1307	\N	\N
+6381	612	171	713	\N	\N
+6382	4297	62	684	\N	\N
+6383	4746	176	1286	\N	\N
+6384	4226	58	1298	\N	\N
+6385	693	37	1152	\N	\N
+6386	2417	44	856	\N	\N
+6387	1633	51	1455	\N	\N
+6388	3875	59	937	\N	\N
+6389	1869	92	1306	\N	\N
+6390	1947	16	937	\N	\N
+6391	2090	62	1184	\N	\N
+6392	4357	58	1084	\N	\N
+6393	4460	176	474	\N	\N
+6394	231	176	795	\N	\N
+6395	4689	51	657	\N	\N
+6396	2784	51	684	\N	\N
+6397	1882	176	1072	\N	\N
+6398	1175	44	516	\N	\N
+6399	2157	15	684	\N	\N
+6400	2462	212	1351	\N	\N
+6401	4387	134	1288	\N	\N
+6402	731	13	791	\N	\N
+6403	3586	58	329	\N	\N
+6404	344	37	937	\N	\N
+6405	4776	176	1298	\N	\N
+6406	1549	62	1195	\N	\N
+6407	5230	51	1096	\N	\N
+6408	1312	189	284	\N	\N
+6409	3923	167	453	\N	\N
+6410	1520	44	1084	\N	\N
+6411	29	51	181	\N	\N
+6412	1589	181	1286	\N	\N
+6413	247	19	1281	\N	\N
+6414	4884	140	937	\N	\N
+6415	5005	51	1481	\N	\N
+6416	1998	140	1288	\N	\N
+6417	3680	204	1199	\N	\N
+6418	2447	62	14	\N	\N
+6419	5371	35	1424	\N	\N
+6420	4812	51	443	\N	\N
+6421	5292	15	1455	\N	\N
+6422	4691	62	1084	\N	\N
+6423	568	140	1288	\N	\N
+6424	2376	69	424	\N	\N
+6425	4060	51	607	\N	\N
+6426	1180	51	989	\N	\N
+6427	4456	176	1000	\N	\N
+6428	3902	51	937	\N	\N
+6429	4244	176	824	\N	\N
+6430	4814	51	1481	\N	\N
+6431	1147	51	893	\N	\N
+6432	4085	203	693	\N	\N
+6433	4646	176	1563	\N	\N
+6434	2599	201	671	\N	\N
+6435	3908	51	1216	\N	\N
+6436	2432	51	989	\N	\N
+6437	1936	51	5	\N	\N
+6438	1370	176	795	\N	\N
+6439	2026	204	809	\N	\N
+6440	2443	176	1218	\N	\N
+6441	611	136	1298	\N	\N
+6442	490	82	464	\N	\N
+6443	254	129	856	\N	\N
+6444	2510	62	1281	\N	\N
+6445	5178	51	684	\N	\N
+6446	2604	176	671	\N	\N
+6447	1120	51	791	\N	\N
+6448	1596	168	916	\N	\N
+6449	2338	2	161	\N	\N
+6450	348	176	1335	\N	\N
+6451	5437	51	1335	\N	\N
+6452	226	186	693	\N	\N
+6453	4484	62	641	\N	\N
+6454	2513	176	1084	\N	\N
+6455	225	212	1412	\N	\N
+6456	4452	86	144	\N	\N
+6457	5140	204	944	\N	\N
+6458	4019	139	656	\N	\N
+6459	847	197	1446	\N	\N
+6460	2323	19	1184	\N	\N
+6461	2349	176	937	\N	\N
+6462	4829	53	937	\N	\N
+6463	1847	51	918	\N	\N
+6464	2036	176	1307	\N	\N
+6465	452	158	1513	\N	\N
+6466	4300	62	937	\N	\N
+6467	5005	51	1195	\N	\N
+6468	410	51	684	\N	\N
+6469	4964	67	941	\N	\N
+6470	181	181	1286	\N	\N
+6471	4492	212	1412	\N	\N
+6472	1805	176	728	\N	\N
+6473	824	62	1348	\N	\N
+6474	1596	168	1295	\N	\N
+6475	4277	190	1338	\N	\N
+6476	536	36	608	\N	\N
+6477	5381	46	856	\N	\N
+6478	5360	181	923	\N	\N
+6479	5290	15	1135	\N	\N
+6480	3752	16	684	\N	\N
+6481	2165	176	1226	\N	\N
+6482	1202	62	1006	\N	\N
+6483	2271	62	656	\N	\N
+6484	805	9	1327	\N	\N
+6485	4516	58	1075	\N	\N
+6486	935	46	856	\N	\N
+6487	2772	176	665	\N	\N
+6488	5317	51	1298	\N	\N
+6489	4975	203	1054	\N	\N
+6490	1952	62	1001	\N	\N
+6491	1121	198	1412	\N	\N
+6492	455	159	1281	\N	\N
+6493	983	176	480	\N	\N
+6494	1270	152	603	\N	\N
+6495	440	51	989	\N	\N
+6496	335	32	1281	\N	\N
+6497	3931	147	1087	\N	\N
+6498	273	167	277	\N	\N
+6499	5049	37	989	\N	\N
+6500	2016	51	684	\N	\N
+6501	1371	147	1296	\N	\N
+6502	3760	176	1335	\N	\N
+6503	4472	35	1272	\N	\N
+6504	5230	51	1481	\N	\N
+6505	3901	51	684	\N	\N
+6506	4489	62	1075	\N	\N
+6507	5383	181	918	\N	\N
+6508	4312	158	1184	\N	\N
+6509	2409	176	437	\N	\N
+6510	922	147	941	\N	\N
+6511	4677	102	1148	\N	\N
+6512	1157	51	1084	\N	\N
+6513	3	37	989	\N	\N
+6514	5170	68	922	\N	\N
+6515	296	176	1502	\N	\N
+6516	4891	212	1352	\N	\N
+6517	4479	176	1312	\N	\N
+6518	1319	22	1075	\N	\N
+6519	1362	142	918	\N	\N
+6520	5371	35	645	\N	\N
+6521	242	163	665	\N	\N
+6522	151	13	791	\N	\N
+6523	2516	51	1075	\N	\N
+6524	4369	62	1152	\N	\N
+6525	4891	204	663	\N	\N
+6526	1140	176	1338	\N	\N
+6527	876	131	856	\N	\N
+6528	2773	176	665	\N	\N
+6529	2013	176	1108	\N	\N
+6530	756	181	232	\N	\N
+6531	1665	181	1307	\N	\N
+6532	4495	212	684	\N	\N
+6533	1382	62	1335	\N	\N
+6534	391	163	1484	\N	\N
+6535	4113	176	863	\N	\N
+6536	1952	62	831	\N	\N
+6537	4723	51	656	\N	\N
+6538	2558	86	1198	\N	\N
+6539	396	62	656	\N	\N
+6540	3841	178	533	\N	\N
+6541	2173	62	1006	\N	\N
+6542	819	181	1307	\N	\N
+6543	1206	69	941	\N	\N
+6544	3790	204	1393	\N	\N
+6545	1589	37	856	\N	\N
+6546	1443	166	944	\N	\N
+6547	2012	32	804	\N	\N
+6548	2264	176	1010	\N	\N
+6549	2428	51	656	\N	\N
+6550	3734	51	937	\N	\N
+6551	4834	51	656	\N	\N
+6552	554	171	1046	\N	\N
+6553	4148	50	94	\N	\N
+6554	4568	51	1335	\N	\N
+6555	532	51	190	\N	\N
+6556	3602	51	1281	\N	\N
+6557	2594	68	1198	\N	\N
+6558	1365	51	804	\N	\N
+6559	642	181	1046	\N	\N
+6560	3742	51	1195	\N	\N
+6561	4368	51	1239	\N	\N
+6562	1161	62	1084	\N	\N
+6563	1410	32	1424	\N	\N
+6564	2352	129	918	\N	\N
+6565	4961	209	474	\N	\N
+6566	1166	51	1075	\N	\N
+6567	4900	179	1338	\N	\N
+6568	4894	51	989	\N	\N
+6569	1818	58	804	\N	\N
+6570	444	133	527	\N	\N
+6571	728	62	1006	\N	\N
+6572	5007	212	1463	\N	\N
+6573	2213	176	880	\N	\N
+6574	5482	51	656	\N	\N
+6575	3884	198	1104	\N	\N
+6576	375	51	937	\N	\N
+6577	32	68	860	\N	\N
+6578	1052	131	856	\N	\N
+6579	2409	176	1340	\N	\N
+6580	599	51	684	\N	\N
+6581	340	51	684	\N	\N
+6582	4525	19	804	\N	\N
+6583	368	62	1418	\N	\N
+6584	1297	51	1298	\N	\N
+6585	4183	167	765	\N	\N
+6586	2536	149	1087	\N	\N
+6587	253	129	1281	\N	\N
+6588	2002	176	684	\N	\N
+6589	5350	181	693	\N	\N
+6590	1823	212	1199	\N	\N
+6591	2006	176	693	\N	\N
+6592	4393	138	1281	\N	\N
+6593	1047	147	531	\N	\N
+6594	1749	51	238	\N	\N
+6595	1873	176	1478	\N	\N
+6596	5494	51	1195	\N	\N
+6597	4317	212	1463	\N	\N
+6598	334	51	1516	\N	\N
+6599	994	176	1046	\N	\N
+6600	2606	13	582	\N	\N
+6601	4655	176	1561	\N	\N
+6602	4265	51	937	\N	\N
+6603	1540	58	1122	\N	\N
+6604	4553	47	1239	\N	\N
+6605	4373	51	1152	\N	\N
+6606	1713	68	462	\N	\N
+6607	212	35	645	\N	\N
+6608	839	51	1348	\N	\N
+6609	5242	199	1408	\N	\N
+6610	1705	175	785	\N	\N
+6611	4957	69	233	\N	\N
+6612	4639	191	1156	\N	\N
+6613	910	68	861	\N	\N
+6614	4536	13	918	\N	\N
+6615	3711	176	459	\N	\N
+6616	1704	35	911	\N	\N
+6617	5308	62	937	\N	\N
+6618	643	51	1250	\N	\N
+6619	713	102	1062	\N	\N
+6620	2319	181	1199	\N	\N
+6621	3662	51	1497	\N	\N
+6622	4047	147	903	\N	\N
+6623	5516	163	656	\N	\N
+6624	1577	51	1096	\N	\N
+6625	4244	176	1332	\N	\N
+6626	691	179	1046	\N	\N
+6627	2458	181	1485	\N	\N
+6628	5411	51	918	\N	\N
+6629	1889	43	175	\N	\N
+6630	57	13	1006	\N	\N
+6631	4711	51	1536	\N	\N
+6632	805	9	1316	\N	\N
+6633	805	9	1520	\N	\N
+6634	4537	68	692	\N	\N
+6635	1601	173	539	\N	\N
+6636	2338	198	255	\N	\N
+6637	989	51	1281	\N	\N
+6638	324	51	1298	\N	\N
+6639	1403	212	516	\N	\N
+6640	2327	122	842	\N	\N
+6641	4975	149	1053	\N	\N
+6642	3625	202	1293	\N	\N
+6643	4322	4	1335	\N	\N
+6644	392	62	656	\N	\N
+6645	3924	176	693	\N	\N
+6646	5266	181	1043	\N	\N
+6647	4486	154	1216	\N	\N
+6648	2054	147	1337	\N	\N
+6649	183	204	1089	\N	\N
+6650	1981	51	1006	\N	\N
+6651	309	51	1075	\N	\N
+6652	4769	62	684	\N	\N
+6653	100	62	1043	\N	\N
+6654	5105	201	1130	\N	\N
+6655	1467	51	1335	\N	\N
+6656	4093	176	795	\N	\N
+6657	4181	176	693	\N	\N
+6658	33	68	684	\N	\N
+6659	2519	58	718	\N	\N
+6660	93	194	863	\N	\N
+6661	4674	212	1152	\N	\N
+6662	338	12	918	\N	\N
+6663	390	62	1502	\N	\N
+6664	4390	32	684	\N	\N
+6665	4309	155	289	\N	\N
+6666	4526	62	860	\N	\N
+6667	384	51	1075	\N	\N
+6668	1856	19	1075	\N	\N
+6669	4876	13	768	\N	\N
+6670	4152	51	1006	\N	\N
+6671	2521	62	989	\N	\N
+6672	320	74	1006	\N	\N
+6673	5009	51	918	\N	\N
+6674	4000	176	1338	\N	\N
+6675	4136	68	941	\N	\N
+6676	1495	176	37	\N	\N
+6677	57	13	684	\N	\N
+6678	2512	135	873	\N	\N
+6679	4307	51	875	\N	\N
+6680	3769	139	684	\N	\N
+6681	754	176	272	\N	\N
+6682	4448	51	1281	\N	\N
+6683	1284	62	1367	\N	\N
+6684	1096	157	1039	\N	\N
+6685	4305	176	863	\N	\N
+6686	4681	19	848	\N	\N
+6687	2051	68	424	\N	\N
+6688	19	51	656	\N	\N
+6689	2762	51	1281	\N	\N
+6690	39	117	861	\N	\N
+6691	37	62	656	\N	\N
+6692	46	68	1306	\N	\N
+6693	4674	212	1154	\N	\N
+6694	3748	51	1043	\N	\N
+6695	1462	134	1281	\N	\N
+6696	3988	156	1236	\N	\N
+6697	3880	193	1307	\N	\N
+6698	801	74	1305	\N	\N
+6699	3997	181	863	\N	\N
+6700	1830	176	944	\N	\N
+6701	4134	44	791	\N	\N
+6702	724	181	1540	\N	\N
+6703	773	46	1100	\N	\N
+6704	2179	51	791	\N	\N
+6705	2058	47	656	\N	\N
+6706	5266	19	1152	\N	\N
+6707	4868	62	1481	\N	\N
+6708	5165	176	548	\N	\N
+6709	4991	147	861	\N	\N
+6710	4333	13	1335	\N	\N
+6711	1604	68	28	\N	\N
+6712	2139	19	791	\N	\N
+6713	4168	62	1481	\N	\N
+6714	1903	59	937	\N	\N
+6715	181	181	1307	\N	\N
+6716	2165	176	1140	\N	\N
+6717	1420	51	1424	\N	\N
+6718	5357	112	533	\N	\N
+6719	4439	44	1298	\N	\N
+6720	554	173	519	\N	\N
+6721	1708	175	215	\N	\N
+6722	5177	35	656	\N	\N
+6723	1591	181	1307	\N	\N
+6724	5192	133	1556	\N	\N
+6725	3602	163	944	\N	\N
+6726	1491	37	1239	\N	\N
+6727	258	133	856	\N	\N
+6728	3803	74	1539	\N	\N
+6729	2284	19	1075	\N	\N
+6730	4928	194	533	\N	\N
+6731	4988	76	1245	\N	\N
+6732	1601	147	537	\N	\N
+6733	146	62	656	\N	\N
+6734	4094	181	714	\N	\N
+6735	4061	13	1455	\N	\N
+6736	5023	62	989	\N	\N
+6737	2417	44	1493	\N	\N
+6738	2028	176	1010	\N	\N
+6739	3988	159	265	\N	\N
+6740	3982	62	804	\N	\N
+6741	2493	176	1212	\N	\N
+6742	4563	51	684	\N	\N
+6743	2522	134	995	\N	\N
+6744	209	62	1043	\N	\N
+6745	774	62	1411	\N	\N
+6746	769	204	12	\N	\N
+6747	209	62	860	\N	\N
+6748	4501	58	918	\N	\N
+6749	5045	35	911	\N	\N
+6750	2421	51	270	\N	\N
+6751	2110	87	698	\N	\N
+6752	759	177	1367	\N	\N
+6753	2214	79	693	\N	\N
+6754	5064	163	1307	\N	\N
+6755	904	51	448	\N	\N
+6756	5433	176	671	\N	\N
+6757	913	181	863	\N	\N
+6758	2078	176	1371	\N	\N
+6759	135	47	918	\N	\N
+6760	1496	62	477	\N	\N
+6761	2518	13	607	\N	\N
+6762	2449	176	863	\N	\N
+6763	649	176	1010	\N	\N
+6764	912	102	918	\N	\N
+6765	1174	62	726	\N	\N
+6766	2246	67	692	\N	\N
+6767	4435	185	693	\N	\N
+6768	1586	181	1286	\N	\N
+6769	4663	176	1274	\N	\N
+6770	2534	68	1306	\N	\N
+6771	371	19	1281	\N	\N
+6772	1473	51	726	\N	\N
+6773	5573	51	1298	\N	\N
+6774	1127	181	1043	\N	\N
+6775	2268	133	918	\N	\N
+6776	5232	51	387	\N	\N
+6777	1859	181	95	\N	\N
+6778	1867	62	895	\N	\N
+6779	1592	181	1286	\N	\N
+6780	4368	51	1043	\N	\N
+6781	1997	134	1288	\N	\N
+6782	5321	51	1513	\N	\N
+6783	2044	37	656	\N	\N
+6784	4581	62	918	\N	\N
+6785	1189	51	258	\N	\N
+6786	931	62	918	\N	\N
+6787	1561	212	1338	\N	\N
+6788	1873	176	1274	\N	\N
+6789	256	181	1170	\N	\N
+6790	2210	19	918	\N	\N
+6791	164	139	1179	\N	\N
+6792	3813	51	730	\N	\N
+6793	5526	51	937	\N	\N
+6794	5467	176	672	\N	\N
+6795	605	179	477	\N	\N
+6796	1594	79	944	\N	\N
+6797	5348	176	1335	\N	\N
+6798	4194	181	944	\N	\N
+6799	442	62	893	\N	\N
+6800	120	176	1561	\N	\N
+6801	29	51	165	\N	\N
+6802	4893	13	1281	\N	\N
+6803	110	153	1243	\N	\N
+6804	5014	51	791	\N	\N
+6805	3600	62	656	\N	\N
+6806	508	86	692	\N	\N
+6807	21	51	321	\N	\N
+6808	4508	89	1472	\N	\N
+6809	729	207	1386	\N	\N
+6810	981	51	989	\N	\N
+6811	525	51	1382	\N	\N
+6812	4257	176	1213	\N	\N
+6813	1653	212	608	\N	\N
+6814	4885	51	937	\N	\N
+6815	1849	51	529	\N	\N
+6816	677	51	1481	\N	\N
+6817	2419	62	860	\N	\N
+6818	4911	37	1184	\N	\N
+6819	2	51	656	\N	\N
+6820	944	147	1306	\N	\N
+6821	3608	111	941	\N	\N
+6822	457	154	1513	\N	\N
+6823	554	62	893	\N	\N
+6824	345	133	1281	\N	\N
+6825	797	204	632	\N	\N
+6826	2300	62	1298	\N	\N
+6827	1394	62	529	\N	\N
+6828	2492	196	1034	\N	\N
+6829	243	163	735	\N	\N
+6830	1947	22	937	\N	\N
+6831	4670	51	1448	\N	\N
+6832	4431	62	684	\N	\N
+6833	1707	62	656	\N	\N
+6834	2116	117	1337	\N	\N
+6835	3862	176	1010	\N	\N
+6836	440	62	1281	\N	\N
+6837	4702	19	1184	\N	\N
+6838	4761	51	1496	\N	\N
+6839	1699	62	1043	\N	\N
+6840	3956	51	1152	\N	\N
+6841	2091	51	1184	\N	\N
+6842	558	19	315	\N	\N
+6843	4123	134	1556	\N	\N
+6844	253	131	856	\N	\N
+6845	48	62	1281	\N	\N
+6846	325	51	330	\N	\N
+6847	1439	68	567	\N	\N
+6848	678	51	243	\N	\N
+6849	3780	51	1239	\N	\N
+6850	2571	179	1307	\N	\N
+6851	5554	37	918	\N	\N
+6852	5173	137	1195	\N	\N
+6853	2171	181	1240	\N	\N
+6854	612	58	656	\N	\N
+6855	1361	142	656	\N	\N
+6856	268	51	918	\N	\N
+6857	2479	175	1046	\N	\N
+6858	821	44	1216	\N	\N
+6859	212	35	1272	\N	\N
+6860	5409	48	1239	\N	\N
+6861	4932	131	856	\N	\N
+6862	1873	176	645	\N	\N
+6863	874	51	1448	\N	\N
+6864	2497	62	1084	\N	\N
+6865	5141	13	1281	\N	\N
+6866	1195	15	1455	\N	\N
+6867	4461	131	684	\N	\N
+6868	4162	68	531	\N	\N
+6869	2629	176	944	\N	\N
+6870	5413	139	918	\N	\N
+6871	5257	51	937	\N	\N
+6872	4692	46	1282	\N	\N
+6873	3595	204	1307	\N	\N
+6874	5234	51	817	\N	\N
+6875	1496	62	1239	\N	\N
+6876	4249	176	1298	\N	\N
+6877	821	62	1075	\N	\N
+6878	4603	176	1561	\N	\N
+6879	847	204	613	\N	\N
+6880	456	142	1281	\N	\N
+6881	762	62	529	\N	\N
+6882	4424	27	918	\N	\N
+6883	3678	13	1298	\N	\N
+6884	4261	201	1192	\N	\N
+6885	4634	140	1006	\N	\N
+6886	2281	62	1281	\N	\N
+6887	1390	176	1444	\N	\N
+6888	18	51	656	\N	\N
+6889	930	51	656	\N	\N
+6890	865	2	1281	\N	\N
+6891	2374	51	1481	\N	\N
+6892	1451	147	631	\N	\N
+6893	2141	13	791	\N	\N
+6894	3877	59	937	\N	\N
+6895	805	9	1229	\N	\N
+6896	376	51	937	\N	\N
+6897	4873	19	937	\N	\N
+6898	1308	189	403	\N	\N
+6899	710	181	1161	\N	\N
+6900	2509	204	944	\N	\N
+6901	680	51	1043	\N	\N
+6902	1676	51	804	\N	\N
+6903	1295	68	861	\N	\N
+6904	1949	62	937	\N	\N
+6905	169	62	1043	\N	\N
+6906	2302	15	974	\N	\N
+6907	1254	201	753	\N	\N
+6908	402	51	1481	\N	\N
+6909	4626	62	1152	\N	\N
+6910	365	147	1124	\N	\N
+6911	1231	51	684	\N	\N
+6912	1542	51	1298	\N	\N
+6913	4803	69	937	\N	\N
+6914	875	114	1534	\N	\N
+6915	2192	155	411	\N	\N
+6916	3759	176	1031	\N	\N
+6917	2250	13	656	\N	\N
+6918	1445	173	693	\N	\N
+6919	612	194	1561	\N	\N
+6920	835	44	1216	\N	\N
+6921	4775	19	937	\N	\N
+6922	1413	44	656	\N	\N
+6923	528	86	698	\N	\N
+6924	4964	69	941	\N	\N
+6925	1882	176	637	\N	\N
+6926	1351	24	1084	\N	\N
+6927	1047	67	531	\N	\N
+6928	328	51	1298	\N	\N
+6929	1703	51	911	\N	\N
+6930	3593	13	1152	\N	\N
+6931	920	68	941	\N	\N
+6932	4891	204	1076	\N	\N
+6933	1387	51	804	\N	\N
+6934	4330	62	656	\N	\N
+6935	5160	167	828	\N	\N
+6936	2603	176	671	\N	\N
+6937	2248	69	211	\N	\N
+6938	377	181	972	\N	\N
+6939	1810	139	1075	\N	\N
+6940	1266	58	1133	\N	\N
+6941	838	62	1006	\N	\N
+6942	2302	15	825	\N	\N
+6943	5327	212	608	\N	\N
+6944	254	156	41	\N	\N
+6945	2361	51	10	\N	\N
+6946	1489	176	1338	\N	\N
+6947	804	35	1362	\N	\N
+6948	1881	139	1179	\N	\N
+6949	626	185	693	\N	\N
+6950	1865	185	1046	\N	\N
+6951	1692	62	860	\N	\N
+6952	3760	176	684	\N	\N
+6953	961	37	656	\N	\N
+6954	1939	51	1075	\N	\N
+6955	2218	127	306	\N	\N
+6956	1533	62	974	\N	\N
+6957	603	62	1075	\N	\N
+6958	4141	19	1335	\N	\N
+6959	5325	51	1006	\N	\N
+6960	687	51	1516	\N	\N
+6961	1617	59	1195	\N	\N
+6962	146	62	1298	\N	\N
+6963	895	212	492	\N	\N
+6964	3859	58	1006	\N	\N
+6965	1934	62	1335	\N	\N
+6966	4537	69	692	\N	\N
+6967	5180	201	679	\N	\N
+6968	4703	179	863	\N	\N
+6969	2293	51	1362	\N	\N
+6970	332	51	918	\N	\N
+6971	1986	51	684	\N	\N
+6972	2009	176	860	\N	\N
+6973	3735	51	1195	\N	\N
+6974	677	51	1096	\N	\N
+6975	1881	176	1178	\N	\N
+6976	1719	181	638	\N	\N
+6977	4378	51	1298	\N	\N
+6978	907	62	577	\N	\N
+6979	2206	98	1262	\N	\N
+6980	138	69	980	\N	\N
+6981	4211	11	1084	\N	\N
+6982	2354	176	1325	\N	\N
+6983	426	58	1527	\N	\N
+6984	4150	68	941	\N	\N
+6985	1679	176	1307	\N	\N
+6986	2514	51	1075	\N	\N
+6987	2171	13	937	\N	\N
+6988	2253	145	861	\N	\N
+6989	1719	51	645	\N	\N
+6990	1677	176	1335	\N	\N
+6991	1576	51	1043	\N	\N
+6992	4334	51	1298	\N	\N
+6993	1435	48	911	\N	\N
+6994	184	62	893	\N	\N
+6995	2034	176	1010	\N	\N
+6996	674	51	1195	\N	\N
+6997	124	51	1006	\N	\N
+6998	4183	51	656	\N	\N
+6999	38	102	727	\N	\N
+7000	650	142	1146	\N	\N
+7001	4020	208	1295	\N	\N
+7002	4426	67	89	\N	\N
+7003	170	176	795	\N	\N
+7004	4205	62	732	\N	\N
+7005	2261	62	1298	\N	\N
+7006	951	194	693	\N	\N
+7007	4397	51	860	\N	\N
+7008	1154	58	684	\N	\N
+7009	2118	19	656	\N	\N
+7010	3674	140	725	\N	\N
+7011	1702	35	637	\N	\N
+7012	941	51	1480	\N	\N
+7013	5393	185	693	\N	\N
+7014	4740	176	737	\N	\N
+7015	4084	62	1335	\N	\N
+7016	856	46	1281	\N	\N
+7017	1469	62	467	\N	\N
+7018	5535	62	490	\N	\N
+7019	830	19	999	\N	\N
+7020	5439	179	1297	\N	\N
+7021	3887	37	237	\N	\N
+7022	4067	51	1128	\N	\N
+7023	990	176	880	\N	\N
+7024	5255	51	818	\N	\N
+7025	1960	51	1084	\N	\N
+7026	4428	51	989	\N	\N
+7027	2779	109	864	\N	\N
+7028	4409	32	937	\N	\N
+7029	1136	176	1089	\N	\N
+7030	416	179	1338	\N	\N
+7031	2153	181	1307	\N	\N
+7032	171	176	1240	\N	\N
+7033	5115	61	1281	\N	\N
+7034	216	51	1043	\N	\N
+7035	1222	15	1502	\N	\N
+7036	1142	186	610	\N	\N
+7037	4532	162	1084	\N	\N
+7038	1764	51	1239	\N	\N
+7039	802	62	718	\N	\N
+7040	4459	35	656	\N	\N
+7041	983	51	1281	\N	\N
+7042	327	176	1193	\N	\N
+7043	986	51	1281	\N	\N
+7044	2496	62	918	\N	\N
+7045	2107	51	955	\N	\N
+7046	5149	13	1084	\N	\N
+7047	2103	176	680	\N	\N
+7048	847	176	1010	\N	\N
+7049	4442	51	1281	\N	\N
+7050	1537	51	1253	\N	\N
+7051	4123	140	1556	\N	\N
+7052	5177	35	918	\N	\N
+7053	2608	176	795	\N	\N
+7054	418	105	486	\N	\N
+7055	914	147	194	\N	\N
+7056	4557	51	1362	\N	\N
+7057	463	44	1084	\N	\N
+7058	2393	37	1335	\N	\N
+7059	130	181	1432	\N	\N
+7060	418	171	935	\N	\N
+7061	5281	139	918	\N	\N
+7062	2354	176	1440	\N	\N
+7063	1122	51	1367	\N	\N
+7064	4185	185	944	\N	\N
+7065	2226	51	893	\N	\N
+7066	5507	58	1075	\N	\N
+7067	3681	176	1195	\N	\N
+7068	2114	19	768	\N	\N
+7069	5350	51	918	\N	\N
+7070	262	37	1281	\N	\N
+7071	2159	182	485	\N	\N
+7072	5357	68	531	\N	\N
+7073	2330	15	1502	\N	\N
+7074	4875	13	1335	\N	\N
+7075	2453	181	656	\N	\N
+7076	1583	176	1286	\N	\N
+7077	1647	51	1298	\N	\N
+7078	5327	212	607	\N	\N
+7079	1274	167	1154	\N	\N
+7080	3610	62	1335	\N	\N
+7081	809	62	1006	\N	\N
+7082	3952	187	149	\N	\N
+7083	30	51	180	\N	\N
+7084	5042	185	944	\N	\N
+7085	1287	62	937	\N	\N
+7086	4998	37	1075	\N	\N
+7087	4946	181	923	\N	\N
+7088	583	147	941	\N	\N
+7089	4804	51	937	\N	\N
+7090	1151	179	587	\N	\N
+7091	1867	62	1043	\N	\N
+7092	4635	51	1495	\N	\N
+7093	2363	176	1367	\N	\N
+7094	1623	176	721	\N	\N
+7095	2013	176	1381	\N	\N
+7096	871	163	1307	\N	\N
+7097	264	74	1006	\N	\N
+7098	5268	201	1563	\N	\N
+7099	5263	51	1481	\N	\N
+7100	4548	176	1298	\N	\N
+7101	2189	62	1298	\N	\N
+7102	229	62	918	\N	\N
+7103	2116	120	1052	\N	\N
+7104	543	147	1306	\N	\N
+7105	3588	140	1556	\N	\N
+7106	4526	58	1165	\N	\N
+7107	4073	176	1307	\N	\N
+7108	2548	181	1561	\N	\N
+7109	678	51	150	\N	\N
+7110	624	176	1298	\N	\N
+7111	3875	59	1195	\N	\N
+7112	483	204	1199	\N	\N
+7113	4186	147	510	\N	\N
+7114	1392	178	477	\N	\N
+7115	3584	176	1046	\N	\N
+7116	297	62	20	\N	\N
+7117	2364	19	529	\N	\N
+7118	4771	51	1298	\N	\N
+7119	674	51	1096	\N	\N
+7120	2041	62	656	\N	\N
+7121	1153	51	1160	\N	\N
+7122	29	51	877	\N	\N
+7123	2360	74	1542	\N	\N
+7124	1086	51	1455	\N	\N
+7125	2160	176	1307	\N	\N
+7126	1389	32	529	\N	\N
+7127	299	62	1335	\N	\N
+7128	5280	142	1062	\N	\N
+7129	1721	51	226	\N	\N
+7130	4353	176	368	\N	\N
+7131	2749	62	1006	\N	\N
+7132	5534	104	622	\N	\N
+7133	183	62	1362	\N	\N
+7134	32	67	861	\N	\N
+7135	1083	212	1154	\N	\N
+7136	857	102	656	\N	\N
+7137	1079	176	1529	\N	\N
+7138	820	62	1075	\N	\N
+7139	427	51	1096	\N	\N
+7140	4538	51	656	\N	\N
+7141	4313	62	1184	\N	\N
+7142	5480	51	656	\N	\N
+7143	1250	179	168	\N	\N
+7144	3780	51	1160	\N	\N
+7145	2062	51	836	\N	\N
+7146	966	154	664	\N	\N
+7147	393	37	1335	\N	\N
+7148	5403	68	941	\N	\N
+7149	5524	51	189	\N	\N
+7150	3974	98	1239	\N	\N
+7151	1006	51	323	\N	\N
+7152	1596	171	987	\N	\N
+7153	1563	181	1010	\N	\N
+7154	2185	51	616	\N	\N
+7155	1652	176	1338	\N	\N
+7156	1676	176	1338	\N	\N
+7157	1721	51	225	\N	\N
+7158	158	29	791	\N	\N
+7159	1655	74	1084	\N	\N
+7160	5266	19	1165	\N	\N
+7161	4736	135	656	\N	\N
+7162	4532	162	937	\N	\N
+7163	1951	62	1043	\N	\N
+7164	3983	165	692	\N	\N
+7165	89	51	444	\N	\N
+7166	3668	201	671	\N	\N
+7167	1315	189	761	\N	\N
+7168	1481	142	656	\N	\N
+7169	670	62	1481	\N	\N
+7170	4010	176	1561	\N	\N
+7171	1229	13	77	\N	\N
+7172	2310	176	680	\N	\N
+7173	2390	179	511	\N	\N
+7174	4015	13	60	\N	\N
+7175	378	62	860	\N	\N
+7176	5064	51	1281	\N	\N
+7177	124	51	656	\N	\N
+7178	1777	51	684	\N	\N
+7179	1858	51	733	\N	\N
+7180	1885	135	656	\N	\N
+7181	245	160	388	\N	\N
+7182	1204	68	692	\N	\N
+7183	806	62	718	\N	\N
+7184	573	201	1338	\N	\N
+7185	1391	51	1279	\N	\N
+7186	164	176	1179	\N	\N
+7187	333	94	712	\N	\N
+7188	4768	110	1010	\N	\N
+7189	1053	51	1298	\N	\N
+7190	735	58	791	\N	\N
+7191	1759	35	645	\N	\N
+7192	5255	51	1481	\N	\N
+7193	5541	51	684	\N	\N
+7194	1562	51	836	\N	\N
+7195	4379	51	804	\N	\N
+7196	2147	181	1421	\N	\N
+7197	4845	139	1150	\N	\N
+7198	3607	68	692	\N	\N
+7199	1915	62	1184	\N	\N
+7200	3601	197	656	\N	\N
+7201	903	46	856	\N	\N
+7202	1025	103	1307	\N	\N
+7203	1499	181	665	\N	\N
+7204	3663	62	893	\N	\N
+7205	4253	181	1421	\N	\N
+7206	4589	111	1475	\N	\N
+7207	826	62	1057	\N	\N
+7208	1674	37	641	\N	\N
+7209	528	74	1298	\N	\N
+7210	4338	13	791	\N	\N
+7211	1668	37	1122	\N	\N
+7212	1102	149	1063	\N	\N
+7213	1873	176	1177	\N	\N
+7214	4627	176	1367	\N	\N
+7215	4477	62	656	\N	\N
+7216	4525	19	684	\N	\N
+7217	3724	62	1335	\N	\N
+7218	1474	51	1335	\N	\N
+7219	1870	51	791	\N	\N
+7220	1282	62	684	\N	\N
+7221	858	62	1298	\N	\N
+7222	340	47	1335	\N	\N
+7223	958	122	1152	\N	\N
+7224	97	135	645	\N	\N
+7225	2565	62	1006	\N	\N
+7226	4245	58	849	\N	\N
+7227	964	147	941	\N	\N
+7228	5258	62	1298	\N	\N
+7229	2321	122	1152	\N	\N
+7230	2045	9	918	\N	\N
+7231	3791	179	1338	\N	\N
+7232	5187	201	681	\N	\N
+7233	1987	212	517	\N	\N
+7234	4954	167	1338	\N	\N
+7235	1637	62	1084	\N	\N
+7236	3767	147	941	\N	\N
+7237	5349	51	1281	\N	\N
+7238	5540	51	1298	\N	\N
+7239	4338	13	918	\N	\N
+7240	5498	62	1411	\N	\N
+7241	4785	62	709	\N	\N
+7242	1309	189	402	\N	\N
+7243	2483	62	1043	\N	\N
+7244	4906	68	522	\N	\N
+7245	242	19	1281	\N	\N
+7246	4262	167	693	\N	\N
+7247	75	86	861	\N	\N
+7248	4821	51	443	\N	\N
+7249	1511	181	1550	\N	\N
+7250	1682	74	1539	\N	\N
+7251	157	25	744	\N	\N
+7252	1435	35	645	\N	\N
+7253	837	204	1563	\N	\N
+7254	4227	37	462	\N	\N
+7255	1700	37	640	\N	\N
+7256	1750	176	235	\N	\N
+7257	395	37	1298	\N	\N
+7258	2341	107	1553	\N	\N
+7259	2013	176	998	\N	\N
+7260	4288	48	1222	\N	\N
+7261	4912	133	856	\N	\N
+7262	1787	15	1502	\N	\N
+7263	2767	36	584	\N	\N
+7264	1238	156	1164	\N	\N
+7265	5526	51	1195	\N	\N
+7266	2355	74	1542	\N	\N
+7267	5490	176	1091	\N	\N
+7268	1529	87	692	\N	\N
+7269	4564	51	1481	\N	\N
+7270	4983	51	1075	\N	\N
+7271	4139	149	1063	\N	\N
+7272	2575	147	1277	\N	\N
+7273	4557	181	1089	\N	\N
+7274	4636	46	989	\N	\N
+7275	4407	204	1563	\N	\N
+7276	4985	51	1298	\N	\N
+7277	4878	37	1195	\N	\N
+7278	5436	51	684	\N	\N
+7279	4966	13	656	\N	\N
+7280	3581	62	656	\N	\N
+7281	249	139	641	\N	\N
+7282	3870	140	1195	\N	\N
+7283	4917	62	1006	\N	\N
+7284	4357	58	804	\N	\N
+7285	438	176	1366	\N	\N
+7286	261	51	684	\N	\N
+7287	542	62	918	\N	\N
+7288	4051	51	684	\N	\N
+7289	5228	51	818	\N	\N
+7290	385	51	1006	\N	\N
+7291	4028	51	1043	\N	\N
+7292	3580	32	684	\N	\N
+7293	1458	50	733	\N	\N
+7294	3874	51	937	\N	\N
+7295	5204	140	1556	\N	\N
+7296	1442	69	692	\N	\N
+7297	1352	140	1281	\N	\N
+7298	1628	176	944	\N	\N
+7299	928	67	941	\N	\N
+7300	1701	58	1006	\N	\N
+7301	4855	51	937	\N	\N
+7302	877	129	856	\N	\N
+7303	4628	140	804	\N	\N
+7304	3579	62	718	\N	\N
+7305	442	62	684	\N	\N
+7306	4637	46	1536	\N	\N
+7307	4625	38	656	\N	\N
+7308	871	51	1281	\N	\N
+7309	3604	13	1043	\N	\N
+7310	1614	51	1281	\N	\N
+7311	1501	62	490	\N	\N
+7312	3802	13	726	\N	\N
+7313	2528	176	1367	\N	\N
+7314	3808	51	1281	\N	\N
+7315	347	176	1338	\N	\N
+7316	3741	51	192	\N	\N
+7317	887	133	856	\N	\N
+7318	3971	51	1335	\N	\N
+7319	5127	135	1335	\N	\N
+7320	590	51	684	\N	\N
+7321	3893	37	1075	\N	\N
+7322	346	62	1084	\N	\N
+7323	429	207	531	\N	\N
+7324	5058	19	791	\N	\N
+7325	5398	51	1075	\N	\N
+7326	245	51	392	\N	\N
+7327	1654	37	856	\N	\N
+7328	2294	19	1075	\N	\N
+7329	959	133	1281	\N	\N
+7330	394	62	83	\N	\N
+7331	4752	212	517	\N	\N
+7332	2162	201	1563	\N	\N
+7333	822	176	693	\N	\N
+7334	5539	68	941	\N	\N
+7335	5371	32	1424	\N	\N
+7336	4598	176	945	\N	\N
+7337	4825	19	1335	\N	\N
+7338	1344	201	1007	\N	\N
+7339	2533	176	1362	\N	\N
+7340	78	32	637	\N	\N
+7341	1536	181	1046	\N	\N
+7342	2185	51	1265	\N	\N
+7343	4645	176	1338	\N	\N
+7344	5110	51	989	\N	\N
+7345	4564	51	1195	\N	\N
+7346	3930	139	656	\N	\N
+7347	5317	51	918	\N	\N
+7348	4834	176	863	\N	\N
+7349	4262	51	804	\N	\N
+7350	327	176	655	\N	\N
+7351	4279	158	308	\N	\N
+7352	1142	2	1184	\N	\N
+7353	292	139	656	\N	\N
+7354	5083	51	1298	\N	\N
+7355	5171	51	1335	\N	\N
+7356	4324	51	1184	\N	\N
+7357	940	134	1274	\N	\N
+7358	4143	176	1024	\N	\N
+7359	388	62	1160	\N	\N
+7360	5072	62	119	\N	\N
+7361	1654	62	1281	\N	\N
+7362	599	62	691	\N	\N
+7363	320	74	1298	\N	\N
+7364	2569	19	656	\N	\N
+7365	645	212	612	\N	\N
+7366	3706	140	995	\N	\N
+7367	1641	198	1338	\N	\N
+7368	248	154	1184	\N	\N
+7369	4837	19	516	\N	\N
+7370	2605	194	1046	\N	\N
+7371	577	62	974	\N	\N
+7372	3870	59	1195	\N	\N
+7373	1967	176	1046	\N	\N
+7374	4714	20	516	\N	\N
+7375	527	147	861	\N	\N
+7376	2409	176	694	\N	\N
+7377	5172	51	1481	\N	\N
+7378	2452	212	1567	\N	\N
+7379	2318	201	1563	\N	\N
+7380	2598	201	671	\N	\N
+7381	2299	176	1442	\N	\N
+7382	322	51	791	\N	\N
+7383	206	51	1075	\N	\N
+7384	5468	176	1307	\N	\N
+7385	1323	69	233	\N	\N
+7386	2615	62	860	\N	\N
+7387	2431	158	786	\N	\N
+7388	1223	15	825	\N	\N
+7389	562	37	893	\N	\N
+7390	688	212	1463	\N	\N
+7391	2004	176	944	\N	\N
+7392	1176	68	692	\N	\N
+7393	2484	68	531	\N	\N
+7394	807	37	1298	\N	\N
+7395	3931	122	560	\N	\N
+7396	2121	203	584	\N	\N
+7397	1308	189	99	\N	\N
+7398	2535	51	1281	\N	\N
+7399	4369	51	860	\N	\N
+7400	4447	140	599	\N	\N
+7401	4262	51	937	\N	\N
+7402	4121	176	837	\N	\N
+7403	1054	176	1010	\N	\N
+7404	4509	37	804	\N	\N
+7405	1203	62	1298	\N	\N
+7406	4852	176	1517	\N	\N
+7407	1025	142	1281	\N	\N
+7408	4354	176	543	\N	\N
+7409	2388	179	1046	\N	\N
+7410	4251	74	860	\N	\N
+7411	1303	62	1160	\N	\N
+7412	3660	46	856	\N	\N
+7413	2420	37	1043	\N	\N
+7414	1871	181	95	\N	\N
+7415	4080	201	1484	\N	\N
+7416	1539	44	508	\N	\N
+7417	4352	176	1467	\N	\N
+7418	1000	51	684	\N	\N
+7419	2013	176	1099	\N	\N
+7420	2550	62	1195	\N	\N
+7421	4244	176	1151	\N	\N
+7422	128	51	1043	\N	\N
+7423	2562	176	1046	\N	\N
+7424	973	62	1455	\N	\N
+7425	911	131	856	\N	\N
+7426	1758	35	1272	\N	\N
+7427	1517	176	1338	\N	\N
+7428	509	62	656	\N	\N
+7429	1828	176	474	\N	\N
+7430	742	35	1184	\N	\N
+7431	802	62	1298	\N	\N
+7432	3598	145	631	\N	\N
+7433	5051	51	1195	\N	\N
+7434	1754	32	529	\N	\N
+7435	380	62	860	\N	\N
+7436	2084	51	726	\N	\N
+7437	1296	51	1298	\N	\N
+7438	1242	69	1537	\N	\N
+7439	2167	203	863	\N	\N
+7440	535	2	1355	\N	\N
+7441	111	102	362	\N	\N
+7442	3725	37	1335	\N	\N
+7443	4516	51	656	\N	\N
+7444	1578	51	387	\N	\N
+7445	3675	62	684	\N	\N
+7446	4924	176	693	\N	\N
+7447	164	176	1072	\N	\N
+7448	4845	139	1039	\N	\N
+7449	4169	62	1195	\N	\N
+7450	245	51	350	\N	\N
+7451	1678	51	1418	\N	\N
+7452	2414	176	1307	\N	\N
+7453	4461	176	477	\N	\N
+7454	4907	19	791	\N	\N
+7455	2557	62	1006	\N	\N
+7456	5025	212	751	\N	\N
+7457	1755	20	529	\N	\N
+7458	1371	86	1296	\N	\N
+7459	1308	189	105	\N	\N
+7460	3785	176	1421	\N	\N
+7461	1134	62	877	\N	\N
+7462	1110	176	989	\N	\N
+7463	290	62	656	\N	\N
+7464	4298	51	937	\N	\N
+7465	1086	51	1006	\N	\N
+7466	1289	62	1335	\N	\N
+7467	3623	114	860	\N	\N
+7468	71	201	1563	\N	\N
+7469	3769	139	1298	\N	\N
+7470	3681	176	1481	\N	\N
+7471	1663	204	1046	\N	\N
+7472	3936	137	1556	\N	\N
+7473	4376	176	1064	\N	\N
+7474	802	37	1298	\N	\N
+7475	2486	62	1335	\N	\N
+7476	5232	51	159	\N	\N
+7477	828	176	841	\N	\N
+7478	4547	51	1481	\N	\N
+7479	4148	62	200	\N	\N
+7480	1938	140	47	\N	\N
+7481	1024	212	863	\N	\N
+7482	4618	187	809	\N	\N
+7483	5139	51	684	\N	\N
+7484	2357	32	1535	\N	\N
+7485	171	74	684	\N	\N
+7486	4236	51	656	\N	\N
+7487	3726	51	1335	\N	\N
+7488	4940	62	893	\N	\N
+7489	3861	19	1298	\N	\N
+7490	1661	62	1448	\N	\N
+7491	5288	51	684	\N	\N
+7492	682	51	893	\N	\N
+7493	1464	51	684	\N	\N
+7494	1048	192	728	\N	\N
+7495	2405	62	1493	\N	\N
+7496	2515	51	684	\N	\N
+7497	2304	176	645	\N	\N
+7498	3577	35	656	\N	\N
+7499	840	62	1348	\N	\N
+7500	4406	51	1335	\N	\N
+7501	1400	51	937	\N	\N
+7502	123	62	1269	\N	\N
+7503	2072	86	1338	\N	\N
+7504	848	173	698	\N	\N
+7505	2338	204	255	\N	\N
+7506	307	51	860	\N	\N
+7507	1840	2	804	\N	\N
+7508	4857	176	891	\N	\N
+7509	324	51	718	\N	\N
+7510	1060	51	733	\N	\N
+7511	2147	190	1421	\N	\N
+7512	2290	51	746	\N	\N
+7513	818	181	1307	\N	\N
+7514	5214	147	861	\N	\N
+7515	4865	133	918	\N	\N
+7516	838	62	1348	\N	\N
+7517	4338	19	918	\N	\N
+7518	78	181	1107	\N	\N
+7519	1266	58	849	\N	\N
+7520	659	135	1062	\N	\N
+7521	3774	13	288	\N	\N
+7522	889	142	1281	\N	\N
+7523	2445	181	1089	\N	\N
+7524	4086	62	937	\N	\N
+7525	3605	62	1335	\N	\N
+7526	4072	62	684	\N	\N
+7527	1321	51	937	\N	\N
+7528	2603	201	669	\N	\N
+7529	468	204	1199	\N	\N
+7530	5265	15	1481	\N	\N
+7531	714	212	1338	\N	\N
+7532	5479	62	1260	\N	\N
+7533	3935	101	856	\N	\N
+7534	3738	51	937	\N	\N
+7535	881	156	856	\N	\N
+7536	17	51	656	\N	\N
+7537	1155	178	494	\N	\N
+7538	1829	176	1482	\N	\N
+7539	987	51	1281	\N	\N
+7540	4515	51	1084	\N	\N
+7541	1792	51	1253	\N	\N
+7542	2388	179	863	\N	\N
+7543	81	62	304	\N	\N
+7544	3639	176	693	\N	\N
+7545	1910	59	937	\N	\N
+7546	103	190	1338	\N	\N
+7547	4918	37	1493	\N	\N
+7548	92	181	359	\N	\N
+7549	740	58	791	\N	\N
+7550	2014	134	644	\N	\N
+7551	946	46	937	\N	\N
+7552	613	62	1418	\N	\N
+7553	195	51	1335	\N	\N
+7554	1591	62	1281	\N	\N
+7555	2781	12	1195	\N	\N
+7556	668	139	791	\N	\N
+7557	1661	62	1281	\N	\N
+7558	847	194	697	\N	\N
+7559	4385	51	937	\N	\N
+7560	755	176	1239	\N	\N
+7561	1199	51	1298	\N	\N
+7562	3914	51	791	\N	\N
+7563	2261	62	656	\N	\N
+7564	2144	176	1520	\N	\N
+7565	1276	201	795	\N	\N
+7566	2629	176	1199	\N	\N
+7567	3736	51	196	\N	\N
+7568	5105	201	1131	\N	\N
+7569	1506	62	684	\N	\N
+7570	1398	176	1307	\N	\N
+7571	183	51	1184	\N	\N
+7572	3948	176	1514	\N	\N
+7573	2408	62	1335	\N	\N
+7574	813	51	1281	\N	\N
+7575	1515	187	217	\N	\N
+7576	4992	139	1184	\N	\N
+7577	3884	158	1281	\N	\N
+7578	4164	147	531	\N	\N
+7579	2203	201	1338	\N	\N
+7580	5516	163	1075	\N	\N
+7581	4264	176	616	\N	\N
+7582	5114	204	665	\N	\N
+7583	3981	62	656	\N	\N
+7584	1460	38	893	\N	\N
+7585	2324	22	684	\N	\N
+7586	1704	35	1272	\N	\N
+7587	1236	179	470	\N	\N
+7588	4227	37	860	\N	\N
+7589	799	194	693	\N	\N
+7590	1816	51	1281	\N	\N
+7591	4822	62	684	\N	\N
+7592	4471	51	1179	\N	\N
+7593	1345	176	1326	\N	\N
+7594	1515	187	898	\N	\N
+7595	2059	176	944	\N	\N
+7596	2129	51	1184	\N	\N
+7597	1264	166	941	\N	\N
+7598	2381	51	1084	\N	\N
+7599	4986	51	918	\N	\N
+7600	1665	197	1075	\N	\N
+7601	5516	163	1362	\N	\N
+7602	3625	204	649	\N	\N
+7603	1845	47	1448	\N	\N
+7604	2514	51	791	\N	\N
+7605	2548	181	132	\N	\N
+7606	2035	178	1338	\N	\N
+7607	1719	51	1070	\N	\N
+7608	1242	69	1373	\N	\N
+7609	1819	62	937	\N	\N
+7610	183	200	923	\N	\N
+7611	2013	176	853	\N	\N
+7612	4308	19	1184	\N	\N
+7613	2396	37	1493	\N	\N
+7614	4674	181	1418	\N	\N
+7615	4000	181	1240	\N	\N
+7616	1312	189	286	\N	\N
+7617	4911	62	1184	\N	\N
+7618	568	140	645	\N	\N
+7619	4776	176	656	\N	\N
+7620	505	51	1536	\N	\N
+7621	1427	212	1307	\N	\N
+7622	2358	181	665	\N	\N
+7623	4319	51	1084	\N	\N
+7624	245	51	1497	\N	\N
+7625	5453	51	1335	\N	\N
+7626	1100	179	1064	\N	\N
+7627	2204	176	1240	\N	\N
+7628	5356	201	671	\N	\N
+7629	665	139	668	\N	\N
+7630	454	51	856	\N	\N
+7631	1518	176	1338	\N	\N
+7632	1881	139	911	\N	\N
+7633	1637	176	502	\N	\N
+7634	1677	176	863	\N	\N
+7635	2028	201	1010	\N	\N
+7636	5350	51	791	\N	\N
+7637	955	35	1006	\N	\N
+7638	2500	212	1463	\N	\N
+7639	2039	176	1307	\N	\N
+7640	1199	51	656	\N	\N
+7641	4516	51	918	\N	\N
+7642	710	181	863	\N	\N
+7643	3582	51	1152	\N	\N
+7644	404	51	1075	\N	\N
+7645	1290	62	937	\N	\N
+7646	496	176	863	\N	\N
+7647	3952	187	209	\N	\N
+7648	2576	147	1153	\N	\N
+7649	3665	160	1307	\N	\N
+7650	4410	51	609	\N	\N
+7651	1431	201	1199	\N	\N
+7652	5263	51	937	\N	\N
+7653	2092	19	1298	\N	\N
+7654	554	212	533	\N	\N
+7655	4470	62	684	\N	\N
+7656	4916	147	1306	\N	\N
+7657	5002	37	684	\N	\N
+7658	1210	51	1516	\N	\N
+7659	4951	212	1046	\N	\N
+7660	5419	51	804	\N	\N
+7661	41	186	1239	\N	\N
+7662	476	62	1480	\N	\N
+7663	829	22	1516	\N	\N
+7664	819	212	944	\N	\N
+7665	1839	201	1555	\N	\N
+7666	1781	51	1298	\N	\N
+7667	5558	51	937	\N	\N
+7668	5450	212	752	\N	\N
+7669	3778	185	1046	\N	\N
+7670	5238	129	1281	\N	\N
+7671	535	201	780	\N	\N
+7672	3799	95	143	\N	\N
+7673	4021	176	1297	\N	\N
+7674	117	191	1561	\N	\N
+7675	3651	181	1484	\N	\N
+7676	1682	197	421	\N	\N
+7677	3625	202	1386	\N	\N
+7678	4196	62	684	\N	\N
+7679	1843	167	1307	\N	\N
+7680	1957	37	1335	\N	\N
+7681	5463	140	1455	\N	\N
+7682	4679	176	888	\N	\N
+7683	2101	86	692	\N	\N
+7684	5254	51	684	\N	\N
+7685	1873	176	1179	\N	\N
+7686	954	62	937	\N	\N
+7687	2472	32	656	\N	\N
+7688	805	9	705	\N	\N
+7689	4154	159	573	\N	\N
+7690	2443	140	674	\N	\N
+7691	506	135	1281	\N	\N
+7692	4325	51	918	\N	\N
+7693	4645	176	1561	\N	\N
+7694	5168	62	937	\N	\N
+7695	563	135	860	\N	\N
+7696	5575	51	1281	\N	\N
+7697	360	51	875	\N	\N
+7698	648	176	1298	\N	\N
+7699	30	51	164	\N	\N
+7700	4863	139	1184	\N	\N
+7701	1797	182	498	\N	\N
+7702	2273	176	1338	\N	\N
+7703	1884	51	1367	\N	\N
+7704	319	62	1043	\N	\N
+7705	4207	62	1298	\N	\N
+7706	2103	176	932	\N	\N
+7707	3717	35	656	\N	\N
+7708	3692	51	271	\N	\N
+7709	1257	51	1259	\N	\N
+7710	352	51	1006	\N	\N
+7711	1582	181	1286	\N	\N
+7712	5420	35	937	\N	\N
+7713	5178	51	937	\N	\N
+7714	5062	147	188	\N	\N
+7715	436	58	656	\N	\N
+7716	5338	51	1272	\N	\N
+7717	1647	51	656	\N	\N
+7718	246	156	97	\N	\N
+7719	4393	173	1281	\N	\N
+7720	3643	173	1184	\N	\N
+7721	5326	51	684	\N	\N
+7722	402	51	937	\N	\N
+7723	1565	15	656	\N	\N
+7724	2630	176	1006	\N	\N
+7725	2302	15	1502	\N	\N
+7726	1196	62	1455	\N	\N
+7727	2412	176	1264	\N	\N
+7728	1575	102	1513	\N	\N
+7729	211	51	1274	\N	\N
+7730	209	62	529	\N	\N
+7731	4391	51	656	\N	\N
+7732	1491	62	1239	\N	\N
+7733	880	156	856	\N	\N
+7734	3740	51	1195	\N	\N
+7735	135	167	1199	\N	\N
+7736	2548	108	1565	\N	\N
+7737	1896	48	1335	\N	\N
+7738	876	140	989	\N	\N
+7739	4156	212	1338	\N	\N
+7740	2293	19	1184	\N	\N
+7741	5136	51	1481	\N	\N
+7742	3906	181	665	\N	\N
+7743	337	212	1463	\N	\N
+7744	979	62	656	\N	\N
+7745	293	62	684	\N	\N
+7746	861	58	1281	\N	\N
+7747	1417	165	505	\N	\N
+7748	2379	66	1362	\N	\N
+7749	1882	176	1071	\N	\N
+7750	4277	190	863	\N	\N
+7751	985	51	1281	\N	\N
+7752	946	152	937	\N	\N
+7753	5310	51	684	\N	\N
+7754	861	58	1448	\N	\N
+7755	5400	176	1195	\N	\N
+7756	3702	176	1341	\N	\N
+7757	4171	135	1556	\N	\N
+7758	2153	212	1307	\N	\N
+7759	2187	13	1075	\N	\N
+7760	1534	181	863	\N	\N
+7761	4874	135	656	\N	\N
+7762	1480	176	655	\N	\N
+7763	4565	62	937	\N	\N
+7764	2522	134	1288	\N	\N
+7765	612	22	656	\N	\N
+7766	1878	176	1006	\N	\N
+7767	175	204	1307	\N	\N
+7768	5404	58	656	\N	\N
+7769	847	204	1209	\N	\N
+7770	245	163	388	\N	\N
+7771	255	19	989	\N	\N
+7772	737	204	944	\N	\N
+7773	4707	127	35	\N	\N
+7774	4162	147	522	\N	\N
+7775	342	131	641	\N	\N
+7776	514	120	316	\N	\N
+7777	4264	176	1276	\N	\N
+7778	3752	16	1195	\N	\N
+7779	198	51	62	\N	\N
+7780	1089	136	1006	\N	\N
+7781	4258	135	1455	\N	\N
+7782	2245	147	941	\N	\N
+7783	1111	51	684	\N	\N
+7784	179	139	656	\N	\N
+7785	2103	176	619	\N	\N
+7786	4088	19	791	\N	\N
+7787	5048	67	861	\N	\N
+7788	3590	2	941	\N	\N
+7789	4563	51	1335	\N	\N
+7790	4095	37	1335	\N	\N
+7791	22	62	1461	\N	\N
+7792	495	147	922	\N	\N
+7793	2520	134	787	\N	\N
+7794	2103	176	1251	\N	\N
+7795	861	154	845	\N	\N
+7796	3637	140	749	\N	\N
+7797	5115	47	1481	\N	\N
+7798	2425	62	1335	\N	\N
+7799	1515	187	296	\N	\N
+7800	923	68	941	\N	\N
+7801	4452	76	718	\N	\N
+7802	2074	51	860	\N	\N
+7803	78	35	1070	\N	\N
+7804	4741	13	918	\N	\N
+7805	2576	86	1337	\N	\N
+7806	249	163	1284	\N	\N
+7807	4299	176	863	\N	\N
+7808	63	51	804	\N	\N
+7809	841	62	989	\N	\N
+7810	1443	62	918	\N	\N
+7811	1137	37	1281	\N	\N
+7812	4325	51	1184	\N	\N
+7813	1756	37	1075	\N	\N
+7814	5487	51	860	\N	\N
+7815	596	176	1339	\N	\N
+7816	4868	62	1195	\N	\N
+7817	3728	79	115	\N	\N
+7818	3760	176	804	\N	\N
+7819	4529	163	1484	\N	\N
+7820	4869	62	1481	\N	\N
+7821	210	176	1280	\N	\N
+7822	1471	112	531	\N	\N
+7823	5516	163	791	\N	\N
+7824	2200	13	1222	\N	\N
+7825	3670	201	672	\N	\N
+7826	625	139	693	\N	\N
+7827	2360	51	427	\N	\N
+7828	2240	51	1281	\N	\N
+7829	4677	46	1384	\N	\N
+7830	5174	19	1411	\N	\N
+7831	291	62	656	\N	\N
+7832	2204	176	1161	\N	\N
+7833	1524	86	698	\N	\N
+7834	4310	181	281	\N	\N
+7835	888	156	641	\N	\N
+7836	2756	51	791	\N	\N
+7837	807	62	718	\N	\N
+7838	4677	102	1460	\N	\N
+7839	336	62	1298	\N	\N
+7840	1710	179	441	\N	\N
+7841	923	166	944	\N	\N
+7842	1094	176	1338	\N	\N
+7843	4715	37	1455	\N	\N
+7844	5105	201	1436	\N	\N
+7845	5436	51	804	\N	\N
+7846	143	51	918	\N	\N
+7847	2262	179	479	\N	\N
+7848	1062	62	1043	\N	\N
+7849	4845	139	1235	\N	\N
+7850	4754	176	863	\N	\N
+7851	333	94	801	\N	\N
+7852	1882	176	1179	\N	\N
+7853	1215	62	860	\N	\N
+7854	3997	181	1240	\N	\N
+7855	4742	176	1307	\N	\N
+7856	1127	181	1046	\N	\N
+7857	4655	176	608	\N	\N
+7858	508	51	1298	\N	\N
+7859	5290	15	1455	\N	\N
+7860	1777	51	804	\N	\N
+7861	3662	204	203	\N	\N
+7862	4760	176	1344	\N	\N
+7863	3952	187	147	\N	\N
+7864	5057	156	641	\N	\N
+7865	4201	206	494	\N	\N
+7866	959	131	1281	\N	\N
+7867	1968	176	944	\N	\N
+7868	2529	201	1290	\N	\N
+7869	1574	51	1216	\N	\N
+7870	114	51	1006	\N	\N
+7871	3962	51	448	\N	\N
+7872	1918	209	585	\N	\N
+7873	5402	48	1502	\N	\N
+7874	833	62	119	\N	\N
+7875	1720	51	1152	\N	\N
+7876	4052	43	718	\N	\N
+7877	318	51	989	\N	\N
+7878	4293	51	804	\N	\N
+7879	799	66	656	\N	\N
+7880	4749	147	1337	\N	\N
+7881	3941	47	967	\N	\N
+7882	4094	62	937	\N	\N
+7883	1917	147	893	\N	\N
+7884	1879	51	1239	\N	\N
+7885	5081	185	1046	\N	\N
+7886	367	197	656	\N	\N
+7887	1037	51	649	\N	\N
+7888	4025	176	1307	\N	\N
+7889	2294	13	1075	\N	\N
+7890	5228	51	1195	\N	\N
+7891	5138	83	1307	\N	\N
+7892	4886	62	684	\N	\N
+7893	1761	135	1287	\N	\N
+7894	1311	189	1	\N	\N
+7895	558	19	315	\N	\N
+7896	2044	181	1199	\N	\N
+7897	4472	35	645	\N	\N
+7898	4818	62	1536	\N	\N
+7899	4806	13	860	\N	\N
+7900	4197	51	1184	\N	\N
+7901	5405	58	656	\N	\N
+7902	5415	135	525	\N	\N
+7903	3595	62	656	\N	\N
+7904	3985	111	423	\N	\N
+7905	4902	51	181	\N	\N
+7906	4540	19	726	\N	\N
+7907	249	154	1298	\N	\N
+7908	2515	51	1335	\N	\N
+7909	4787	4	611	\N	\N
+7910	72	86	583	\N	\N
+7911	2280	62	989	\N	\N
+7912	1928	3	1294	\N	\N
+7913	5212	51	818	\N	\N
+7914	1267	51	1335	\N	\N
+7915	5136	51	684	\N	\N
+7916	4083	62	937	\N	\N
+7917	4352	176	381	\N	\N
+7918	647	176	946	\N	\N
+7919	186	51	1367	\N	\N
+7920	5045	35	1274	\N	\N
+7921	1790	54	656	\N	\N
+7922	1511	62	1043	\N	\N
+7923	4990	68	531	\N	\N
+7924	4752	212	514	\N	\N
+7925	3993	44	552	\N	\N
+7926	1011	51	656	\N	\N
+7927	2266	62	1281	\N	\N
+7928	1232	179	469	\N	\N
+7929	4078	203	693	\N	\N
+7930	3729	181	18	\N	\N
+7931	4855	137	1195	\N	\N
+7932	4372	51	860	\N	\N
+7933	2521	62	1281	\N	\N
+7934	2358	19	1298	\N	\N
+7935	2516	51	656	\N	\N
+7936	2068	13	918	\N	\N
+7937	1392	176	1238	\N	\N
+7938	514	212	719	\N	\N
+7939	5237	51	949	\N	\N
+7940	1881	140	1179	\N	\N
+7941	2086	151	1369	\N	\N
+7942	1512	44	1084	\N	\N
+7943	3597	69	978	\N	\N
+7944	1241	69	664	\N	\N
+7945	1557	181	1503	\N	\N
+7946	975	22	937	\N	\N
+7947	991	51	1281	\N	\N
+7948	2026	176	1010	\N	\N
+7949	190	51	836	\N	\N
+7950	2547	176	1307	\N	\N
+7951	4021	201	1334	\N	\N
+7952	2598	176	929	\N	\N
+7953	45	68	1306	\N	\N
+7954	3961	111	423	\N	\N
+7955	695	190	494	\N	\N
+7956	2581	212	50	\N	\N
+7957	4193	19	937	\N	\N
+7958	1600	68	28	\N	\N
+7959	805	9	1442	\N	\N
+7960	199	62	1075	\N	\N
+7961	4702	212	1566	\N	\N
+7962	1681	181	923	\N	\N
+7963	27	136	1298	\N	\N
+7964	3863	140	1367	\N	\N
+7965	1120	51	1006	\N	\N
+7966	4103	19	1336	\N	\N
+7967	3616	135	1298	\N	\N
+7968	79	181	699	\N	\N
+7969	3901	74	684	\N	\N
+7970	4170	62	1481	\N	\N
+7971	2353	13	1195	\N	\N
+7972	80	51	877	\N	\N
+7973	5061	69	664	\N	\N
+7974	2119	19	918	\N	\N
+7975	2623	176	1338	\N	\N
+7976	4533	19	684	\N	\N
+7977	803	51	1075	\N	\N
+7978	38	95	918	\N	\N
+7979	2273	181	1046	\N	\N
+7980	2256	163	1010	\N	\N
+7981	829	62	1367	\N	\N
+7982	2217	127	1224	\N	\N
+7983	1952	62	1499	\N	\N
+7984	3852	176	600	\N	\N
+7985	125	168	916	\N	\N
+7986	839	37	1006	\N	\N
+7987	4552	13	322	\N	\N
+7988	5119	62	1448	\N	\N
+7989	1181	184	494	\N	\N
+7990	604	179	511	\N	\N
+7991	4244	176	515	\N	\N
+7992	918	68	941	\N	\N
+7993	454	154	1513	\N	\N
+7994	4666	51	1014	\N	\N
+7995	917	147	941	\N	\N
+7996	1733	51	181	\N	\N
+7997	4126	177	1195	\N	\N
+7998	4245	58	1133	\N	\N
+7999	4785	62	789	\N	\N
+8000	4441	165	1462	\N	\N
+8001	4308	181	202	\N	\N
+8002	4201	206	533	\N	\N
+8003	3858	135	937	\N	\N
+8004	1651	176	1338	\N	\N
+8005	4367	51	1152	\N	\N
+8006	1266	54	1133	\N	\N
+8007	1137	44	1281	\N	\N
+8008	4213	74	918	\N	\N
+8009	1383	51	684	\N	\N
+8010	1032	6	1295	\N	\N
+8011	735	58	1075	\N	\N
+8012	1923	96	513	\N	\N
+8013	749	202	1295	\N	\N
+8014	5396	51	1253	\N	\N
+8015	3875	51	937	\N	\N
+8016	2113	130	986	\N	\N
+8017	970	62	1184	\N	\N
+8018	1418	175	1107	\N	\N
+8019	183	204	665	\N	\N
+8020	4873	13	937	\N	\N
+8021	2071	212	693	\N	\N
+8022	3754	13	937	\N	\N
+8023	2464	37	1075	\N	\N
+8024	220	35	937	\N	\N
+8025	444	133	581	\N	\N
+8026	209	37	529	\N	\N
+8027	4458	51	1195	\N	\N
+8028	5489	51	656	\N	\N
+8029	4873	19	989	\N	\N
+8030	5209	51	681	\N	\N
+8031	5145	62	684	\N	\N
+8032	1171	19	804	\N	\N
+8033	722	13	1481	\N	\N
+8034	5416	142	1188	\N	\N
+8035	1872	32	1298	\N	\N
+8036	4213	74	656	\N	\N
+8037	224	181	1421	\N	\N
+8038	4322	4	937	\N	\N
+8039	251	19	989	\N	\N
+8040	327	176	1280	\N	\N
+8041	3765	147	583	\N	\N
+8042	1135	51	684	\N	\N
+8043	1024	47	1335	\N	\N
+8044	4548	176	656	\N	\N
+8045	4728	131	656	\N	\N
+8046	1919	62	1298	\N	\N
+8047	533	139	1184	\N	\N
+8048	3657	176	896	\N	\N
+8049	1687	32	1424	\N	\N
+8050	166	135	634	\N	\N
+8051	2527	176	528	\N	\N
+8052	763	62	529	\N	\N
+8053	380	212	502	\N	\N
+8054	1327	62	937	\N	\N
+8055	4427	139	1298	\N	\N
+8056	4663	176	647	\N	\N
+8057	1258	212	264	\N	\N
+8058	799	66	1281	\N	\N
+8059	1074	176	665	\N	\N
+8060	1362	135	918	\N	\N
+8061	4420	139	684	\N	\N
+8062	1655	181	346	\N	\N
+8063	366	19	1281	\N	\N
+8064	2607	176	791	\N	\N
+8065	815	62	1184	\N	\N
+8066	4263	48	684	\N	\N
+8067	4870	62	1195	\N	\N
+8068	4255	48	1084	\N	\N
+8069	3927	139	1281	\N	\N
+8070	4587	68	692	\N	\N
+8071	5052	201	1338	\N	\N
+8072	58	68	1306	\N	\N
+8073	4117	62	989	\N	\N
+8074	2092	44	791	\N	\N
+8075	3844	68	692	\N	\N
+8076	2237	51	684	\N	\N
+8077	5569	51	937	\N	\N
+8078	3748	51	1239	\N	\N
+8079	1175	58	516	\N	\N
+8080	2114	44	791	\N	\N
+8081	97	135	911	\N	\N
+8082	2636	51	791	\N	\N
+8083	737	181	1307	\N	\N
+8084	454	163	1199	\N	\N
+8085	3968	82	160	\N	\N
+8086	1657	19	791	\N	\N
+8087	4292	51	1502	\N	\N
+8088	224	212	806	\N	\N
+8089	611	136	656	\N	\N
+8090	4757	212	1010	\N	\N
+8091	3607	67	692	\N	\N
+8092	4179	135	934	\N	\N
+8093	1565	62	684	\N	\N
+8094	5435	51	1298	\N	\N
+8095	3928	135	1281	\N	\N
+8096	2251	194	693	\N	\N
+8097	219	62	860	\N	\N
+8098	969	86	941	\N	\N
+8099	5531	179	1154	\N	\N
+8100	504	51	1536	\N	\N
+8101	5219	68	531	\N	\N
+8102	613	62	804	\N	\N
+8103	1056	62	1298	\N	\N
+8104	1103	19	1075	\N	\N
+8105	1678	51	804	\N	\N
+8106	4427	140	684	\N	\N
+8107	4459	35	1006	\N	\N
+8108	2533	139	791	\N	\N
+8109	464	62	1281	\N	\N
+8110	1582	62	1281	\N	\N
+8111	422	188	1417	\N	\N
+8112	48	62	656	\N	\N
+8113	4382	51	937	\N	\N
+8114	832	51	1453	\N	\N
+8115	556	62	684	\N	\N
+8116	4377	51	656	\N	\N
+8117	4218	59	68	\N	\N
+8118	771	204	70	\N	\N
+8119	4039	139	1268	\N	\N
+8120	4887	51	1495	\N	\N
+8121	2120	181	876	\N	\N
+8122	2324	22	1195	\N	\N
+8123	4948	62	893	\N	\N
+8124	5535	62	1043	\N	\N
+8125	1425	62	1195	\N	\N
+8126	4674	212	1411	\N	\N
+8127	4229	51	656	\N	\N
+8128	4760	176	546	\N	\N
+8129	5092	154	1513	\N	\N
+8130	1855	62	860	\N	\N
+8131	1517	62	1335	\N	\N
+8132	4456	176	1139	\N	\N
+8133	3712	179	477	\N	\N
+8134	613	204	1419	\N	\N
+8135	1419	201	1307	\N	\N
+8136	2152	212	944	\N	\N
+8137	1249	117	861	\N	\N
+8138	2443	140	1458	\N	\N
+8139	4811	74	448	\N	\N
+8140	5232	51	250	\N	\N
+8141	2409	176	923	\N	\N
+8142	277	86	692	\N	\N
+8143	4222	147	531	\N	\N
+8144	1803	51	1335	\N	\N
+8145	1424	185	561	\N	\N
+8146	4829	53	1335	\N	\N
+8147	2602	201	671	\N	\N
+8148	3625	202	1387	\N	\N
+8149	1203	62	718	\N	\N
+8150	1497	179	863	\N	\N
+8151	1062	181	895	\N	\N
+8152	388	62	1103	\N	\N
+8153	5540	51	656	\N	\N
+8154	4789	4	1058	\N	\N
+8155	1670	62	1119	\N	\N
+8156	3988	131	1235	\N	\N
+8157	1292	68	537	\N	\N
+8158	368	62	804	\N	\N
+8159	350	62	843	\N	\N
+8160	1682	176	417	\N	\N
+8161	4934	139	589	\N	\N
+8162	4193	13	937	\N	\N
+8163	1078	176	1529	\N	\N
+8164	527	68	861	\N	\N
+8165	1309	189	399	\N	\N
+8166	1415	194	502	\N	\N
+8167	5468	176	693	\N	\N
+8168	255	161	1307	\N	\N
+8169	4915	62	684	\N	\N
+8170	3737	51	937	\N	\N
+8171	2472	32	918	\N	\N
+8172	468	62	1480	\N	\N
+8173	382	62	1281	\N	\N
+8174	4394	44	508	\N	\N
+8175	1161	37	804	\N	\N
+8176	606	179	511	\N	\N
+8177	2342	139	918	\N	\N
+8178	1703	51	766	\N	\N
+8179	4612	176	393	\N	\N
+8180	792	93	664	\N	\N
+8181	4553	47	1335	\N	\N
+8182	2556	62	1298	\N	\N
+8183	136	47	1184	\N	\N
+8184	4857	140	527	\N	\N
+8185	4277	199	652	\N	\N
+8186	1046	51	1195	\N	\N
+8187	4430	51	937	\N	\N
+8188	1514	51	170	\N	\N
+8189	4146	13	1455	\N	\N
+8190	935	181	923	\N	\N
+8191	3952	187	1561	\N	\N
+8192	2512	135	575	\N	\N
+8193	3728	79	770	\N	\N
+8194	2258	132	723	\N	\N
+8195	2352	59	1298	\N	\N
+8196	420	51	684	\N	\N
+8197	4278	15	825	\N	\N
+8198	489	176	671	\N	\N
+8199	4905	176	997	\N	\N
+8200	5073	152	794	\N	\N
+8201	3638	176	1307	\N	\N
+8202	249	154	1284	\N	\N
+8203	2360	51	428	\N	\N
+8204	4752	199	652	\N	\N
+8205	4463	181	32	\N	\N
+8206	4046	150	1557	\N	\N
+8207	4288	48	804	\N	\N
+8208	1800	19	1195	\N	\N
+8209	4700	114	571	\N	\N
+8210	4374	15	1195	\N	\N
+8211	3948	176	1081	\N	\N
+8212	4199	67	531	\N	\N
+8213	890	129	1281	\N	\N
+8214	4623	135	733	\N	\N
+8215	1881	176	618	\N	\N
+8216	5441	19	918	\N	\N
+8217	1051	166	533	\N	\N
+8218	1439	86	568	\N	\N
+8219	294	51	1281	\N	\N
+8220	940	139	1274	\N	\N
+8221	829	62	1084	\N	\N
+8222	5327	212	1154	\N	\N
+8223	4651	176	1561	\N	\N
+8224	1027	51	1281	\N	\N
+8225	2197	62	1429	\N	\N
+8226	3664	51	1096	\N	\N
+8227	1427	32	989	\N	\N
+8228	1418	51	575	\N	\N
+8229	2001	139	918	\N	\N
+8230	2767	36	863	\N	\N
+8231	5116	51	1281	\N	\N
+8232	4007	62	684	\N	\N
+8233	98	62	1043	\N	\N
+8234	4336	212	1154	\N	\N
+8235	255	19	1281	\N	\N
+8236	5003	37	120	\N	\N
+8237	5043	153	649	\N	\N
+8238	1719	181	1107	\N	\N
+8239	157	25	1407	\N	\N
+8240	1974	139	1298	\N	\N
+8241	3882	176	665	\N	\N
+8242	4369	51	1043	\N	\N
+8243	2325	204	254	\N	\N
+8244	5140	54	1184	\N	\N
+8245	2454	62	1281	\N	\N
+8246	1515	187	134	\N	\N
+8247	5445	51	804	\N	\N
+8248	4151	69	692	\N	\N
+8249	2179	181	1089	\N	\N
+8250	251	163	885	\N	\N
+8251	2420	62	1239	\N	\N
+8252	5261	176	895	\N	\N
+8253	5064	51	1497	\N	\N
+8254	2632	176	523	\N	\N
+8255	5109	51	989	\N	\N
+8256	1826	176	947	\N	\N
+8257	5243	51	1184	\N	\N
+8258	1396	176	1046	\N	\N
+8259	2019	62	1195	\N	\N
+8260	4543	176	895	\N	\N
+8261	2385	179	511	\N	\N
+8262	3794	139	737	\N	\N
+8263	4074	16	804	\N	\N
+8264	2528	176	791	\N	\N
+8265	2172	51	937	\N	\N
+8266	5509	51	1075	\N	\N
+8267	1131	90	944	\N	\N
+8268	5228	51	1481	\N	\N
+8269	397	51	656	\N	\N
+8270	849	86	697	\N	\N
+8271	2463	176	1444	\N	\N
+8272	4897	62	1281	\N	\N
+8273	660	142	1062	\N	\N
+8274	894	212	492	\N	\N
+8275	1908	59	1195	\N	\N
+8276	2548	2	204	\N	\N
+8277	4368	133	1006	\N	\N
+8278	5537	201	881	\N	\N
+8279	1153	48	1239	\N	\N
+8280	2159	182	487	\N	\N
+8281	344	37	684	\N	\N
+8282	2354	176	1385	\N	\N
+8283	1085	37	656	\N	\N
+8284	1155	178	533	\N	\N
+8285	64	176	944	\N	\N
+8286	63	51	937	\N	\N
+8287	4205	62	717	\N	\N
+8288	1039	179	1239	\N	\N
+8289	1469	51	15	\N	\N
+8290	1313	155	397	\N	\N
+8291	4227	37	490	\N	\N
+8292	1985	50	733	\N	\N
+8293	155	37	1428	\N	\N
+8294	717	212	1154	\N	\N
+8295	2538	137	791	\N	\N
+8296	4640	167	1021	\N	\N
+8297	1226	62	529	\N	\N
+8298	1381	19	1006	\N	\N
+8299	4298	62	937	\N	\N
+8300	1316	173	533	\N	\N
+8301	4664	178	1089	\N	\N
+8302	4461	131	1084	\N	\N
+8303	507	204	1484	\N	\N
+8304	2293	19	1075	\N	\N
+8305	897	75	477	\N	\N
+8306	399	62	469	\N	\N
+8307	4619	176	536	\N	\N
+8308	1766	135	656	\N	\N
+8309	1126	176	863	\N	\N
+8310	5353	51	1298	\N	\N
+8311	4300	176	584	\N	\N
+8312	4684	193	769	\N	\N
+8313	1989	51	1195	\N	\N
+8314	2618	176	693	\N	\N
+8315	1356	51	805	\N	\N
+8316	4615	176	418	\N	\N
+8317	1539	44	605	\N	\N
+8318	4263	48	804	\N	\N
+8319	1338	51	1455	\N	\N
+8320	4271	51	989	\N	\N
+8321	580	147	531	\N	\N
+8322	4255	48	804	\N	\N
+8323	2366	74	448	\N	\N
+8324	4163	147	531	\N	\N
+8325	1640	51	1298	\N	\N
+8326	5445	51	893	\N	\N
+8327	2427	44	1448	\N	\N
+8328	743	74	684	\N	\N
+8329	4051	51	1195	\N	\N
+8330	249	51	1497	\N	\N
+8331	5308	181	944	\N	\N
+8332	2456	51	989	\N	\N
+8333	969	62	656	\N	\N
+8334	2417	44	1281	\N	\N
+8335	737	51	1075	\N	\N
+8336	514	120	316	\N	\N
+8337	5341	51	1075	\N	\N
+8338	3870	51	1195	\N	\N
+8339	4760	52	656	\N	\N
+8340	2424	135	656	\N	\N
+8341	1093	176	1338	\N	\N
+8342	861	19	989	\N	\N
+8343	4661	176	928	\N	\N
+8344	4204	144	886	\N	\N
+8345	5056	156	856	\N	\N
+8346	4739	62	390	\N	\N
+8347	2363	176	937	\N	\N
+8348	1175	15	516	\N	\N
+8349	2119	19	656	\N	\N
+8350	1537	51	1335	\N	\N
+8351	2027	62	1123	\N	\N
+8352	1186	19	1298	\N	\N
+8353	1470	68	531	\N	\N
+8354	4323	176	863	\N	\N
+8355	4890	176	809	\N	\N
+8356	785	181	1561	\N	\N
+8357	4776	176	1195	\N	\N
+8358	1386	62	1006	\N	\N
+8359	267	62	1335	\N	\N
+8360	1428	51	989	\N	\N
+8361	299	62	684	\N	\N
+8362	4416	51	1502	\N	\N
+8363	1759	35	1274	\N	\N
+8364	4873	19	656	\N	\N
+8365	4376	22	1203	\N	\N
+8366	2216	44	1043	\N	\N
+8367	4529	51	1497	\N	\N
+8368	1189	51	259	\N	\N
+8369	745	181	693	\N	\N
+8370	1200	51	791	\N	\N
+8371	524	51	1075	\N	\N
+8372	445	86	794	\N	\N
+8373	4757	74	799	\N	\N
+8374	744	51	67	\N	\N
+8375	1579	51	386	\N	\N
+8376	1701	58	656	\N	\N
+8377	918	68	185	\N	\N
+8378	2263	62	684	\N	\N
+8379	612	62	1292	\N	\N
+8380	5237	51	1298	\N	\N
+8381	1539	37	462	\N	\N
+8382	5394	3	849	\N	\N
+8383	1930	69	861	\N	\N
+8384	1190	51	656	\N	\N
+8385	4750	151	1337	\N	\N
+8386	2290	51	684	\N	\N
+8387	431	201	1097	\N	\N
+8388	5139	47	1239	\N	\N
+8389	4398	51	860	\N	\N
+8390	1661	204	1481	\N	\N
+8391	4396	176	1167	\N	\N
+8392	324	51	1006	\N	\N
+8393	1418	51	1265	\N	\N
+8394	4986	19	1298	\N	\N
+8395	5126	51	1075	\N	\N
+8396	4066	62	684	\N	\N
+8397	4084	62	937	\N	\N
+8398	3621	51	893	\N	\N
+8399	271	37	656	\N	\N
+8400	4657	176	608	\N	\N
+8401	2350	149	1337	\N	\N
+8402	2483	62	1335	\N	\N
+8403	55	35	989	\N	\N
+8404	1650	51	687	\N	\N
+8405	1031	67	937	\N	\N
+8406	2420	2	1239	\N	\N
+8407	397	51	1006	\N	\N
+8408	3688	79	1561	\N	\N
+8409	961	37	1298	\N	\N
+8410	801	74	1456	\N	\N
+8411	1663	204	809	\N	\N
+8412	1515	187	134	\N	\N
+8413	4957	67	233	\N	\N
+8414	5010	176	693	\N	\N
+8415	1137	44	856	\N	\N
+8416	1222	15	825	\N	\N
+8417	2032	51	860	\N	\N
+8418	2148	212	1421	\N	\N
+8419	3990	51	791	\N	\N
+8420	4281	152	1556	\N	\N
+8421	2420	62	860	\N	\N
+8422	2756	51	1075	\N	\N
+8423	933	140	490	\N	\N
+8424	1986	181	944	\N	\N
+8425	4485	154	1089	\N	\N
+8426	5449	212	1127	\N	\N
+8427	1206	68	692	\N	\N
+8428	5359	68	1198	\N	\N
+8429	4715	200	1457	\N	\N
+8430	3913	37	1335	\N	\N
+8431	5248	58	138	\N	\N
+8432	1229	13	75	\N	\N
+8433	1121	51	1367	\N	\N
+8434	2024	69	941	\N	\N
+8435	1360	176	863	\N	\N
+8436	3813	51	786	\N	\N
+8437	4471	51	635	\N	\N
+8438	62	35	684	\N	\N
+8439	2438	140	860	\N	\N
+8440	4471	51	1424	\N	\N
+8441	106	51	1043	\N	\N
+8442	3929	135	656	\N	\N
+8443	5069	168	84	\N	\N
+8444	5017	58	1298	\N	\N
+8445	3602	160	944	\N	\N
+8446	1027	51	1497	\N	\N
+8447	5130	212	693	\N	\N
+8448	2095	51	1022	\N	\N
+8449	164	176	638	\N	\N
+8450	521	212	1199	\N	\N
+8451	3647	176	944	\N	\N
+8452	1101	179	1064	\N	\N
+8453	3754	16	684	\N	\N
+8454	38	212	944	\N	\N
+8455	409	51	937	\N	\N
+8456	3590	88	941	\N	\N
+8457	4832	179	1046	\N	\N
+8458	4506	51	656	\N	\N
+8459	3619	67	941	\N	\N
+8460	2773	176	1286	\N	\N
+8461	4056	62	624	\N	\N
+8462	4184	134	1363	\N	\N
+8463	4300	62	684	\N	\N
+8464	3809	13	1084	\N	\N
+8465	5124	51	10	\N	\N
+8466	4283	62	684	\N	\N
+8467	4510	51	1497	\N	\N
+8468	1602	147	537	\N	\N
+8469	2130	51	1184	\N	\N
+8470	4132	37	718	\N	\N
+8471	797	69	980	\N	\N
+8472	5223	51	1298	\N	\N
+8473	3879	2	1195	\N	\N
+8474	32	68	583	\N	\N
+8475	5515	62	1043	\N	\N
+8476	622	176	1213	\N	\N
+8477	4873	13	656	\N	\N
+8478	5565	62	656	\N	\N
+8479	4729	204	923	\N	\N
+8480	1673	181	354	\N	\N
+8481	789	13	1335	\N	\N
+8482	5321	51	1216	\N	\N
+8483	1648	44	791	\N	\N
+8484	1546	62	1281	\N	\N
+8485	4095	37	937	\N	\N
+8486	382	51	1281	\N	\N
+8487	2755	62	1195	\N	\N
+8488	651	175	1487	\N	\N
+8489	5064	133	1281	\N	\N
+8490	4796	19	1335	\N	\N
+8491	2322	19	918	\N	\N
+8492	1612	51	1152	\N	\N
+8493	367	135	656	\N	\N
+8494	4628	140	684	\N	\N
+8495	1022	139	1281	\N	\N
+8496	5091	37	684	\N	\N
+8497	5193	140	1556	\N	\N
+8498	3945	37	1335	\N	\N
+8499	815	37	918	\N	\N
+8500	5516	51	1281	\N	\N
+8501	5506	62	684	\N	\N
+8502	4873	135	656	\N	\N
+8503	2105	86	1337	\N	\N
+8504	1905	13	1281	\N	\N
+8505	1565	15	1367	\N	\N
+8506	3841	178	494	\N	\N
+8507	977	176	1287	\N	\N
+8508	1366	198	1510	\N	\N
+8509	594	164	1512	\N	\N
+8510	3722	35	1272	\N	\N
+8511	1660	181	1286	\N	\N
+8512	303	194	953	\N	\N
+8513	4825	19	860	\N	\N
+8514	943	19	918	\N	\N
+8515	4670	51	989	\N	\N
+8516	5067	51	1075	\N	\N
+8517	507	62	1184	\N	\N
+8518	1275	62	1281	\N	\N
+8519	2258	133	723	\N	\N
+8520	4013	181	1240	\N	\N
+8521	4124	54	1298	\N	\N
+8522	1321	51	1195	\N	\N
+8523	2049	176	1297	\N	\N
+8524	559	9	1335	\N	\N
+8525	2305	176	997	\N	\N
+8526	1127	181	690	\N	\N
+8527	3593	13	1239	\N	\N
+8528	2301	51	1298	\N	\N
+8529	40	68	583	\N	\N
+8530	298	62	1043	\N	\N
+8531	859	51	937	\N	\N
+8532	3754	24	937	\N	\N
+8533	4177	62	1043	\N	\N
+8534	1301	51	937	\N	\N
+8535	4411	13	1075	\N	\N
+8536	139	167	1129	\N	\N
+8537	2462	212	752	\N	\N
+8538	3911	176	769	\N	\N
+8539	990	176	1046	\N	\N
+8540	3619	114	1536	\N	\N
+8541	2343	142	918	\N	\N
+8542	1392	176	802	\N	\N
+8543	174	51	48	\N	\N
+8544	1543	37	1043	\N	\N
+8545	4475	204	1307	\N	\N
+8546	2091	176	1338	\N	\N
+8547	3993	44	605	\N	\N
+8548	2015	176	944	\N	\N
+8549	2420	37	1152	\N	\N
+8550	4459	181	665	\N	\N
+8551	1046	51	1481	\N	\N
+8552	2392	104	1423	\N	\N
+8553	1408	35	645	\N	\N
+8554	2035	176	693	\N	\N
+8555	164	176	911	\N	\N
+8556	1341	176	1195	\N	\N
+8557	127	102	1362	\N	\N
+8558	4700	68	684	\N	\N
+8559	4741	13	1075	\N	\N
+8560	4944	136	1298	\N	\N
+8561	4352	176	1468	\N	\N
+8562	2030	58	804	\N	\N
+8563	1707	32	1006	\N	\N
+8564	2468	116	1362	\N	\N
+8565	2243	204	1199	\N	\N
+8566	5328	51	656	\N	\N
+8567	1740	62	1239	\N	\N
+8568	2285	62	1281	\N	\N
+8569	4790	51	791	\N	\N
+8570	2096	58	1394	\N	\N
+8571	5485	62	684	\N	\N
+8572	66	134	684	\N	\N
+8573	4603	176	373	\N	\N
+8574	2081	140	726	\N	\N
+8575	1426	65	684	\N	\N
+8576	4081	62	937	\N	\N
+8577	4547	51	1195	\N	\N
+8578	3870	134	1195	\N	\N
+8579	4032	51	1043	\N	\N
+8580	3992	19	937	\N	\N
+8581	5410	51	1335	\N	\N
+8582	5501	62	918	\N	\N
+8583	1035	171	652	\N	\N
+8584	911	133	1281	\N	\N
+8585	4245	58	1321	\N	\N
+8586	2051	173	944	\N	\N
+8587	3624	51	684	\N	\N
+8588	2357	74	1542	\N	\N
+8589	5115	52	1448	\N	\N
+8590	53	37	989	\N	\N
+8591	5571	51	893	\N	\N
+8592	4229	51	1006	\N	\N
+8593	5289	44	656	\N	\N
+8594	515	62	1184	\N	\N
+8595	3982	62	1222	\N	\N
+8596	4134	59	918	\N	\N
+8597	4528	51	1281	\N	\N
+8598	2548	181	172	\N	\N
+8599	4514	199	1002	\N	\N
+8600	4881	62	684	\N	\N
+8601	5074	62	989	\N	\N
+8602	696	190	494	\N	\N
+8603	5111	62	1281	\N	\N
+8604	438	140	1083	\N	\N
+8605	186	51	726	\N	\N
+8606	4797	147	510	\N	\N
+8607	1551	22	1461	\N	\N
+8608	5353	51	1006	\N	\N
+8609	2570	62	1084	\N	\N
+8610	917	67	941	\N	\N
+8611	612	181	1209	\N	\N
+8612	4306	125	989	\N	\N
+8613	3776	176	441	\N	\N
+8614	3612	51	937	\N	\N
+8615	823	212	944	\N	\N
+8616	2757	51	791	\N	\N
+8617	3612	51	684	\N	\N
+8618	5098	51	918	\N	\N
+8619	4977	179	1154	\N	\N
+8620	1044	62	893	\N	\N
+8621	1973	185	944	\N	\N
+8622	1598	194	539	\N	\N
+8623	3878	59	937	\N	\N
+8624	579	151	861	\N	\N
+8625	4359	47	1480	\N	\N
+8626	3731	51	937	\N	\N
+8627	3934	212	1398	\N	\N
+8628	3879	103	1195	\N	\N
+8629	5307	142	1062	\N	\N
+8630	4221	147	532	\N	\N
+8631	212	35	784	\N	\N
+8632	793	62	1502	\N	\N
+8633	409	51	1481	\N	\N
+8634	5397	126	941	\N	\N
+8635	983	58	641	\N	\N
+8636	630	134	995	\N	\N
+8637	119	181	1194	\N	\N
+8638	3974	47	1335	\N	\N
+8639	2401	44	1367	\N	\N
+8640	5054	147	583	\N	\N
+8641	2415	176	665	\N	\N
+8642	5340	176	1227	\N	\N
+8643	217	35	1184	\N	\N
+8644	806	62	1006	\N	\N
+8645	930	176	1307	\N	\N
+8646	4696	51	1043	\N	\N
+8647	249	154	1186	\N	\N
+8648	4555	51	1497	\N	\N
+8649	333	94	1525	\N	\N
+8650	2244	62	656	\N	\N
+8651	1714	51	1283	\N	\N
+8652	1053	181	809	\N	\N
+8653	5363	35	1184	\N	\N
+8654	5228	51	1096	\N	\N
+8655	2476	140	1012	\N	\N
+8656	2117	154	1319	\N	\N
+8657	970	62	918	\N	\N
+8658	2020	51	15	\N	\N
+8659	5278	51	1497	\N	\N
+8660	1291	68	861	\N	\N
+8661	1155	178	523	\N	\N
+8662	4456	176	1441	\N	\N
+8663	615	51	791	\N	\N
+8664	4594	176	452	\N	\N
+8665	2350	179	1338	\N	\N
+8666	100	62	1239	\N	\N
+8667	2090	86	664	\N	\N
+8668	4052	43	1006	\N	\N
+8669	388	62	825	\N	\N
+8670	1562	73	971	\N	\N
+8671	1627	185	944	\N	\N
+8672	1150	19	1298	\N	\N
+8673	1775	15	1135	\N	\N
+8674	1822	48	1239	\N	\N
+8675	916	68	937	\N	\N
+8676	67	59	1122	\N	\N
+8677	1875	51	1481	\N	\N
+8678	3889	37	353	\N	\N
+8679	465	147	1277	\N	\N
+8680	1115	179	944	\N	\N
+8681	4622	86	1483	\N	\N
+8682	2371	51	726	\N	\N
+8683	5524	51	60	\N	\N
+8684	1764	51	1043	\N	\N
+8685	4277	62	1043	\N	\N
+8686	410	51	1481	\N	\N
+8687	4320	81	531	\N	\N
+8688	3603	202	531	\N	\N
+8689	1837	181	923	\N	\N
+8690	3975	51	1043	\N	\N
+8691	1717	212	608	\N	\N
+8692	1068	176	923	\N	\N
+8693	1222	15	974	\N	\N
+8694	2149	102	727	\N	\N
+8695	4947	51	259	\N	\N
+8696	925	68	941	\N	\N
+8697	395	51	1006	\N	\N
+8698	5247	51	1281	\N	\N
+8699	1518	62	1335	\N	\N
+8700	3915	43	718	\N	\N
+8701	4923	51	1096	\N	\N
+8702	4639	191	1154	\N	\N
+8703	94	140	645	\N	\N
+8704	5512	19	656	\N	\N
+8705	1725	179	944	\N	\N
+8706	4532	162	684	\N	\N
+8707	4750	147	1337	\N	\N
+8708	3884	62	1448	\N	\N
+8709	1600	147	28	\N	\N
+8710	382	46	1281	\N	\N
+8711	1172	19	804	\N	\N
+8712	812	51	860	\N	\N
+8713	4819	51	1281	\N	\N
+8714	4311	181	923	\N	\N
+8715	3601	102	656	\N	\N
+8716	3653	176	1046	\N	\N
+8717	4373	51	860	\N	\N
+8718	3969	195	371	\N	\N
+8719	972	135	810	\N	\N
+8720	1291	176	1046	\N	\N
+8721	5245	62	1335	\N	\N
+8722	1061	51	118	\N	\N
+8723	1135	51	937	\N	\N
+8724	4430	51	1195	\N	\N
+8725	5335	62	656	\N	\N
+8726	198	51	68	\N	\N
+8727	4467	181	1286	\N	\N
+8728	3599	69	982	\N	\N
+8729	2149	102	1198	\N	\N
+8730	56	176	1239	\N	\N
+8731	4530	2	1307	\N	\N
+8732	1592	6	1286	\N	\N
+8733	699	176	1046	\N	\N
+8734	4553	97	1239	\N	\N
+8735	1803	51	893	\N	\N
+8736	263	181	1127	\N	\N
+8737	4103	19	1335	\N	\N
+8738	4870	37	383	\N	\N
+8739	405	58	1075	\N	\N
+8740	844	166	1010	\N	\N
+8741	5233	51	818	\N	\N
+8742	535	2	590	\N	\N
+8743	5164	19	893	\N	\N
+8744	3898	176	1275	\N	\N
+8745	1428	17	733	\N	\N
+8746	3682	142	986	\N	\N
+8747	485	181	1561	\N	\N
+8748	294	163	944	\N	\N
+8749	164	176	647	\N	\N
+8750	1057	62	529	\N	\N
+8751	4450	127	1556	\N	\N
+8752	4644	176	1561	\N	\N
+8753	5488	51	1298	\N	\N
+8754	4374	15	1084	\N	\N
+8755	5298	15	1455	\N	\N
+8756	2304	176	669	\N	\N
+8757	1728	32	1181	\N	\N
+8758	541	69	1379	\N	\N
+8759	4451	62	1281	\N	\N
+8760	2460	212	429	\N	\N
+8761	1662	181	665	\N	\N
+8762	4743	176	1199	\N	\N
+8763	1919	62	656	\N	\N
+8764	401	51	1455	\N	\N
+8765	2275	51	684	\N	\N
+8766	244	13	1281	\N	\N
+8767	1574	51	1513	\N	\N
+8768	826	41	718	\N	\N
+8769	1676	181	1046	\N	\N
+8770	1158	51	937	\N	\N
+8771	4299	62	1335	\N	\N
+8772	2319	62	656	\N	\N
+8773	5448	212	751	\N	\N
+8774	968	62	1448	\N	\N
+8775	678	51	245	\N	\N
+8776	5523	51	1195	\N	\N
+8777	5078	51	63	\N	\N
+8778	1664	181	1127	\N	\N
+8779	1299	176	1455	\N	\N
+8780	1331	51	86	\N	\N
+8781	861	204	1457	\N	\N
+8782	1322	51	1195	\N	\N
+8783	4249	62	1536	\N	\N
+8784	829	17	1562	\N	\N
+8785	4066	62	1481	\N	\N
+8786	2748	19	1281	\N	\N
+8787	2766	47	1006	\N	\N
+8788	238	62	1335	\N	\N
+8789	636	195	378	\N	\N
+8790	1308	189	400	\N	\N
+8791	2420	62	1043	\N	\N
+8792	4912	133	1281	\N	\N
+8793	549	135	1288	\N	\N
+8794	4982	149	1153	\N	\N
+8795	2292	62	1298	\N	\N
+8796	1143	178	523	\N	\N
+8797	2454	181	923	\N	\N
+8798	638	37	684	\N	\N
+8799	5037	19	656	\N	\N
+8800	413	139	1281	\N	\N
+8801	4235	58	1298	\N	\N
+8802	2402	176	840	\N	\N
+8803	3884	204	1104	\N	\N
+8804	2186	130	744	\N	\N
+8805	358	62	1043	\N	\N
+8806	1899	59	937	\N	\N
+8807	5013	176	1421	\N	\N
+8808	5436	51	893	\N	\N
+8809	3916	19	1062	\N	\N
+8810	3848	32	684	\N	\N
+8811	1124	13	937	\N	\N
+8812	2029	51	726	\N	\N
+8813	1193	129	1281	\N	\N
+8814	5141	19	1281	\N	\N
+8815	514	212	177	\N	\N
+8816	5112	62	1281	\N	\N
+8817	3800	19	726	\N	\N
+8818	1344	201	1006	\N	\N
+8819	620	176	1307	\N	\N
+8820	1302	62	1043	\N	\N
+8821	3637	140	1244	\N	\N
+8822	4234	51	918	\N	\N
+8823	2476	140	1288	\N	\N
+8824	1493	62	553	\N	\N
+8825	4675	212	751	\N	\N
+8826	2770	176	665	\N	\N
+8827	5101	51	1075	\N	\N
+8828	785	181	2	\N	\N
+8829	730	56	791	\N	\N
+8830	348	176	893	\N	\N
+8831	221	62	1239	\N	\N
+8832	3686	139	656	\N	\N
+8833	930	44	791	\N	\N
+8834	209	62	877	\N	\N
+8835	3630	51	1184	\N	\N
+8836	3657	176	1421	\N	\N
+8837	4316	51	1043	\N	\N
+8838	2070	176	1074	\N	\N
+8839	1713	147	462	\N	\N
+8840	1928	4	526	\N	\N
+8841	1225	62	529	\N	\N
+8842	4773	13	718	\N	\N
+8843	3665	37	1497	\N	\N
+8844	1735	59	1335	\N	\N
+8845	2463	176	1441	\N	\N
+8846	2412	176	1307	\N	\N
+8847	4923	51	1481	\N	\N
+8848	740	58	1075	\N	\N
+8849	147	62	1298	\N	\N
+8850	4457	165	456	\N	\N
+8851	3665	154	1481	\N	\N
+8852	4396	176	1530	\N	\N
+8853	3912	179	584	\N	\N
+8854	78	181	638	\N	\N
+8855	4598	176	1339	\N	\N
+8856	779	167	1137	\N	\N
+8857	4018	35	1414	\N	\N
+8858	1138	37	684	\N	\N
+8859	4586	147	537	\N	\N
+8860	2290	51	1043	\N	\N
+8861	1608	62	1195	\N	\N
+8862	4068	147	631	\N	\N
+8863	4235	58	1075	\N	\N
+8864	1565	23	1084	\N	\N
+8865	243	163	665	\N	\N
+8866	56	177	1239	\N	\N
+8867	5113	51	1270	\N	\N
+8868	1577	51	1195	\N	\N
+8869	163	51	1448	\N	\N
+8870	1223	15	974	\N	\N
+8871	1471	147	531	\N	\N
+8872	5341	74	1542	\N	\N
+8873	4050	13	1152	\N	\N
+8874	3863	140	804	\N	\N
+8875	2185	51	1414	\N	\N
+8876	4846	129	1235	\N	\N
+8877	1	62	656	\N	\N
+8878	5154	62	1184	\N	\N
+8879	396	62	330	\N	\N
+8880	1357	51	656	\N	\N
+8881	2584	62	1298	\N	\N
+8882	1600	68	33	\N	\N
+8883	5076	67	1198	\N	\N
+8884	3750	79	665	\N	\N
+8885	2461	212	1567	\N	\N
+8886	4526	44	508	\N	\N
+8887	1557	181	1240	\N	\N
+8888	68	179	1338	\N	\N
+8889	2512	176	1159	\N	\N
+8890	4579	178	1089	\N	\N
+8891	838	62	1057	\N	\N
+8892	2464	37	791	\N	\N
+8893	1684	179	944	\N	\N
+8894	1368	44	1084	\N	\N
+8895	4842	51	684	\N	\N
+8896	1265	51	684	\N	\N
+8897	2306	176	1096	\N	\N
+8898	1345	176	822	\N	\N
+8899	4613	176	1307	\N	\N
+8900	5092	19	989	\N	\N
+8901	367	86	1009	\N	\N
+8902	820	51	1075	\N	\N
+8903	13	167	1463	\N	\N
+8904	3874	59	1195	\N	\N
+8905	1874	62	918	\N	\N
+9251	993	176	1046	\N	\N
+8906	818	212	1307	\N	\N
+8907	1493	68	861	\N	\N
+8908	1850	22	1152	\N	\N
+8909	1071	35	684	\N	\N
+8910	193	193	1307	\N	\N
+8911	5397	208	944	\N	\N
+8912	877	133	641	\N	\N
+8913	1771	212	1154	\N	\N
+8914	5151	62	860	\N	\N
+8915	5073	69	1084	\N	\N
+8916	4452	168	234	\N	\N
+8917	4469	176	494	\N	\N
+8918	692	51	656	\N	\N
+8919	2013	176	1206	\N	\N
+8920	1864	86	861	\N	\N
+8921	1598	194	539	\N	\N
+8922	5115	51	1389	\N	\N
+8923	2242	2	1335	\N	\N
+8924	2385	179	477	\N	\N
+8925	4375	181	1127	\N	\N
+8926	5031	179	435	\N	\N
+8927	40	147	582	\N	\N
+8928	4299	62	684	\N	\N
+8929	1895	181	937	\N	\N
+8930	968	181	923	\N	\N
+8931	4466	176	693	\N	\N
+8932	612	171	698	\N	\N
+8933	1649	51	684	\N	\N
+8934	4953	179	893	\N	\N
+8935	5148	133	856	\N	\N
+8936	4040	62	1195	\N	\N
+8937	4038	51	1536	\N	\N
+8938	1096	131	856	\N	\N
+8939	1515	187	133	\N	\N
+8940	2567	176	1161	\N	\N
+8941	1420	51	1272	\N	\N
+8942	4065	176	1457	\N	\N
+8943	4117	62	1298	\N	\N
+8944	851	135	934	\N	\N
+8945	671	37	275	\N	\N
+8946	4978	190	1370	\N	\N
+8947	926	62	918	\N	\N
+8948	1747	176	795	\N	\N
+8949	1231	176	1047	\N	\N
+8950	2370	51	1195	\N	\N
+8951	770	204	242	\N	\N
+8952	5431	201	671	\N	\N
+8953	2459	212	478	\N	\N
+8954	398	62	656	\N	\N
+8955	4407	134	1556	\N	\N
+8956	5045	35	1272	\N	\N
+8957	3935	197	641	\N	\N
+8958	5412	51	918	\N	\N
+8959	324	51	656	\N	\N
+8960	262	181	1286	\N	\N
+8961	2322	51	918	\N	\N
+8962	578	68	861	\N	\N
+8963	5529	51	1281	\N	\N
+8964	672	190	1457	\N	\N
+8965	215	200	1307	\N	\N
+8966	4867	37	275	\N	\N
+8967	5480	51	1184	\N	\N
+8968	1413	44	1298	\N	\N
+8969	1988	51	791	\N	\N
+8970	1052	133	856	\N	\N
+8971	809	37	1298	\N	\N
+8972	5167	51	545	\N	\N
+8973	4124	54	656	\N	\N
+8974	1677	62	804	\N	\N
+8975	3982	62	1084	\N	\N
+8976	4473	185	656	\N	\N
+8977	579	67	861	\N	\N
+8978	4881	62	1335	\N	\N
+8979	5279	139	684	\N	\N
+8980	1961	139	693	\N	\N
+8981	1011	51	937	\N	\N
+8982	2426	44	641	\N	\N
+8983	1333	62	718	\N	\N
+8984	4087	51	1335	\N	\N
+8985	4509	37	937	\N	\N
+8986	3655	212	608	\N	\N
+8987	5075	69	664	\N	\N
+8988	4364	51	791	\N	\N
+8989	4308	19	292	\N	\N
+8990	308	62	1006	\N	\N
+8991	3693	79	1544	\N	\N
+8992	1083	212	1052	\N	\N
+8993	2253	147	861	\N	\N
+8994	1078	176	923	\N	\N
+8995	1050	44	1455	\N	\N
+8996	1546	181	1286	\N	\N
+8997	3597	69	982	\N	\N
+8998	2113	206	494	\N	\N
+8999	1719	51	637	\N	\N
+9000	1018	133	641	\N	\N
+9001	3674	140	860	\N	\N
+9002	4554	163	1307	\N	\N
+9003	3867	170	1307	\N	\N
+9004	4930	147	1306	\N	\N
+9005	4580	44	1122	\N	\N
+9006	1952	37	760	\N	\N
+9007	4849	16	971	\N	\N
+9008	2426	44	1281	\N	\N
+9009	1913	80	1484	\N	\N
+9010	4760	2	1006	\N	\N
+9011	231	176	665	\N	\N
+9012	2543	176	985	\N	\N
+9013	4577	79	1544	\N	\N
+9014	333	94	763	\N	\N
+9015	1112	51	62	\N	\N
+9016	300	51	989	\N	\N
+9017	2370	51	1481	\N	\N
+9018	4675	212	659	\N	\N
+9019	1261	62	468	\N	\N
+9020	1235	179	17	\N	\N
+9021	1142	51	1184	\N	\N
+9022	4056	62	627	\N	\N
+9023	5382	51	1424	\N	\N
+9024	3631	176	923	\N	\N
+9025	1565	23	1367	\N	\N
+9026	704	58	1418	\N	\N
+9027	5175	62	1075	\N	\N
+9028	2765	147	597	\N	\N
+9029	2564	179	608	\N	\N
+9030	1097	176	1039	\N	\N
+9031	2079	51	1014	\N	\N
+9032	2628	62	877	\N	\N
+9033	4434	51	937	\N	\N
+9034	1881	176	913	\N	\N
+9035	2253	207	1293	\N	\N
+9036	1957	37	893	\N	\N
+9037	4314	9	1281	\N	\N
+9038	1863	147	1254	\N	\N
+9039	2372	51	1481	\N	\N
+9040	772	204	1563	\N	\N
+9041	522	74	1542	\N	\N
+9042	4389	51	684	\N	\N
+9043	663	51	1281	\N	\N
+9044	643	51	684	\N	\N
+9045	5140	62	1184	\N	\N
+9046	673	51	332	\N	\N
+9047	3701	68	692	\N	\N
+9048	4241	51	989	\N	\N
+9049	1539	37	485	\N	\N
+9050	613	176	693	\N	\N
+9051	5080	51	9	\N	\N
+9052	361	51	93	\N	\N
+9053	4393	173	856	\N	\N
+9054	2272	62	1335	\N	\N
+9055	809	62	718	\N	\N
+9056	5193	134	1556	\N	\N
+9057	2373	19	1195	\N	\N
+9058	4482	154	1216	\N	\N
+9059	4447	140	1502	\N	\N
+9060	2764	116	1157	\N	\N
+9061	4869	37	1195	\N	\N
+9062	936	133	1281	\N	\N
+9063	5399	108	864	\N	\N
+9064	2200	13	1084	\N	\N
+9065	598	186	584	\N	\N
+9066	1418	51	1414	\N	\N
+9067	183	51	1362	\N	\N
+9068	4698	203	596	\N	\N
+9069	835	51	1075	\N	\N
+9070	331	51	860	\N	\N
+9071	2448	51	960	\N	\N
+9072	1309	189	103	\N	\N
+9073	125	168	1295	\N	\N
+9074	715	212	1335	\N	\N
+9075	2184	51	1335	\N	\N
+9076	983	55	641	\N	\N
+9077	749	6	481	\N	\N
+9078	1011	62	656	\N	\N
+9079	583	68	941	\N	\N
+9080	1644	62	684	\N	\N
+9081	5130	51	656	\N	\N
+9082	5021	62	1043	\N	\N
+9083	1579	51	153	\N	\N
+9084	4323	197	1335	\N	\N
+9085	948	62	469	\N	\N
+9086	4001	127	1061	\N	\N
+9087	1529	86	696	\N	\N
+9088	4796	145	861	\N	\N
+9089	1311	189	126	\N	\N
+9090	5095	176	607	\N	\N
+9091	2310	176	932	\N	\N
+9092	5407	176	1370	\N	\N
+9093	765	51	937	\N	\N
+9094	177	62	1175	\N	\N
+9095	4278	15	974	\N	\N
+9096	3935	197	643	\N	\N
+9097	410	51	937	\N	\N
+9098	1095	58	791	\N	\N
+9099	3942	204	1199	\N	\N
+9100	551	140	995	\N	\N
+9101	4750	147	364	\N	\N
+9102	947	51	1281	\N	\N
+9103	4746	176	665	\N	\N
+9104	1176	67	692	\N	\N
+9105	888	157	856	\N	\N
+9106	153	167	895	\N	\N
+9107	5166	184	693	\N	\N
+9108	1875	51	726	\N	\N
+9109	379	62	1281	\N	\N
+9110	1048	192	1413	\N	\N
+9111	4863	140	1184	\N	\N
+9112	271	37	1298	\N	\N
+9113	2260	19	1281	\N	\N
+9114	1952	62	915	\N	\N
+9115	5474	62	656	\N	\N
+9116	4067	167	1433	\N	\N
+9117	1759	35	1272	\N	\N
+9118	3696	37	989	\N	\N
+9119	2001	139	656	\N	\N
+9120	805	9	1326	\N	\N
+9121	516	140	645	\N	\N
+9122	2518	19	1411	\N	\N
+9123	471	147	364	\N	\N
+9124	4388	51	1253	\N	\N
+9125	2524	189	369	\N	\N
+9126	1113	176	1338	\N	\N
+9127	1945	51	804	\N	\N
+9128	402	51	1195	\N	\N
+9129	295	130	1377	\N	\N
+9130	5239	133	1281	\N	\N
+9131	484	147	21	\N	\N
+9132	5203	134	1556	\N	\N
+9133	2593	62	607	\N	\N
+9134	5419	51	684	\N	\N
+9135	2769	176	665	\N	\N
+9136	4370	51	860	\N	\N
+9137	1297	51	656	\N	\N
+9138	2532	176	656	\N	\N
+9139	5504	51	1335	\N	\N
+9140	2326	62	918	\N	\N
+9141	1461	44	656	\N	\N
+9142	815	37	1184	\N	\N
+9143	4847	3	1195	\N	\N
+9144	4433	51	1195	\N	\N
+9145	2144	176	1140	\N	\N
+9146	4255	48	1222	\N	\N
+9147	5111	181	923	\N	\N
+9148	1532	86	698	\N	\N
+9149	207	135	911	\N	\N
+9150	4033	163	1307	\N	\N
+9151	2052	48	1181	\N	\N
+9152	3765	68	583	\N	\N
+9153	5314	62	684	\N	\N
+9154	4891	11	1075	\N	\N
+9155	2479	62	1335	\N	\N
+9156	861	19	1281	\N	\N
+9157	871	13	1281	\N	\N
+9158	5234	51	1481	\N	\N
+9159	1458	50	1281	\N	\N
+9160	5466	32	1195	\N	\N
+9161	1229	13	71	\N	\N
+9162	65	62	179	\N	\N
+9163	4849	16	726	\N	\N
+9164	104	181	517	\N	\N
+9165	1332	176	347	\N	\N
+9166	3586	51	336	\N	\N
+9167	3873	59	1195	\N	\N
+9168	2270	62	656	\N	\N
+9169	1683	62	1122	\N	\N
+9170	4447	176	1503	\N	\N
+9171	4878	62	1195	\N	\N
+9172	692	51	684	\N	\N
+9173	3884	181	918	\N	\N
+9174	4393	133	856	\N	\N
+9175	259	62	1195	\N	\N
+9176	989	51	989	\N	\N
+9177	4061	13	791	\N	\N
+9178	346	198	863	\N	\N
+9179	4740	176	1307	\N	\N
+9180	315	51	893	\N	\N
+9181	2140	19	791	\N	\N
+9182	4568	51	1481	\N	\N
+9183	353	51	937	\N	\N
+9184	1609	62	1298	\N	\N
+9185	59	163	1484	\N	\N
+9186	4810	51	1281	\N	\N
+9187	1218	176	1089	\N	\N
+9188	5111	62	1448	\N	\N
+9189	1258	51	1335	\N	\N
+9190	1915	204	1199	\N	\N
+9191	532	51	278	\N	\N
+9192	2256	163	1307	\N	\N
+9193	2140	13	791	\N	\N
+9194	5192	140	1556	\N	\N
+9195	4616	176	1529	\N	\N
+9196	3591	62	656	\N	\N
+9197	4801	51	1195	\N	\N
+9198	4598	176	1307	\N	\N
+9199	5206	135	759	\N	\N
+9200	221	62	1411	\N	\N
+9201	1911	59	937	\N	\N
+9202	274	140	1281	\N	\N
+9203	2097	51	1281	\N	\N
+9204	724	176	1541	\N	\N
+9205	5044	176	656	\N	\N
+9206	1406	1	1411	\N	\N
+9207	5317	51	791	\N	\N
+9208	5471	176	1307	\N	\N
+9209	5059	167	1199	\N	\N
+9210	1810	139	1184	\N	\N
+9211	1197	59	971	\N	\N
+9212	4523	137	1556	\N	\N
+9213	1272	62	684	\N	\N
+9214	1353	51	1281	\N	\N
+9215	4689	51	792	\N	\N
+9216	2030	58	1418	\N	\N
+9217	479	139	656	\N	\N
+9218	491	185	944	\N	\N
+9219	4432	51	937	\N	\N
+9220	4174	139	668	\N	\N
+9221	1703	51	1179	\N	\N
+9222	1980	13	1052	\N	\N
+9223	1318	68	941	\N	\N
+9224	1409	51	645	\N	\N
+9225	3881	59	937	\N	\N
+9226	183	35	1362	\N	\N
+9227	145	62	937	\N	\N
+9228	1560	62	490	\N	\N
+9229	4087	181	714	\N	\N
+9230	671	37	384	\N	\N
+9231	4196	62	1335	\N	\N
+9232	1751	4	814	\N	\N
+9233	4526	44	607	\N	\N
+9234	4471	51	645	\N	\N
+9235	69	179	1338	\N	\N
+9236	4770	13	1298	\N	\N
+9237	5148	133	1281	\N	\N
+9238	5027	3	1084	\N	\N
+9239	1682	74	421	\N	\N
+9240	3913	37	684	\N	\N
+9241	3754	13	1195	\N	\N
+9242	934	38	1281	\N	\N
+9243	3754	16	937	\N	\N
+9244	5418	51	937	\N	\N
+9245	3935	44	856	\N	\N
+9246	1824	140	1006	\N	\N
+9247	273	126	1556	\N	\N
+9248	394	62	330	\N	\N
+9249	493	185	655	\N	\N
+9250	1602	167	539	\N	\N
+9252	159	202	651	\N	\N
+9253	1011	62	1298	\N	\N
+9254	697	181	1353	\N	\N
+9255	1935	51	426	\N	\N
+9256	1046	51	1335	\N	\N
+9257	666	139	924	\N	\N
+9258	1316	173	584	\N	\N
+9259	1902	176	693	\N	\N
+9260	4366	51	860	\N	\N
+9261	1283	62	893	\N	\N
+9262	1164	37	1195	\N	\N
+9263	5427	140	1289	\N	\N
+9264	5394	3	1527	\N	\N
+9265	791	136	1428	\N	\N
+9266	3731	51	1195	\N	\N
+9267	5387	181	923	\N	\N
+9268	2567	74	684	\N	\N
+9269	1936	51	6	\N	\N
+9270	359	175	1059	\N	\N
+9271	4074	16	1084	\N	\N
+9272	1579	51	247	\N	\N
+9273	4623	135	1281	\N	\N
+9274	2775	176	665	\N	\N
+9275	461	163	944	\N	\N
+9276	961	62	1298	\N	\N
+9277	4459	32	1006	\N	\N
+9278	1258	51	1084	\N	\N
+9279	3940	67	692	\N	\N
+9280	3736	51	285	\N	\N
+9281	712	212	561	\N	\N
+9282	4310	19	1184	\N	\N
+9283	3958	59	1075	\N	\N
+9284	4500	176	863	\N	\N
+9285	1665	62	1281	\N	\N
+9286	457	51	1281	\N	\N
+9287	941	51	1281	\N	\N
+9288	2021	52	1536	\N	\N
+9289	1829	176	1196	\N	\N
+9290	5073	66	791	\N	\N
+9291	1585	181	1281	\N	\N
+9292	56	186	1239	\N	\N
+9293	3764	146	583	\N	\N
+9294	4311	158	664	\N	\N
+9295	2420	37	1239	\N	\N
+9296	3976	179	1199	\N	\N
+9297	450	51	1281	\N	\N
+9298	3789	201	1199	\N	\N
+9299	851	135	681	\N	\N
+9300	4600	176	923	\N	\N
+9301	46	37	918	\N	\N
+9302	1242	69	1374	\N	\N
+9303	55	51	1330	\N	\N
+9304	4510	133	1281	\N	\N
+9305	4306	13	656	\N	\N
+9306	2483	62	860	\N	\N
+9307	1984	37	684	\N	\N
+9308	930	13	1298	\N	\N
+9309	4695	176	1222	\N	\N
+9310	4689	51	1299	\N	\N
+9311	1027	160	117	\N	\N
+9312	1202	62	718	\N	\N
+9313	4497	176	1366	\N	\N
+9314	5234	51	816	\N	\N
+9315	1600	145	27	\N	\N
+9316	1309	189	107	\N	\N
+9317	5252	51	1075	\N	\N
+9318	2539	51	1367	\N	\N
+9319	912	102	1362	\N	\N
+9320	1403	212	517	\N	\N
+9321	4555	163	1484	\N	\N
+9322	3703	188	1089	\N	\N
+9323	80	51	582	\N	\N
+9324	5405	59	1298	\N	\N
+9325	4226	58	918	\N	\N
+9326	3585	51	656	\N	\N
+9327	2352	129	641	\N	\N
+9328	4832	179	584	\N	\N
+9329	3893	37	1362	\N	\N
+9330	316	51	937	\N	\N
+9331	3983	111	1307	\N	\N
+9332	4083	37	1335	\N	\N
+9333	759	183	1367	\N	\N
+9334	905	139	1188	\N	\N
+9335	1422	140	1556	\N	\N
+9336	3884	37	1448	\N	\N
+9337	566	62	825	\N	\N
+9338	323	51	448	\N	\N
+9339	531	51	1195	\N	\N
+9340	5375	32	1184	\N	\N
+9341	404	51	656	\N	\N
+9342	454	154	1362	\N	\N
+9343	1050	51	684	\N	\N
+9344	3594	121	1239	\N	\N
+9345	4050	13	860	\N	\N
+9346	188	202	1322	\N	\N
+9347	334	51	1367	\N	\N
+9348	5282	19	1084	\N	\N
+9349	1166	176	1010	\N	\N
+9350	2015	49	937	\N	\N
+9351	1137	51	856	\N	\N
+9352	907	62	490	\N	\N
+9353	375	51	1195	\N	\N
+9354	407	62	918	\N	\N
+9355	1255	62	1335	\N	\N
+9356	1095	56	791	\N	\N
+9357	743	176	937	\N	\N
+9358	4240	51	791	\N	\N
+9359	1049	176	790	\N	\N
+9360	5272	135	918	\N	\N
+9361	4848	188	724	\N	\N
+9362	4117	62	733	\N	\N
+9363	3929	135	1281	\N	\N
+9364	839	51	1057	\N	\N
+9365	761	62	529	\N	\N
+9366	3783	176	656	\N	\N
+9367	1468	51	448	\N	\N
+9368	805	9	1111	\N	\N
+9369	3651	160	656	\N	\N
+9370	4557	175	795	\N	\N
+9371	1245	67	692	\N	\N
+9372	5442	179	441	\N	\N
+9373	235	35	973	\N	\N
+9374	930	19	1298	\N	\N
+9375	197	181	693	\N	\N
+9376	5326	47	1335	\N	\N
+9377	80	51	607	\N	\N
+9378	2462	212	812	\N	\N
+9379	749	202	1387	\N	\N
+9380	4393	133	989	\N	\N
+9381	554	105	530	\N	\N
+9382	5530	160	1513	\N	\N
+9383	4563	62	684	\N	\N
+9384	2187	19	918	\N	\N
+9385	551	135	995	\N	\N
+9386	540	204	1199	\N	\N
+9387	1756	37	791	\N	\N
+9388	5408	62	1536	\N	\N
+9389	2295	176	1364	\N	\N
+9390	1198	19	1195	\N	\N
+9391	4117	204	1010	\N	\N
+9392	38	102	1362	\N	\N
+9393	865	52	1281	\N	\N
+9394	5267	51	791	\N	\N
+9395	4905	140	738	\N	\N
+9396	4244	176	1037	\N	\N
+9397	1127	181	1043	\N	\N
+9398	74	185	693	\N	\N
+9399	2454	204	1104	\N	\N
+9400	826	62	1298	\N	\N
+9401	2269	51	1184	\N	\N
+9402	2433	51	1335	\N	\N
+9403	4689	51	791	\N	\N
+9404	1416	165	1087	\N	\N
+9405	2187	13	918	\N	\N
+9406	668	2	791	\N	\N
+9407	4208	176	1025	\N	\N
+9408	1416	111	937	\N	\N
+9409	5066	37	1075	\N	\N
+9410	2605	68	1045	\N	\N
+9411	1659	62	1455	\N	\N
+9412	1533	37	974	\N	\N
+9413	1568	179	477	\N	\N
+9414	1308	189	101	\N	\N
+9415	5066	37	237	\N	\N
+9416	2544	51	656	\N	\N
+9417	4051	51	804	\N	\N
+9418	2566	176	1240	\N	\N
+9419	1408	35	1424	\N	\N
+9420	437	32	529	\N	\N
+9421	3715	19	989	\N	\N
+9422	5437	51	893	\N	\N
+9423	1230	117	861	\N	\N
+9424	90	37	212	\N	\N
+9425	1704	35	1274	\N	\N
+9426	1428	44	989	\N	\N
+9427	3980	51	1502	\N	\N
+9428	4205	62	1134	\N	\N
+9429	2601	2	1307	\N	\N
+9430	2256	13	1281	\N	\N
+9431	164	176	1290	\N	\N
+9432	211	51	645	\N	\N
+9433	1970	176	693	\N	\N
+9434	1308	172	102	\N	\N
+9435	447	51	641	\N	\N
+9436	870	19	1281	\N	\N
+9437	595	51	1298	\N	\N
+9438	483	62	1184	\N	\N
+9439	1566	19	989	\N	\N
+9440	138	74	1268	\N	\N
+9441	4772	176	665	\N	\N
+9442	1982	51	155	\N	\N
+9443	1877	176	1046	\N	\N
+9444	2346	139	918	\N	\N
+9445	1860	51	1184	\N	\N
+9446	1243	69	1379	\N	\N
+9447	275	62	684	\N	\N
+9448	2752	51	1075	\N	\N
+9449	4157	186	584	\N	\N
+9450	225	212	1154	\N	\N
+9451	211	51	911	\N	\N
+9452	5544	19	1298	\N	\N
+9453	478	147	1254	\N	\N
+9454	433	51	893	\N	\N
+9455	2028	51	1298	\N	\N
+9456	4063	51	948	\N	\N
+9457	4260	181	1561	\N	\N
+9458	3943	51	1195	\N	\N
+9459	1259	212	1154	\N	\N
+9460	4298	62	684	\N	\N
+9461	1663	176	1455	\N	\N
+9462	4224	147	1445	\N	\N
+9463	189	51	6	\N	\N
+9464	2345	51	818	\N	\N
+9465	416	179	865	\N	\N
+9466	4496	51	7	\N	\N
+9467	1946	176	693	\N	\N
+9468	4526	62	462	\N	\N
+9469	4685	51	1428	\N	\N
+9470	4530	181	665	\N	\N
+9471	385	51	656	\N	\N
+9472	5326	47	1239	\N	\N
+9473	4132	37	1298	\N	\N
+9474	2280	93	664	\N	\N
+9475	1882	176	1180	\N	\N
+9476	453	12	989	\N	\N
+9477	1952	62	649	\N	\N
+9478	3989	139	1235	\N	\N
+9479	1477	58	656	\N	\N
+9480	1986	181	693	\N	\N
+9481	1895	51	684	\N	\N
+9482	1719	35	1179	\N	\N
+9483	4809	13	1455	\N	\N
+9484	486	197	989	\N	\N
+9485	3763	176	1452	\N	\N
+9486	4465	35	1096	\N	\N
+9487	3619	68	941	\N	\N
+9488	4737	156	45	\N	\N
+9489	1178	51	1075	\N	\N
+9490	367	42	918	\N	\N
+9491	3847	62	1367	\N	\N
+9492	1138	58	849	\N	\N
+9493	767	62	1281	\N	\N
+9494	4264	140	911	\N	\N
+9495	2510	62	1184	\N	\N
+9496	2224	176	1307	\N	\N
+9497	5235	51	656	\N	\N
+9498	3734	51	1195	\N	\N
+9499	3802	9	726	\N	\N
+9500	551	140	1288	\N	\N
+9501	729	207	1101	\N	\N
+9502	2595	176	1244	\N	\N
+9503	2264	204	809	\N	\N
+9504	5454	51	791	\N	\N
+9505	2479	62	860	\N	\N
+9506	187	58	163	\N	\N
+9507	1213	62	1239	\N	\N
+9508	1732	51	1075	\N	\N
+9509	983	55	1281	\N	\N
+9510	245	163	1484	\N	\N
+9511	1189	51	1135	\N	\N
+9512	3855	176	1412	\N	\N
+9513	1827	122	1335	\N	\N
+9514	3771	48	1239	\N	\N
+9515	1555	181	1240	\N	\N
+9516	3933	176	1307	\N	\N
+9517	4877	51	1006	\N	\N
+9518	5463	140	791	\N	\N
+9519	4938	147	1306	\N	\N
+9520	1168	176	1046	\N	\N
+9521	2329	204	261	\N	\N
+9522	1982	51	249	\N	\N
+9523	1616	62	1298	\N	\N
+9524	1308	189	406	\N	\N
+9525	5017	58	656	\N	\N
+9526	2750	51	656	\N	\N
+9527	5023	176	1307	\N	\N
+9528	499	135	573	\N	\N
+9529	1309	189	407	\N	\N
+9530	4205	62	1293	\N	\N
+9531	1168	176	684	\N	\N
+9532	4434	51	1195	\N	\N
+9533	4996	179	1240	\N	\N
+9534	1414	58	656	\N	\N
+9535	5054	68	861	\N	\N
+9536	4785	62	831	\N	\N
+9537	4393	133	1281	\N	\N
+9538	4111	51	1075	\N	\N
+9539	2288	51	684	\N	\N
+9540	5418	51	684	\N	\N
+9541	1799	51	937	\N	\N
+9542	4562	51	684	\N	\N
+9543	869	13	1281	\N	\N
+9544	839	62	1348	\N	\N
+9545	1165	51	1367	\N	\N
+9546	4391	51	791	\N	\N
+9547	344	62	684	\N	\N
+9548	1811	58	656	\N	\N
+9549	235	35	1501	\N	\N
+9550	1494	62	529	\N	\N
+9551	61	68	338	\N	\N
+9552	4371	181	863	\N	\N
+9553	4705	37	1335	\N	\N
+9554	3665	19	1281	\N	\N
+9555	2634	51	656	\N	\N
+9556	1076	158	1556	\N	\N
+9557	602	62	937	\N	\N
+9558	1287	62	1195	\N	\N
+9559	2565	62	1298	\N	\N
+9560	5427	134	1515	\N	\N
+9561	2312	140	1281	\N	\N
+9562	1507	176	1010	\N	\N
+9563	1835	192	471	\N	\N
+9564	4219	147	522	\N	\N
+9565	653	62	1428	\N	\N
+9566	4794	19	860	\N	\N
+9567	5499	135	641	\N	\N
+9568	4550	51	684	\N	\N
+9569	3609	173	692	\N	\N
+9570	1326	135	1093	\N	\N
+9571	3626	181	1286	\N	\N
+9572	306	212	1411	\N	\N
+9573	4086	62	1335	\N	\N
+9574	280	74	1367	\N	\N
+9575	5200	134	900	\N	\N
+9576	1848	51	918	\N	\N
+9577	1565	23	656	\N	\N
+9578	1000	51	937	\N	\N
+9579	2119	152	918	\N	\N
+9580	380	212	501	\N	\N
+9581	4833	179	1046	\N	\N
+9582	535	201	781	\N	\N
+9583	405	58	918	\N	\N
+9584	1304	13	918	\N	\N
+9585	675	51	1481	\N	\N
+9586	1637	62	684	\N	\N
+9587	5198	2	1563	\N	\N
+9588	4824	51	791	\N	\N
+9589	4296	51	1480	\N	\N
+9590	4748	68	1063	\N	\N
+9591	3954	185	1202	\N	\N
+9592	1980	3	1026	\N	\N
+9593	3646	212	693	\N	\N
+9594	4663	176	1561	\N	\N
+9595	4527	35	576	\N	\N
+9596	1600	147	531	\N	\N
+9597	5377	46	856	\N	\N
+9598	3690	68	473	\N	\N
+9599	4193	181	940	\N	\N
+9600	1697	201	1046	\N	\N
+9601	1538	37	684	\N	\N
+9602	4034	51	1497	\N	\N
+9603	936	133	989	\N	\N
+9604	2454	204	665	\N	\N
+9605	1195	15	791	\N	\N
+9606	4917	62	1298	\N	\N
+9607	1756	37	1298	\N	\N
+9608	1678	176	1338	\N	\N
+9609	1677	176	1338	\N	\N
+9610	1167	135	1043	\N	\N
+9611	4561	51	684	\N	\N
+9612	2438	176	465	\N	\N
+9613	1924	127	307	\N	\N
+9614	4635	51	1128	\N	\N
+9615	5192	134	1556	\N	\N
+9616	2122	152	922	\N	\N
+9617	453	163	1513	\N	\N
+9618	4986	51	1006	\N	\N
+9619	4374	62	684	\N	\N
+9620	4985	51	656	\N	\N
+9621	2530	19	1401	\N	\N
+9622	1716	176	895	\N	\N
+9623	1565	173	533	\N	\N
+9624	930	139	656	\N	\N
+9625	866	19	1281	\N	\N
+9626	1393	62	1502	\N	\N
+9627	5335	62	1006	\N	\N
+9628	2422	62	860	\N	\N
+9629	1084	62	1335	\N	\N
+9630	3746	51	937	\N	\N
+9631	1768	142	860	\N	\N
+9632	3803	176	1561	\N	\N
+9633	629	135	827	\N	\N
+9634	452	163	1362	\N	\N
+9635	1661	175	923	\N	\N
+9636	5054	68	583	\N	\N
+9637	4572	176	795	\N	\N
+9638	5207	66	989	\N	\N
+9639	839	62	1057	\N	\N
+9640	4287	130	649	\N	\N
+9641	4829	53	684	\N	\N
+9642	755	181	1353	\N	\N
+9643	4352	176	380	\N	\N
+9644	4683	135	1268	\N	\N
+9645	1339	19	989	\N	\N
+9646	275	176	656	\N	\N
+9647	4417	68	1420	\N	\N
+9648	4984	51	1006	\N	\N
+9649	4299	62	1195	\N	\N
+9650	369	19	1298	\N	\N
+9651	1912	51	1281	\N	\N
+9652	4308	19	292	\N	\N
+9653	5254	51	1335	\N	\N
+9654	1112	51	68	\N	\N
+9655	5490	176	1233	\N	\N
+9656	206	167	1137	\N	\N
+9657	3665	154	989	\N	\N
+9658	131	59	1239	\N	\N
+9659	4641	178	1561	\N	\N
+9660	3990	51	918	\N	\N
+9661	2140	19	1298	\N	\N
+9662	4677	51	1460	\N	\N
+9663	3743	51	937	\N	\N
+9664	4383	51	937	\N	\N
+9665	3601	204	693	\N	\N
+9666	1190	51	1298	\N	\N
+9667	4021	181	1297	\N	\N
+9668	3637	176	684	\N	\N
+9669	4333	13	804	\N	\N
+9670	1515	187	296	\N	\N
+9671	350	62	844	\N	\N
+9672	745	176	937	\N	\N
+9673	1403	54	746	\N	\N
+9674	1919	37	1298	\N	\N
+9675	2355	51	1536	\N	\N
+9676	1291	176	1240	\N	\N
+9677	2333	142	918	\N	\N
+9678	1367	19	937	\N	\N
+9679	1628	176	1199	\N	\N
+9680	3909	209	864	\N	\N
+9681	1051	194	531	\N	\N
+9682	3580	41	684	\N	\N
+9683	3884	62	1281	\N	\N
+9684	4308	13	1184	\N	\N
+9685	2777	190	864	\N	\N
+9686	932	179	1338	\N	\N
+9687	706	30	974	\N	\N
+9688	805	9	1035	\N	\N
+9689	1215	62	529	\N	\N
+9690	1927	51	46	\N	\N
+9691	1490	176	85	\N	\N
+9692	4591	176	672	\N	\N
+9693	1544	62	1298	\N	\N
+9694	1778	201	377	\N	\N
+9695	4674	212	1412	\N	\N
+9696	5064	163	923	\N	\N
+9697	2152	95	1362	\N	\N
+9698	5405	176	1010	\N	\N
+9699	1038	51	818	\N	\N
+9700	258	132	1281	\N	\N
+9701	1195	29	791	\N	\N
+9702	1114	179	944	\N	\N
+9703	284	140	656	\N	\N
+9704	1710	179	438	\N	\N
+9705	861	154	1141	\N	\N
+9706	1548	86	1153	\N	\N
+9707	86	87	531	\N	\N
+9708	3741	51	274	\N	\N
+9709	1881	176	1180	\N	\N
+9710	792	51	989	\N	\N
+9711	4045	135	1268	\N	\N
+9712	4076	19	791	\N	\N
+9713	4249	51	1455	\N	\N
+9714	2422	62	1239	\N	\N
+9715	2149	212	1199	\N	\N
+9716	784	51	1367	\N	\N
+9717	2417	44	1448	\N	\N
+9718	709	176	1338	\N	\N
+9719	1725	179	182	\N	\N
+9720	1597	67	531	\N	\N
+9721	3589	62	656	\N	\N
+9722	2007	176	665	\N	\N
+9723	3956	51	860	\N	\N
+9724	4264	176	1342	\N	\N
+9725	2634	51	1298	\N	\N
+9726	5327	212	1152	\N	\N
+9727	4056	62	625	\N	\N
+9728	3676	178	1089	\N	\N
+9729	4565	62	684	\N	\N
+9730	3939	51	1281	\N	\N
+9731	4572	185	1370	\N	\N
+9732	959	131	641	\N	\N
+9733	3714	179	494	\N	\N
+9734	4057	37	607	\N	\N
+9735	1412	136	1075	\N	\N
+9736	600	48	1239	\N	\N
+9737	4704	51	684	\N	\N
+9738	754	176	1240	\N	\N
+9739	5303	13	1298	\N	\N
+9740	4225	15	1006	\N	\N
+9741	2299	176	1444	\N	\N
+9742	285	69	1087	\N	\N
+9743	592	149	1063	\N	\N
+9744	4584	51	1184	\N	\N
+9745	3617	176	637	\N	\N
+9746	334	51	1084	\N	\N
+9747	4228	44	508	\N	\N
+9748	2629	176	769	\N	\N
+9749	2144	176	969	\N	\N
+9750	1980	13	1165	\N	\N
+9751	3854	176	1412	\N	\N
+9752	3957	176	795	\N	\N
+9753	4604	176	1468	\N	\N
+9754	1966	139	684	\N	\N
+9755	330	51	656	\N	\N
+9756	1267	51	893	\N	\N
+9757	4058	62	860	\N	\N
+9758	1035	171	987	\N	\N
+9759	4495	204	1115	\N	\N
+9760	95	173	698	\N	\N
+9761	175	62	1362	\N	\N
+9762	527	111	861	\N	\N
+9763	3633	176	1338	\N	\N
+9764	4479	176	1314	\N	\N
+9765	2042	62	656	\N	\N
+9766	4309	13	289	\N	\N
+9767	1050	51	1006	\N	\N
+9768	3865	176	1046	\N	\N
+9769	5016	197	656	\N	\N
+9770	4776	176	1307	\N	\N
+9771	4682	13	656	\N	\N
+9772	2342	139	856	\N	\N
+9773	3809	13	1455	\N	\N
+9774	5217	67	30	\N	\N
+9775	5494	51	1481	\N	\N
+9776	3754	142	1195	\N	\N
+9777	3729	181	1561	\N	\N
+9778	4605	192	728	\N	\N
+9779	1321	51	684	\N	\N
+9780	5283	58	656	\N	\N
+9781	2786	19	656	\N	\N
+9782	1028	160	1484	\N	\N
+9783	214	136	1298	\N	\N
+9784	336	62	656	\N	\N
+9785	418	171	1532	\N	\N
+9786	454	163	1362	\N	\N
+9787	1876	51	684	\N	\N
+9788	3862	173	871	\N	\N
+9789	727	179	1338	\N	\N
+9790	2214	79	944	\N	\N
+9791	3935	198	693	\N	\N
+9792	4205	62	1499	\N	\N
+9793	3875	51	1195	\N	\N
+9794	103	176	533	\N	\N
+9795	1954	58	791	\N	\N
+9796	801	62	1455	\N	\N
+9797	2560	2	1198	\N	\N
+9798	1642	204	863	\N	\N
+9799	5392	167	944	\N	\N
+9800	2269	181	1010	\N	\N
+9801	683	176	1298	\N	\N
+9802	520	204	769	\N	\N
+9803	2528	176	726	\N	\N
+9804	679	51	1481	\N	\N
+9805	1838	105	864	\N	\N
+9806	56	185	561	\N	\N
+9807	757	51	1298	\N	\N
+9808	5367	51	1075	\N	\N
+9809	629	135	1244	\N	\N
+9810	312	13	1455	\N	\N
+9811	4942	51	1516	\N	\N
+9812	4376	51	791	\N	\N
+9813	4209	19	1084	\N	\N
+9814	3953	51	1216	\N	\N
+9815	4878	37	1481	\N	\N
+9816	4757	212	1338	\N	\N
+9817	4822	62	1335	\N	\N
+9818	2548	173	1547	\N	\N
+9819	1690	176	1441	\N	\N
+9820	5256	51	1298	\N	\N
+9821	1769	19	989	\N	\N
+9822	4403	51	1335	\N	\N
+9823	4987	147	1153	\N	\N
+9824	2219	176	694	\N	\N
+9825	1278	140	937	\N	\N
+9826	1673	176	262	\N	\N
+9827	237	62	1335	\N	\N
+9828	3949	204	863	\N	\N
+9829	98	6	652	\N	\N
+9830	4501	58	1298	\N	\N
+9831	2573	147	631	\N	\N
+9832	5119	62	1281	\N	\N
+9833	4235	58	918	\N	\N
+9834	3709	179	494	\N	\N
+9835	2463	176	706	\N	\N
+9836	2486	176	1338	\N	\N
+9837	1900	176	684	\N	\N
+9838	266	51	860	\N	\N
+9839	5400	176	1481	\N	\N
+9840	2386	179	22	\N	\N
+9841	480	204	1484	\N	\N
+9842	700	51	1298	\N	\N
+9843	101	199	652	\N	\N
+9844	876	140	1039	\N	\N
+9845	5168	62	684	\N	\N
+9846	4875	13	989	\N	\N
+9847	5300	176	641	\N	\N
+9848	877	131	641	\N	\N
+9849	171	181	1353	\N	\N
+9850	4044	181	1561	\N	\N
+9851	272	7	1163	\N	\N
+9852	5054	68	860	\N	\N
+9853	3754	19	684	\N	\N
+9854	4773	13	1006	\N	\N
+9855	4696	62	1043	\N	\N
+9856	4871	37	1298	\N	\N
+9857	5554	135	989	\N	\N
+9858	4968	194	1561	\N	\N
+9859	5522	163	1307	\N	\N
+9860	531	51	937	\N	\N
+9861	228	176	983	\N	\N
+9862	3815	158	606	\N	\N
+9863	679	51	818	\N	\N
+9864	2187	51	656	\N	\N
+9865	4032	181	517	\N	\N
+9866	789	13	684	\N	\N
+9867	645	212	561	\N	\N
+9868	5483	188	1010	\N	\N
+9869	4609	176	923	\N	\N
+9870	4390	32	893	\N	\N
+9871	574	62	825	\N	\N
+9872	638	37	937	\N	\N
+9873	4299	71	1335	\N	\N
+9874	4458	51	684	\N	\N
+9875	504	181	1561	\N	\N
+9876	4162	68	522	\N	\N
+9877	473	62	684	\N	\N
+9878	3983	111	693	\N	\N
+9879	1559	51	1493	\N	\N
+9880	3905	74	1542	\N	\N
+9881	2439	68	1198	\N	\N
+9882	1752	15	918	\N	\N
+9883	3964	185	944	\N	\N
+9884	2546	131	1281	\N	\N
+9885	4784	201	1563	\N	\N
+9886	5376	67	493	\N	\N
+9887	4240	51	989	\N	\N
+9888	2442	62	529	\N	\N
+9889	4390	32	1253	\N	\N
+9890	1494	176	1160	\N	\N
+9891	881	131	856	\N	\N
+9892	4436	37	777	\N	\N
+9893	701	176	693	\N	\N
+9894	411	181	1154	\N	\N
+9895	1562	51	726	\N	\N
+9896	4084	37	937	\N	\N
+9897	2625	176	1338	\N	\N
+9898	2354	176	1023	\N	\N
+9899	1151	179	1046	\N	\N
+9900	1520	44	1367	\N	\N
+9901	1308	189	104	\N	\N
+9902	692	51	1298	\N	\N
+9903	4022	51	1184	\N	\N
+9904	3928	139	656	\N	\N
+9905	5185	201	1011	\N	\N
+9906	3952	187	300	\N	\N
+9907	3594	4	777	\N	\N
+9908	3863	135	1367	\N	\N
+9909	1298	51	1481	\N	\N
+9910	2097	51	1184	\N	\N
+9911	398	51	342	\N	\N
+9912	4619	176	38	\N	\N
+9913	4201	130	916	\N	\N
+9914	1671	62	303	\N	\N
+9915	692	51	1455	\N	\N
+9916	2358	176	1307	\N	\N
+9917	4399	176	1421	\N	\N
+9918	596	176	1492	\N	\N
+9919	4949	51	937	\N	\N
+9920	848	88	698	\N	\N
+9921	1814	51	1281	\N	\N
+9922	2210	19	656	\N	\N
+9923	661	139	1062	\N	\N
+9924	3665	13	1281	\N	\N
+9925	725	176	1307	\N	\N
+9926	4557	51	1075	\N	\N
+9927	3662	154	1484	\N	\N
+9928	4489	181	1127	\N	\N
+9929	915	67	941	\N	\N
+9930	2165	176	1033	\N	\N
+9931	744	176	266	\N	\N
+9932	4918	37	1281	\N	\N
+9933	4527	32	859	\N	\N
+9934	4162	145	531	\N	\N
+9935	2583	181	1043	\N	\N
+9936	5533	176	1046	\N	\N
+9937	3999	51	989	\N	\N
+9938	3590	198	1307	\N	\N
+9939	537	51	1335	\N	\N
+9940	3686	176	1195	\N	\N
+9941	2381	51	1195	\N	\N
+9942	127	102	656	\N	\N
+9943	4338	13	1075	\N	\N
+9944	5234	51	1096	\N	\N
+9945	924	86	1009	\N	\N
+9946	2372	51	726	\N	\N
+9947	4361	58	1281	\N	\N
+9948	4717	68	1198	\N	\N
+9949	479	139	1184	\N	\N
+9950	2492	196	1442	\N	\N
+9951	1491	62	553	\N	\N
+9952	58	62	918	\N	\N
+9953	1427	51	1281	\N	\N
+9954	1420	51	645	\N	\N
+9955	903	181	923	\N	\N
+9956	4094	62	1335	\N	\N
+9957	879	133	641	\N	\N
+9958	1964	139	1298	\N	\N
+9959	1009	19	1195	\N	\N
+9960	3632	176	944	\N	\N
+9961	599	62	893	\N	\N
+9962	4287	130	915	\N	\N
+9963	3604	13	1335	\N	\N
+9964	4696	51	1335	\N	\N
+9965	4585	179	1338	\N	\N
+9966	5291	44	1455	\N	\N
+9967	3659	147	1557	\N	\N
+9968	2513	176	791	\N	\N
+9969	912	212	944	\N	\N
+9970	4154	128	872	\N	\N
+9971	3658	176	895	\N	\N
+9972	2596	176	994	\N	\N
+9973	3619	62	918	\N	\N
+9974	876	140	856	\N	\N
+9975	4737	176	527	\N	\N
+9976	4241	106	480	\N	\N
+9977	1603	201	1255	\N	\N
+9978	2543	176	1118	\N	\N
+9979	1765	51	684	\N	\N
+9980	1691	51	240	\N	\N
+9981	4174	139	1311	\N	\N
+9982	4751	135	573	\N	\N
+9983	4125	51	971	\N	\N
+9984	1692	62	1239	\N	\N
+9985	345	131	656	\N	\N
+9986	1279	62	689	\N	\N
+9987	242	163	1307	\N	\N
+9988	3758	176	1075	\N	\N
+9989	4595	176	923	\N	\N
+9990	858	62	656	\N	\N
+9991	3695	8	700	\N	\N
+9992	1311	117	1	\N	\N
+9993	4452	76	1543	\N	\N
+9994	919	68	941	\N	\N
+9995	5532	60	656	\N	\N
+9996	4346	176	994	\N	\N
+9997	4228	44	1052	\N	\N
+9998	1308	189	113	\N	\N
+9999	562	37	1335	\N	\N
+10000	2516	51	1006	\N	\N
+10001	3846	176	847	\N	\N
+10002	186	51	836	\N	\N
+10003	2393	62	1335	\N	\N
+10004	5516	163	1513	\N	\N
+10005	1314	189	127	\N	\N
+10006	508	197	1298	\N	\N
+10007	871	204	1307	\N	\N
+10008	5523	51	937	\N	\N
+10009	4370	167	863	\N	\N
+10010	5175	62	1298	\N	\N
+10011	5536	46	684	\N	\N
+10012	4995	37	684	\N	\N
+10013	916	147	937	\N	\N
+10014	5144	176	1240	\N	\N
+10015	1561	212	693	\N	\N
+10016	4566	51	1335	\N	\N
+10017	2518	13	1411	\N	\N
+10018	2292	212	684	\N	\N
+10019	251	163	786	\N	\N
+10020	2099	99	1513	\N	\N
+10021	416	179	535	\N	\N
+10022	1606	62	1298	\N	\N
+10023	162	68	692	\N	\N
+10024	4080	201	1199	\N	\N
+10025	4745	51	1184	\N	\N
+10026	4900	179	1240	\N	\N
+10027	2758	62	791	\N	\N
+10028	4368	51	986	\N	\N
+10029	4233	51	918	\N	\N
+10030	608	51	989	\N	\N
+10031	222	51	656	\N	\N
+10032	2595	140	749	\N	\N
+10033	302	51	791	\N	\N
+10034	4562	51	1195	\N	\N
+10035	1468	51	1453	\N	\N
+10036	5126	51	791	\N	\N
+10037	558	19	313	\N	\N
+10038	3928	139	1281	\N	\N
+10039	2410	176	1448	\N	\N
+10040	2481	176	260	\N	\N
+10041	2591	181	1046	\N	\N
+10042	38	95	1362	\N	\N
+10043	2405	62	1281	\N	\N
+10044	2063	176	668	\N	\N
+10045	1244	69	1379	\N	\N
+10046	16	212	1338	\N	\N
+10047	4264	140	1274	\N	\N
+10048	1931	69	861	\N	\N
+10049	4702	181	656	\N	\N
+10050	4471	51	1274	\N	\N
+10051	3791	179	1240	\N	\N
+10052	946	62	937	\N	\N
+10053	4726	156	1281	\N	\N
+10054	64	176	823	\N	\N
+10055	1171	19	684	\N	\N
+10056	2590	154	856	\N	\N
+10057	3677	167	533	\N	\N
+10058	2116	120	1056	\N	\N
+10059	24	176	665	\N	\N
+10060	4257	176	755	\N	\N
+10061	1681	62	1281	\N	\N
+10062	5454	51	1281	\N	\N
+10063	969	204	693	\N	\N
+10064	4809	163	747	\N	\N
+10065	2463	176	1143	\N	\N
+10066	627	135	749	\N	\N
+10067	5468	90	1047	\N	\N
+10068	889	131	1281	\N	\N
+10069	154	62	684	\N	\N
+10070	4452	107	1318	\N	\N
+10071	1433	176	665	\N	\N
+10072	1404	50	989	\N	\N
+10073	4053	62	1281	\N	\N
+10074	1870	181	693	\N	\N
+10075	1367	51	937	\N	\N
+10076	1478	15	1239	\N	\N
+10077	1909	139	1195	\N	\N
+10078	30	51	1043	\N	\N
+10079	5012	176	693	\N	\N
+10080	105	62	1335	\N	\N
+10081	2463	176	1326	\N	\N
+10082	4922	51	1281	\N	\N
+10083	1963	139	656	\N	\N
+10084	4599	176	923	\N	\N
+10085	251	163	708	\N	\N
+10086	666	139	668	\N	\N
+10087	824	62	1006	\N	\N
+10088	3884	204	819	\N	\N
+10089	796	68	941	\N	\N
+10090	2241	181	918	\N	\N
+10091	1919	37	656	\N	\N
+10092	2138	19	791	\N	\N
+10093	1719	32	645	\N	\N
+10094	4404	51	684	\N	\N
+10095	1729	31	1367	\N	\N
+10096	5039	51	893	\N	\N
+10097	1399	135	1298	\N	\N
+10098	2116	36	608	\N	\N
+10099	4865	133	1184	\N	\N
+10100	1131	90	870	\N	\N
+10101	5298	15	791	\N	\N
+10102	2325	47	161	\N	\N
+10103	4240	176	1307	\N	\N
+10104	5014	19	1298	\N	\N
+10105	1106	176	790	\N	\N
+10106	140	176	923	\N	\N
+10107	5535	62	860	\N	\N
+10108	4041	51	1298	\N	\N
+10109	1278	176	1199	\N	\N
+10110	787	185	944	\N	\N
+10111	1562	74	1481	\N	\N
+10112	1434	16	1367	\N	\N
+10113	810	62	718	\N	\N
+10114	3705	176	1246	\N	\N
+10115	4794	19	1335	\N	\N
+10116	5574	62	989	\N	\N
+10117	4857	140	1331	\N	\N
+10118	75	88	861	\N	\N
+10119	1570	51	1216	\N	\N
+10120	4715	37	1006	\N	\N
+10121	4350	178	944	\N	\N
+10122	1616	62	718	\N	\N
+10123	1083	181	1421	\N	\N
+10124	2380	69	941	\N	\N
+10125	4687	62	860	\N	\N
+10126	4609	176	1529	\N	\N
+10127	5539	62	918	\N	\N
+10128	3997	181	1161	\N	\N
+10129	3926	139	656	\N	\N
+10130	5053	146	861	\N	\N
+10131	1084	62	893	\N	\N
+10132	3984	111	693	\N	\N
+10133	3810	51	791	\N	\N
+10134	5523	51	1335	\N	\N
+10135	4897	62	1448	\N	\N
+10136	4501	58	1006	\N	\N
+10137	4869	37	1481	\N	\N
+10138	106	51	1335	\N	\N
+10139	454	108	1199	\N	\N
+10140	2141	19	791	\N	\N
+10141	1678	176	863	\N	\N
+10142	1027	160	331	\N	\N
+10143	5084	135	918	\N	\N
+10144	4927	139	656	\N	\N
+10145	2478	176	533	\N	\N
+10146	4566	51	684	\N	\N
+10147	2135	19	791	\N	\N
+10148	4466	62	1335	\N	\N
+10149	2315	13	1075	\N	\N
+10150	1430	51	937	\N	\N
+10151	3861	19	684	\N	\N
+10152	5229	51	818	\N	\N
+10153	4482	51	574	\N	\N
+10154	1789	68	684	\N	\N
+10155	5140	54	918	\N	\N
+10156	1992	13	937	\N	\N
+10157	3945	167	1154	\N	\N
+10158	4886	62	1335	\N	\N
+10159	1681	204	1104	\N	\N
+10160	1821	62	937	\N	\N
+10161	4909	201	1563	\N	\N
+10162	464	208	1089	\N	\N
+10163	411	212	1154	\N	\N
+10164	250	163	1307	\N	\N
+10165	2516	58	918	\N	\N
+10166	1032	198	1183	\N	\N
+10167	1881	176	1290	\N	\N
+10168	2144	176	1315	\N	\N
+10169	1515	187	217	\N	\N
+10170	35	176	1042	\N	\N
+10171	4103	19	893	\N	\N
+10172	1441	68	894	\N	\N
+10173	1609	62	1006	\N	\N
+10174	1403	181	1046	\N	\N
+10175	503	51	1043	\N	\N
+10176	4825	147	861	\N	\N
+10177	3708	134	995	\N	\N
+10178	245	156	97	\N	\N
+10179	5014	197	656	\N	\N
+10180	847	158	1298	\N	\N
+10181	2512	176	618	\N	\N
+10182	3754	15	1195	\N	\N
+10183	1352	186	863	\N	\N
+10184	1547	181	895	\N	\N
+10185	5259	62	1335	\N	\N
+10186	1197	59	726	\N	\N
+10187	221	62	1043	\N	\N
+10188	736	35	1184	\N	\N
+10189	480	62	1480	\N	\N
+10190	5068	68	476	\N	\N
+10191	3636	51	16	\N	\N
+10192	5158	181	944	\N	\N
+10193	4983	51	1184	\N	\N
+10194	1262	51	918	\N	\N
+10195	5125	25	702	\N	\N
+10196	1455	68	692	\N	\N
+10197	405	58	1298	\N	\N
+10198	4513	51	1536	\N	\N
+10199	828	176	706	\N	\N
+10200	918	68	194	\N	\N
+10201	865	52	641	\N	\N
+10202	4156	19	791	\N	\N
+10203	2584	51	1006	\N	\N
+10204	4832	179	880	\N	\N
+10205	1245	32	684	\N	\N
+10206	2060	51	10	\N	\N
+10207	1470	147	531	\N	\N
+10208	813	51	791	\N	\N
+10209	1246	62	1239	\N	\N
+10210	399	62	458	\N	\N
+10211	4474	176	1412	\N	\N
+10212	134	62	918	\N	\N
+10213	5544	19	791	\N	\N
+10214	5250	134	1556	\N	\N
+10215	4220	147	522	\N	\N
+10216	5571	48	804	\N	\N
+10217	1515	187	133	\N	\N
+10218	4862	139	1184	\N	\N
+10219	243	163	1307	\N	\N
+10220	815	204	944	\N	\N
+10221	454	51	1281	\N	\N
+10222	1515	187	216	\N	\N
+10223	915	211	941	\N	\N
+10224	1092	176	1255	\N	\N
+10225	2590	154	1039	\N	\N
+10226	4368	62	860	\N	\N
+10227	452	154	1513	\N	\N
+10228	4569	62	1043	\N	\N
+10229	594	164	1388	\N	\N
+10230	4872	62	1298	\N	\N
+10231	5014	51	918	\N	\N
+10232	2019	62	818	\N	\N
+10233	1683	62	1125	\N	\N
+10234	1299	176	795	\N	\N
+10235	1078	176	665	\N	\N
+10236	1125	142	918	\N	\N
+10237	1919	37	1006	\N	\N
+10238	4850	176	1010	\N	\N
+10239	350	181	664	\N	\N
+10240	1327	62	1335	\N	\N
+10241	5571	51	684	\N	\N
+10242	2520	134	645	\N	\N
+10243	2310	176	1331	\N	\N
+10244	1224	51	964	\N	\N
+10245	3601	45	656	\N	\N
+10246	720	212	693	\N	\N
+10247	4396	176	1155	\N	\N
+10248	2782	35	684	\N	\N
+10249	3842	130	1181	\N	\N
+10250	1006	51	57	\N	\N
+10251	4565	51	1481	\N	\N
+10252	449	37	860	\N	\N
+10253	897	181	533	\N	\N
+10254	5070	35	918	\N	\N
+10255	814	50	918	\N	\N
+10256	5325	51	1298	\N	\N
+10257	2136	102	941	\N	\N
+10258	4891	23	656	\N	\N
+10259	4048	147	1274	\N	\N
+10260	345	133	656	\N	\N
+10261	3755	156	1195	\N	\N
+10262	4298	62	1335	\N	\N
+10263	5086	147	185	\N	\N
+10264	2518	13	1152	\N	\N
+10265	2298	181	1199	\N	\N
+10266	4162	147	531	\N	\N
+10267	1886	156	856	\N	\N
+10268	1643	62	684	\N	\N
+10269	2430	176	1077	\N	\N
+10270	203	179	608	\N	\N
+10271	1618	19	1428	\N	\N
+10272	4459	32	656	\N	\N
+10273	4776	176	937	\N	\N
+10274	3794	176	737	\N	\N
+10275	4524	51	422	\N	\N
+10276	510	86	861	\N	\N
+10277	1649	51	1335	\N	\N
+10278	4695	176	1516	\N	\N
+10279	1579	51	1481	\N	\N
+10280	1577	51	818	\N	\N
+10281	2394	62	1335	\N	\N
+10282	4739	62	293	\N	\N
+10283	694	204	540	\N	\N
+10284	1058	181	895	\N	\N
+10285	3691	68	922	\N	\N
+10286	5246	13	656	\N	\N
+10287	894	212	491	\N	\N
+10288	1342	125	229	\N	\N
+10289	1137	51	1281	\N	\N
+10290	1640	51	684	\N	\N
+10291	4026	68	692	\N	\N
+10292	3845	176	1341	\N	\N
+10293	1428	51	1281	\N	\N
+10294	208	176	787	\N	\N
+10295	4405	51	684	\N	\N
+10296	4953	179	1253	\N	\N
+10297	855	46	856	\N	\N
+10298	4479	178	670	\N	\N
+10299	937	51	582	\N	\N
+10300	596	176	694	\N	\N
+10301	2166	130	986	\N	\N
+10302	5507	55	791	\N	\N
+10303	570	201	224	\N	\N
+10304	581	203	895	\N	\N
+10305	1539	37	860	\N	\N
+10306	241	51	164	\N	\N
+10307	535	201	1068	\N	\N
+10308	1894	51	684	\N	\N
+10309	1166	212	804	\N	\N
+10310	4562	51	937	\N	\N
+10311	1719	51	1424	\N	\N
+10312	1642	62	684	\N	\N
+10313	3743	51	1195	\N	\N
+10314	1532	58	1455	\N	\N
+10315	115	176	494	\N	\N
+10316	122	191	1561	\N	\N
+10317	1712	68	463	\N	\N
+10318	4648	176	1561	\N	\N
+10319	4615	176	415	\N	\N
+10320	2044	2	656	\N	\N
+10321	1546	181	1307	\N	\N
+10322	4832	179	608	\N	\N
+10323	4541	176	655	\N	\N
+10324	923	62	918	\N	\N
+10325	929	166	937	\N	\N
+10326	4308	19	292	\N	\N
+10327	928	62	918	\N	\N
+10328	4337	51	1152	\N	\N
+10329	596	176	665	\N	\N
+10330	4294	135	1043	\N	\N
+10331	5122	176	944	\N	\N
+10332	4180	66	915	\N	\N
+10333	1851	51	1298	\N	\N
+10334	3775	51	1253	\N	\N
+10335	5555	160	944	\N	\N
+10336	1628	185	944	\N	\N
+10337	5548	140	911	\N	\N
+10338	5274	188	944	\N	\N
+10339	828	176	1140	\N	\N
+10340	31	167	477	\N	\N
+10341	5217	67	531	\N	\N
+10342	1783	62	918	\N	\N
+10343	2026	86	698	\N	\N
+10344	1341	176	1367	\N	\N
+10345	403	176	994	\N	\N
+10346	10	137	656	\N	\N
+10347	78	32	1272	\N	\N
+10348	1830	181	1307	\N	\N
+10349	5476	51	1152	\N	\N
+10350	1925	47	210	\N	\N
+10351	4205	62	1073	\N	\N
+10352	3641	37	506	\N	\N
+10353	2630	176	656	\N	\N
+10354	2471	116	1448	\N	\N
+10355	721	212	1154	\N	\N
+10356	2290	51	1239	\N	\N
+10357	5453	51	684	\N	\N
+10358	1434	16	1084	\N	\N
+10359	5234	51	1477	\N	\N
+10360	3662	62	1281	\N	\N
+10361	5126	212	809	\N	\N
+10362	715	212	1338	\N	\N
+10363	4814	51	726	\N	\N
+10364	4112	181	863	\N	\N
+10365	4884	51	937	\N	\N
+10366	3806	51	791	\N	\N
+10367	4598	176	1431	\N	\N
+10368	5462	176	701	\N	\N
+10369	795	68	186	\N	\N
+10370	4370	181	863	\N	\N
+10371	774	62	1084	\N	\N
+10372	5394	3	1026	\N	\N
+10373	809	37	1006	\N	\N
+10374	139	116	1516	\N	\N
+10375	5147	176	1297	\N	\N
+10376	879	131	641	\N	\N
+10377	4702	74	1542	\N	\N
+10378	1594	79	693	\N	\N
+10379	4480	51	1014	\N	\N
+10380	780	86	698	\N	\N
+10381	2123	204	1308	\N	\N
+10382	78	32	1424	\N	\N
+10383	4770	13	1006	\N	\N
+10384	274	140	656	\N	\N
+10385	2595	140	1244	\N	\N
+10386	4136	51	1006	\N	\N
+10387	1195	62	1455	\N	\N
+10388	2147	212	1412	\N	\N
+10389	1472	147	531	\N	\N
+10390	5331	210	1028	\N	\N
+10391	1562	176	895	\N	\N
+10392	5153	156	733	\N	\N
+10393	440	62	989	\N	\N
+10394	2003	176	863	\N	\N
+10395	1940	51	1075	\N	\N
+10396	2401	44	1084	\N	\N
+10397	5058	106	1046	\N	\N
+10398	4530	35	656	\N	\N
+10399	2363	176	1195	\N	\N
+10400	160	62	684	\N	\N
+10401	890	129	856	\N	\N
+10402	3864	140	1084	\N	\N
+10403	26	188	1417	\N	\N
+10404	103	190	584	\N	\N
+10405	171	51	684	\N	\N
 \.
 
 
+
 COPY public.presentation (id, name, searchable) FROM stdin;
+94	Glóbulo	globulo
 1		
 2	*******	*******
 3	Adesivo	adesivo
@@ -29864,7 +31443,7 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 6	Aerossol Oral	aerossoloral
 7	Aerossol Topico	aerossoltopico
 8	Anel Vaginal	anelvaginal
-9	Cápsula 	capsula
+9	Cápsula	capsula
 10	Capsula Ap	capsulaap
 11	Capsula + Comprimido Revestido + Capsula	capsulacomprimidorevestidocapsula
 12	Capsula De Acao Prolongada	capsuladeacaoprolongada
@@ -29898,15 +31477,15 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 40	Comprimido Com Revestimento Enterico	comprimidocomrevestimentoenterico
 41	Comprimido De Absorcao Retardada	comprimidodeabsorcaoretardada
 42	Comprimido De Desintegraçao Lenta	comprimidodedesintegracaolenta
-43	Comprimido De Liberação Modificada 	comprimidodeliberacaomodificada
+43	Comprimido De Liberação Modificada	comprimidodeliberacaomodificada
 44	Comprimido De Liberação Prolongada	comprimidodeliberacaoprolongada
 45	Comprimido Dispersivel	comprimidodispersivel
 46	Comprimido Efervescente	comprimidoefervescente
 47	Comprimido Mastigavel	comprimidomastigavel
-48	Comprimido Orodispersível 	comprimidoorodispersivel
+48	Comprimido Orodispersível	comprimidoorodispersivel
 49	Comprimido Para Solução	comprimidoparasolucao
 50	Comprimido Para Suspensão	comprimidoparasuspensao
-51	Comprimido Revestido 	comprimidorevestido
+51	Comprimido Revestido	comprimidorevestido
 52	Comprimido Revestido (Englobado)	comprimidorevestido(englobado)
 53	Comprimido Revestido De Açao Prolongada	comprimidorevestidodeacaoprolongada
 54	Comprimido Revestido De Liberaçao Controlada	comprimidorevestidodeliberacaocontrolada
@@ -29933,8 +31512,9 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 75	Elixir	elixir
 76	Emplasto	emplasto
 77	Emulgel	emulgel
-78	Emulsão 	emulsao
-79	Emulsão Injetável 	emulsaoinjetavel
+78	Emulsão	emulsao
+79	Emulsão Injetável	emulsaoinjetavel
+211	Xampu	xampu
 80	Emulsao Oral	emulsaooral
 81	Emulsao Topica	emulsaotopica
 82	Enema	enema
@@ -29949,13 +31529,12 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 91	Geleia Vaginal	geleiavaginal
 92	Gel Oftalmico	geloftalmico
 93	Gel Vaginal	gelvaginal
-94	Glóbulo	globulo
-95	Granulado 	granulado
+95	Granulado	granulado
 96	Granulado Efervescente	granuladoefervescente
 97	Granulado Para Preparacao Extemporanea	granuladoparapreparacaoextemporanea
-98	Granulado Para Solução 	granuladoparasolucao
+98	Granulado Para Solução	granuladoparasolucao
 99	Granulado Para Suspensão	granuladoparasuspensao
-100	Granulado Revestido 	granuladorevestido
+100	Granulado Revestido	granuladorevestido
 101	Granulado Revestido De Liberação Prolongada	granuladorevestidodeliberacaoprolongada
 102	Granulado Simples	granuladosimples
 103	Granulo	granulo
@@ -29963,7 +31542,7 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 105	Inalantes	inalantes
 106	Infusao	infusao
 107	Linimento	linimento
-108	Líquido 	liquido
+108	Líquido	liquido
 109	Liquido Inalante	liquidoinalante
 110	Liquido Pulverizavel	liquidopulverizavel
 111	Loçao	locao
@@ -29971,16 +31550,16 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 113	Loçao Oleosa	locaooleosa
 114	Nao Possui Forma Fisica No Sivs	naopossuiformafisicanosivs
 115	Oleo	oleo
-116	Óvulo 	ovulo
-117	Pasta 	pasta
+116	Óvulo	ovulo
+117	Pasta	pasta
 118	Pasta Dentifricia	pastadentifricia
 119	Pastilha Drops	pastilhadrops
-120	Pastilha Dura 	pastilhadura
+120	Pastilha Dura	pastilhadura
 121	Pastilha Gomosa	pastilhagomosa
 122	Pastilha Simples	pastilhasimples
 123	Perola Gelatinosa	perolagelatinosa
 124	Pessario	pessario
-125	Pó 	po
+125	Pó	po
 126	Po De Uso Topico	podeusotopico
 127	Pó Efervescente	poefervescente
 128	Po Esteril	poesteril
@@ -29992,7 +31571,7 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 134	Po Liofilizado Injetavel + Solucao Diluente	poliofilizadoinjetavelsolucaodiluente
 135	Pó Liofilizado Para Solução Injetável	poliofilizadoparasolucaoinjetavel
 136	Pó Liofilizado Para Solução Para Infusão	poliofilizadoparasolucaoparainfusao
-137	Pó Liofilizado Para Suspensão Injetável 	poliofilizadoparasuspensaoinjetavel
+137	Pó Liofilizado Para Suspensão Injetável	poliofilizadoparasuspensaoinjetavel
 138	Po Liofilo	poliofilo
 139	Po Liofilo Injetavel	poliofiloinjetavel
 140	Po Liofilo Injetavel + Soluçao Diluente	poliofiloinjetavelsolucaodiluente
@@ -30010,7 +31589,7 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 152	Po Oral	pooral
 153	Pó Para Inalação	poparainalacao
 154	Po Para Preparaçoes Extemporanea	poparapreparacoesextemporanea
-155	Pó Para Solução 	poparasolucao
+155	Pó Para Solução	poparasolucao
 156	Pó Para Solução Injetável	poparasolucaoinjetavel
 157	Pó Para Solução Injetável + Solução Diluente	poparasolucaoinjetavelsolucaodiluente
 158	Po Para Soluçao Oral	poparasolucaooral
@@ -30022,8 +31601,8 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 164	Po Seco	poseco
 165	Sabonete	sabonete
 166	Shampoo	shampoo
-167	Solução 	solucao
-168	Solução Aerossol 	solucaoaerossol
+167	Solução	solucao
+168	Solução Aerossol	solucaoaerossol
 169	Soluçao Aquosa	solucaoaquosa
 170	Solucao Capilar	solucaocapilar
 171	Soluçao Com Propelente (Aerosol)	solucaocompropelente(aerosol)
@@ -30031,7 +31610,7 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 173	Soluçao Dermatologica	solucaodermatologica
 174	Soluçao Ginecologica	solucaoginecologica
 175	Solução Gotas	solucaogotas
-176	Solução Injetável 	solucaoinjetavel
+176	Solução Injetável	solucaoinjetavel
 177	Soluçao Injetavel + Soluçao Diluente	solucaoinjetavelsolucaodiluente
 178	Soluçao Nasal	solucaonasal
 179	Solução Oftálmica	solucaooftalmica
@@ -30053,10 +31632,10 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 195	Soluções Com Esterilização Terminal	solucoescomesterilizacaoterminal
 196	Soluções Parenterais De Pequeno Volume Com Preparação Asséptica	solucoesparenteraisdepequenovolumecompreparacaoasseptica
 197	Supositorio Retal	supositorioretal
-198	Suspensão 	suspensao
-199	Suspensão Aerossol 	suspensaoaerossol
-200	Suspensão Gotas 	suspensaogotas
-201	Suspensão Injetável 	suspensaoinjetavel
+198	Suspensão	suspensao
+199	Suspensão Aerossol	suspensaoaerossol
+200	Suspensão Gotas	suspensaogotas
+201	Suspensão Injetável	suspensaoinjetavel
 202	Suspensao Nasal	suspensaonasal
 203	Suspensao Oftalmica	suspensaooftalmica
 204	Suspensao Oral	suspensaooral
@@ -30066,40 +31645,42 @@ COPY public.presentation (id, name, searchable) FROM stdin;
 208	Suspensao Topica	suspensaotopica
 209	Tintura	tintura
 210	Unguento	unguento
-211	Xampu	xampu
-212	Xarope 	xarope
+212	Xarope	xarope
 \.
 
 
+
 SELECT pg_catalog.setval('public.company_id_seq', 253, true);
-SELECT pg_catalog.setval('public.company_medication_presentation_id_seq', 13490, true);
+SELECT pg_catalog.setval('public.company_medication_presentation_dosage_id_seq', 13490, true);
+SELECT pg_catalog.setval('public.dosage_id_seq', 1567, true);
 SELECT pg_catalog.setval('public.medication_id_seq', 5578, true);
-SELECT pg_catalog.setval('public.medication_presentation_id_seq', 10405, true);
+SELECT pg_catalog.setval('public.medication_presentation_dosage_id_seq', 10405, true);
 SELECT pg_catalog.setval('public.presentation_id_seq', 212, true);
 
 
 
+ALTER TABLE ONLY public.company_medication_presentation_dosage
+    ADD CONSTRAINT company_medication_presentation_dosage_pk PRIMARY KEY (id);
 ALTER TABLE ONLY public.company
     ADD CONSTRAINT company_pk PRIMARY KEY (id);
-ALTER TABLE ONLY public.company_medication_presentation
-    ADD CONSTRAINT company_medication_presentation_pk PRIMARY KEY (id);
+ALTER TABLE ONLY public.dosage
+    ADD CONSTRAINT dosage_pk PRIMARY KEY (id);
 ALTER TABLE ONLY public.medication
     ADD CONSTRAINT medication_pk PRIMARY KEY (id);
-ALTER TABLE ONLY public.medication_presentation
-    ADD CONSTRAINT medication_presentation_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.medication_presentation_dosage
+    ADD CONSTRAINT medication_presentation_dosage_pk PRIMARY KEY (id);
 ALTER TABLE ONLY public.presentation
     ADD CONSTRAINT presentation_pk PRIMARY KEY (id);
 
 
 
-ALTER TABLE ONLY public.company_medication_presentation
-    ADD CONSTRAINT fk_company FOREIGN KEY (companyid) REFERENCES public.company (id);
-ALTER TABLE ONLY public.company_medication_presentation
-    ADD CONSTRAINT fk_medication_presentation FOREIGN KEY (medicationpresentationid) REFERENCES public.medication_presentation (id);
-
-
-
-ALTER TABLE ONLY public.medication_presentation
-    ADD CONSTRAINT fkgim26e9orsocnxd7p07ewv2c8 FOREIGN KEY (medicationid) REFERENCES public.medication (id);
-ALTER TABLE ONLY public.medication_presentation
-    ADD CONSTRAINT fko9tow1fxepscgc16em5uv561h FOREIGN KEY (presentationid) REFERENCES public.presentation (id);
+ALTER TABLE ONLY public.company_medication_presentation_dosage
+    ADD CONSTRAINT fk_company FOREIGN KEY (companyid) REFERENCES public.company(id);
+ALTER TABLE ONLY public.medication_presentation_dosage
+    ADD CONSTRAINT fk_dosage FOREIGN KEY (dosageid) REFERENCES public.dosage(id);
+ALTER TABLE ONLY public.medication_presentation_dosage
+    ADD CONSTRAINT fk_medication FOREIGN KEY (medicationid) REFERENCES public.medication(id);
+ALTER TABLE ONLY public.company_medication_presentation_dosage
+    ADD CONSTRAINT fk_medication_presentation_dosage FOREIGN KEY (medicationpresentationdosageid) REFERENCES public.medication_presentation_dosage(id);
+ALTER TABLE ONLY public.medication_presentation_dosage
+    ADD CONSTRAINT fk_presentation FOREIGN KEY (presentationid) REFERENCES public.presentation(id);

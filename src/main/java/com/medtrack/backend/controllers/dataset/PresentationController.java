@@ -1,7 +1,7 @@
 package com.medtrack.backend.controllers.dataset;
 
-import com.medtrack.backend.commands.dataset.Medication.MedicationCommand;
-import com.medtrack.backend.services.dataset.MedicationService;
+import com.medtrack.backend.commands.dataset.Presentation.PresentationCommand;
+import com.medtrack.backend.services.dataset.PresentationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -11,20 +11,21 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
-@RequestMapping("/medication")
+@RequestMapping("/presentation")
 @RequiredArgsConstructor
-public class PrescriptionController {
+public class PresentationController {
 
-    private final MedicationService service;
+    private final PresentationService service;
 
     //TODO
     @GetMapping
-    public ResponseEntity<?> search(@RequestParam(required = false) String value,
+    public ResponseEntity<?> search(@RequestParam(required = false) String medication,
+                                    @RequestParam(required = false) String presentation,
+                                    @RequestParam(required = false) String dosage,
                                     @RequestParam(defaultValue = "0") Integer page,
                                     @RequestParam(defaultValue = "20") Integer size) {
-        if (value == null) value = "";
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(service.search(value, pageable));
+        return ResponseEntity.ok(service.search(medication, presentation, dosage, pageable));
     }
 
     @GetMapping("/{id}")
@@ -33,12 +34,12 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody MedicationCommand command) {
+    public ResponseEntity<?> create(@RequestBody PresentationCommand command) {
         return ResponseEntity.ok(service.create(command));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateById(@PathVariable Long id, @RequestBody MedicationCommand command) throws Exception {
+    public ResponseEntity<?> updateById(@PathVariable Long id, @RequestBody PresentationCommand command) throws Exception {
         return ResponseEntity.ok(service.updateById(id, command));
     }
 

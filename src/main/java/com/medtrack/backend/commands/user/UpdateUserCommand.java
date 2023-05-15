@@ -1,4 +1,4 @@
-package com.medtrack.backend.commands.user;
+package com.medtrack.backend.commands.User;
 
 import lombok.*;
 
