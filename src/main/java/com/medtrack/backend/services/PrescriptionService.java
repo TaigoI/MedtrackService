@@ -1,12 +1,13 @@
 package com.medtrack.backend.services;
 
-import com.medtrack.backend.commands.Prescription.inputs.PrescriptionCommand;
-import com.medtrack.backend.commands.Prescription.outputs.PrescriptionDTO;
-import com.medtrack.backend.commands.PrescriptionItem.inputs.PrescriptionItemCommand;
-import com.medtrack.backend.entities.Prescription;
-import com.medtrack.backend.entities.PrescriptionItem;
-import com.medtrack.backend.repositories.PrescriptionItemRepository;
-import com.medtrack.backend.repositories.PrescriptionRepository;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionCommand;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionDTO;
+import com.medtrack.backend.commands.Prescription.PrescriptionItem.PrescriptionItemCommand;
+import com.medtrack.backend.entities.prescription.Prescription;
+import com.medtrack.backend.entities.prescription.PrescriptionItem;
+import com.medtrack.backend.entities.user.User;
+import com.medtrack.backend.repositories.prescription.PrescriptionItemRepository;
+import com.medtrack.backend.repositories.prescription.PrescriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,37 +20,31 @@ public class PrescriptionService {
     private final PrescriptionRepository repository;
     private final PrescriptionItemRepository itemRepository;
 
-    public Page<PrescriptionDTO> search(String value, Pageable pageable) {
-        return repository.searchByTitle(value, pageable).map(PrescriptionDTO::new);
+    public Page<PrescriptionDTO> search(Long userId, String value, Boolean templatesOnly, Pageable pageable) {
+        return repository.searchByTitle(userId, value, templatesOnly, pageable).map(PrescriptionDTO::new);
     }
 
     public PrescriptionDTO findById(Long prescriptionId) throws Exception {
         return repository.findById(prescriptionId).map(PrescriptionDTO::new).orElseThrow(Exception::new);
     }
 
-    public PrescriptionDTO create(PrescriptionCommand command){
+    public PrescriptionDTO create(PrescriptionCommand command, Long userId) {
         Prescription prescription = new Prescription();
         prescription.setTitle(command.getTitle());
+        prescription.setUser(User.builder().id(userId).build());
         repository.saveAndFlush(prescription);
 
-        for (PrescriptionItemCommand item : command.getItems()) {
-            PrescriptionItem prescriptionItem = new PrescriptionItem();
-            prescriptionItem.setPrescription(prescription);
-            prescriptionItem.setDuration(item.getDuration());
-            prescriptionItem.setDosage(item.getDosage());
-            prescriptionItem.setFrequency(item.getFrequency());
-            //prescriptionItem.setMedicationPresentation(MedicationCompanyPresentation.builder().medicationPresentationId(item.getMedicationPresentationId()).build());
-
-            prescription.getItemList().add(prescriptionItem);
-            itemRepository.saveAndFlush(prescriptionItem);
+        for (PrescriptionItemCommand itemCommand : command.getItems()) {
+            PrescriptionItem prescriptionItem = new PrescriptionItem(prescription, itemCommand);
+            prescription.getItemList().add(itemRepository.saveAndFlush(prescriptionItem));
         }
 
         return new PrescriptionDTO(prescription);
     }
 
     //TODO:
-    public PrescriptionDTO update(Long prescriptionId, PrescriptionCommand command){
+    /*public PrescriptionDTO update(Long prescriptionId, PrescriptionCommand command){
         return new PrescriptionDTO();
-    }
+    }*/
 
 }

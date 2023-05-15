@@ -20,6 +20,8 @@ public class Searchable {
                 .stripAccents(str)
                 .toLowerCase()
                 .replace(" ", "")
+                .replace(".", "")
+                .replace(",", "")
                 .replace("-", "")
                 .replace("+", "")
                 .replace("/", "");
