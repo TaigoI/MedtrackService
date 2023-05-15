@@ -1,6 +1,6 @@
-package com.medtrack.backend.commands.prescription.Prescription;
+package com.medtrack.backend.commands.Prescription.Prescription;
 
-import com.medtrack.backend.commands.prescription.PrescriptionItem.PrescriptionItemDTO;
+import com.medtrack.backend.commands.Prescription.PrescriptionItem.PrescriptionItemDTO;
 import com.medtrack.backend.commands.user.UserDTO;
 import com.medtrack.backend.entities.prescription.Prescription;
 import lombok.*;

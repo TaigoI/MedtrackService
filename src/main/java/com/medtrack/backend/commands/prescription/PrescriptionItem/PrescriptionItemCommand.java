@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 public class PrescriptionItemCommand {
 
-    private Long medicationPresentationId;
+    private Long medicationPresentationDosageId;
     private Integer doseAmount;
     private Integer interval;
     private TimeUnit intervalUnit;
