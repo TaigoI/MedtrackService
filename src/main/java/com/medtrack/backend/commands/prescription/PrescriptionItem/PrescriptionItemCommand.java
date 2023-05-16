@@ -1,4 +1,4 @@
-package com.medtrack.backend.commands.prescription.PrescriptionItem;
+package com.medtrack.backend.commands.Prescription.PrescriptionItem;
 
 import com.medtrack.backend.enums.TimeUnit;
 import lombok.*;

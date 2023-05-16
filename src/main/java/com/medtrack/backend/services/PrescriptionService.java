@@ -1,11 +1,16 @@
 package com.medtrack.backend.services;
 
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionCommand;
 import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionDTO;
+import com.medtrack.backend.commands.Prescription.PrescriptionItem.PrescriptionItemCommand;
+import com.medtrack.backend.entities.dataset.MedicationPresentationDosage;
 import com.medtrack.backend.entities.prescription.Prescription;
 import com.medtrack.backend.entities.prescription.PrescriptionItem;
 import com.medtrack.backend.entities.user.User;
+import com.medtrack.backend.repositories.dataset.MedicationPresentationDosageRepository;
 import com.medtrack.backend.repositories.prescription.PrescriptionItemRepository;
 import com.medtrack.backend.repositories.prescription.PrescriptionRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +22,7 @@ public class PrescriptionService {
 
     private final PrescriptionRepository repository;
     private final PrescriptionItemRepository itemRepository;
+    private final MedicationPresentationDosageRepository medicationPresentationDosageRepository;
 
     public Page<PrescriptionDTO> search(Long userId, String value, Boolean templatesOnly, Pageable pageable) {
         return repository.searchByTitle(userId, value, templatesOnly, pageable).map(PrescriptionDTO::new);
@@ -26,23 +32,18 @@ public class PrescriptionService {
         return repository.findById(prescriptionId).map(PrescriptionDTO::new).orElseThrow(Exception::new);
     }
 
-    public PrescriptionDTO create(com.medtrack.backend.commands.prescription.Prescription.PrescriptionCommand command, Long userId) {
-        Prescription prescription = new Prescription();
-        prescription.setTitle(command.getTitle());
-        prescription.setUser(User.builder().id(userId).build());
+    @Transactional
+    public PrescriptionDTO create(PrescriptionCommand command, Long userId) throws Exception {
+        Prescription prescription = new Prescription(command, User.builder().id(userId).build());
         repository.saveAndFlush(prescription);
 
-        for (com.medtrack.backend.commands.prescription.PrescriptionItem.PrescriptionItemCommand itemCommand : command.getItems()) {
-            PrescriptionItem prescriptionItem = new PrescriptionItem(prescription, itemCommand);
-            prescription.getItemList().add(itemRepository.saveAndFlush(prescriptionItem));
+        for (PrescriptionItemCommand itemCommand : command.getItems()) {
+            MedicationPresentationDosage mpd = medicationPresentationDosageRepository.findById(itemCommand.getMedicationPresentationDosageId()).orElseThrow(Exception::new);
+            prescription.getItemList().add(new PrescriptionItem(prescription, mpd, itemCommand));
         }
 
+        itemRepository.saveAllAndFlush(prescription.getItemList());
         return new PrescriptionDTO(prescription);
     }
-
-    //TODO:
-    /*public PrescriptionDTO update(Long prescriptionId, PrescriptionCommand command){
-        return new PrescriptionDTO();
-    }*/
 
 }

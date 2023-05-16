@@ -1,6 +1,6 @@
-package com.medtrack.backend.commands.prescription.Prescription;
+package com.medtrack.backend.commands.Prescription.Prescription;
 
-import com.medtrack.backend.commands.prescription.PrescriptionItem.PrescriptionItemCommand;
+import com.medtrack.backend.commands.Prescription.PrescriptionItem.PrescriptionItemCommand;
 import lombok.*;
 
 import java.util.List;
