@@ -9,7 +9,7 @@
     "data": [
       {
         "name": "base_url",
-        "value": "http://192.168.0.19:8080"
+        "value": "http://192.168.95.118:8080"
       },
       {
         "name": "access_token",

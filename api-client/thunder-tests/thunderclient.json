@@ -167,7 +167,7 @@
     "method": "GET",
     "sortNum": 10000,
     "created": "2023-05-16T12:09:14.639Z",
-    "modified": "2023-05-16T12:14:07.649Z",
+    "modified": "2023-05-16T12:49:54.265Z",
     "headers": [],
     "params": [
       {
@@ -211,12 +211,12 @@
     "method": "POST",
     "sortNum": 40000,
     "created": "2023-05-16T12:10:53.525Z",
-    "modified": "2023-05-16T12:13:00.298Z",
+    "modified": "2023-05-16T13:11:48.416Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"title\": \"string\",\n  \"description\": \"string\",\n  \"template\": true,\n  \"templateTitle\": \"string\",\n  \"templateDescription\": \"string\",\n  \"items\": [\n    {\n      \"medicationPresentationDosageId\": 0,\n      \"doseAmount\": 0,\n      \"interval\": 0,\n      \"intervalUnit\": \"minute\",\n      \"occurrences\": 0,\n      \"comments\": \"string\"\n    }\n  ]\n}",
+      "raw": "{\n  \"title\": \"string\",\n  \"description\": \"string\",\n  \"template\": true,\n  \"templateTitle\": \"string\",\n  \"templateDescription\": \"string\",\n  \"items\": [\n    {\n      \"medicationPresentationDosageId\": 1046,\n      \"doseAmount\": 0,\n      \"interval\": 0,\n      \"intervalUnit\": \"minute\",\n      \"occurrences\": 0,\n      \"comments\": \"string\"\n    }\n  ]\n}",
       "form": []
     },
     "tests": []
@@ -246,6 +246,30 @@
     "created": "2023-05-16T12:27:48.072Z",
     "modified": "2023-05-16T12:28:31.099Z",
     "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "f0f659eb-4c8f-4940-9fc6-3d621037b146",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "bed8ddca-775b-4097-8112-689a9bf2d188",
+    "name": "show",
+    "url": "/user",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-05-16T12:30:04.810Z",
+    "modified": "2023-05-16T12:30:30.624Z",
+    "headers": [
+      {
+        "name": "User-Agent",
+        "value": "Thunder Client (https://www.thunderclient.com)",
+        "isDisabled": true
+      },
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
     "params": [],
     "tests": []
   }
