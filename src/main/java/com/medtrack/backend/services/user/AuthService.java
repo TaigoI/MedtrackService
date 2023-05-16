@@ -6,14 +6,18 @@ import com.medtrack.backend.auth.MedtrackUserDetails;
 import com.medtrack.backend.auth.TokenDTO;
 import com.medtrack.backend.commands.User.CreateUserCommand;
 import com.medtrack.backend.entities.user.User;
+import com.medtrack.backend.exception.UserAlreadyExistsException;
+import com.medtrack.backend.exception.UserNotFoundException;
 import com.medtrack.backend.repositories.user.UserRepository;
+import com.medtrack.backend.util.Searchable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +34,26 @@ public class AuthService {
             MedtrackUserDetails userDetails = (MedtrackUserDetails) authentication.getPrincipal();
             return new TokenDTO(userDetails, jwtService.generateToken(userDetails));
         } else {
-            throw new UsernameNotFoundException("invalid user request!");
+            throw new UserNotFoundException("Não foi possível autenticar o usuário.", new HashMap<>() {{
+                put("username", command.getUsername());
+            }});
         }
     }
 
     public User signup(CreateUserCommand command) {
+        command.setCpf(Searchable.toSimilarity(command.getCpf()));
+        repository
+                .findByCpfOrEmail(command.getCpf(), command.getEmail())
+                .ifPresent((User user) -> {
+                    throw new UserAlreadyExistsException(
+                            "Usuário já cadastrado com Cpf '" + user.getCpf() + "' e Email '" + user.getEmail() + "'.",
+                            new HashMap<>() {{
+                                put("cpf", user.getCpf());
+                                put("email", user.getEmail());
+                            }}
+                    );
+                });
+
         User user = new User();
         user.updateWithCommand(command);
         user.updateEncodedPassword(passwordEncoder.encode(command.getPassword()));

@@ -11,4 +11,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "select u.* from users u where u.cpf = ?1 or u.email = ?1", nativeQuery = true)
     Optional<User> findByCpfOrEmail(String username);
 
+    @Query(value = "select u.* from users u where u.cpf = ?1 or u.email = ?2", nativeQuery = true)
+    Optional<User> findByCpfOrEmail(String cpf, String email);
+
 }
