@@ -16,22 +16,16 @@ public class MedicationPresentationDosage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "medicationid")
     private Medication medication;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "presentationid")
     private Presentation presentation;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dosageid")
     private Dosage dosage;
-
-    @Column(name = "dosage_amount")
-    private String dosageAmount;
-
-    @Column(name = "dosage_unit")
-    private String dosageUnit;
 
 }

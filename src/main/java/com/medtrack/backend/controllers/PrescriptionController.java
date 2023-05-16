@@ -1,6 +1,7 @@
 package com.medtrack.backend.controllers;
 
 import com.medtrack.backend.auth.MedtrackUserDetails;
+import com.medtrack.backend.commands.Prescription.Prescription.PrescriptionCommand;
 import com.medtrack.backend.services.PrescriptionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,8 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody com.medtrack.backend.commands.prescription.Prescription.PrescriptionCommand command,
-                                    UsernamePasswordAuthenticationToken token) {
+    public ResponseEntity<?> create(@RequestBody PrescriptionCommand command,
+                                    UsernamePasswordAuthenticationToken token) throws Exception {
         MedtrackUserDetails userDetails = (MedtrackUserDetails) token.getPrincipal();
         return ResponseEntity.ok(service.create(command, userDetails.getId()));
     }
