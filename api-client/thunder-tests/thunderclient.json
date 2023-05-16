@@ -3,12 +3,12 @@
     "_id": "50efade0-6365-4893-9708-b5b0b7c922f0",
     "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
     "containerId": "dc667dd1-7571-4cf4-b337-c08676d4b182",
-    "name": "SignIn",
-    "url": "{{base_url}}/auth/login",
+    "name": "Login",
+    "url": "/auth/login",
     "method": "POST",
     "sortNum": 10000,
     "created": "2023-05-16T02:07:58.792Z",
-    "modified": "2023-05-16T02:17:59.562Z",
+    "modified": "2023-05-16T12:03:35.225Z",
     "headers": [
       {
         "name": "User-Agent",
@@ -33,11 +33,11 @@
     "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
     "containerId": "dc667dd1-7571-4cf4-b337-c08676d4b182",
     "name": "SignUp",
-    "url": "{{base_url}}/auth/signup",
-    "method": "GET",
+    "url": "/auth/signup",
+    "method": "POST",
     "sortNum": 20000,
     "created": "2023-05-16T02:12:05.363Z",
-    "modified": "2023-05-16T02:16:48.093Z",
+    "modified": "2023-05-16T12:03:38.593Z",
     "headers": [
       {
         "name": "Content-Type",
@@ -50,6 +50,203 @@
       "raw": "{\n  \"name\": \"string\",\n  \"cpf\": \"string\",\n  \"email\": \"string\",\n  \"gender\": \"string\",\n  \"councilRegistration\": \"string\",\n  \"birthdate\": \"2023-05-16\",\n  \"mobilePhone\": \"string\",\n  \"businessPhone\": \"string\",\n  \"password\": \"string\"\n}",
       "form": []
     },
+    "tests": []
+  },
+  {
+    "_id": "95640982-0d19-4f96-ab8a-ed3d3cb56df7",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "6ec4b589-201e-4ffe-8741-bbe228479658",
+    "name": "index",
+    "url": "/medication",
+    "method": "GET",
+    "sortNum": 30000,
+    "created": "2023-05-16T12:04:20.083Z",
+    "modified": "2023-05-16T12:04:25.541Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "8d9f5281-6f65-4964-92b4-33bdfbec3d8e",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "6ec4b589-201e-4ffe-8741-bbe228479658",
+    "name": "show",
+    "url": "/medication/49",
+    "method": "GET",
+    "sortNum": 40000,
+    "created": "2023-05-16T12:04:35.115Z",
+    "modified": "2023-05-16T12:23:31.844Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "c68cdf50-cccc-4b87-beff-8b1a4968e78a",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "6ec4b589-201e-4ffe-8741-bbe228479658",
+    "name": "store",
+    "url": "/medication",
+    "method": "POST",
+    "sortNum": 50000,
+    "created": "2023-05-16T12:04:44.799Z",
+    "modified": "2023-05-16T12:05:04.236Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"name\": \"string\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "ef5c96d6-d5b7-489d-80c6-404af37a1808",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "6ec4b589-201e-4ffe-8741-bbe228479658",
+    "name": "update",
+    "url": "/medication/1",
+    "method": "POST",
+    "sortNum": 60000,
+    "created": "2023-05-16T12:05:14.139Z",
+    "modified": "2023-05-16T12:05:20.878Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"name\": \"string\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "e46486b0-dda5-4dc0-9650-fc947a4ee414",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "a6fb5b92-01d9-4fa9-89b3-5dc255d706d9",
+    "name": "index",
+    "url": "/dosage?medication=49",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-05-16T12:05:50.437Z",
+    "modified": "2023-05-16T12:23:47.938Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "medication",
+        "value": "49",
+        "isPath": false
+      },
+      {
+        "name": "size",
+        "value": "",
+        "isDisabled": true,
+        "isPath": false
+      }
+    ],
+    "tests": []
+  },
+  {
+    "_id": "968155c0-7ef0-40a6-8905-5bef60d18570",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "a6fb5b92-01d9-4fa9-89b3-5dc255d706d9",
+    "name": "show",
+    "url": "/dosage/1",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-05-16T12:05:54.426Z",
+    "modified": "2023-05-16T12:06:11.227Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "20607480-b742-461a-8fba-dcda631a56b1",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "9ce73129-2a5b-413e-b9dc-72f46c9da762",
+    "name": "index",
+    "url": "/prescription?templatesOnly=false&page=0&size=20",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-05-16T12:09:14.639Z",
+    "modified": "2023-05-16T12:14:07.649Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "templatesOnly",
+        "value": "false",
+        "isPath": false
+      },
+      {
+        "name": "page",
+        "value": "0",
+        "isPath": false
+      },
+      {
+        "name": "size",
+        "value": "20",
+        "isPath": false
+      }
+    ],
+    "tests": []
+  },
+  {
+    "_id": "6a9bd5a1-9e4f-42fa-aef3-a4c9447eb11e",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "9ce73129-2a5b-413e-b9dc-72f46c9da762",
+    "name": "show",
+    "url": "/dosage/1",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-05-16T12:09:14.640Z",
+    "modified": "2023-05-16T12:09:14.639Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "32a9ff40-ef16-4a1e-98b2-dcbf8c8e6010",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "9ce73129-2a5b-413e-b9dc-72f46c9da762",
+    "name": "store",
+    "url": "/prescription",
+    "method": "POST",
+    "sortNum": 40000,
+    "created": "2023-05-16T12:10:53.525Z",
+    "modified": "2023-05-16T12:13:00.298Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"title\": \"string\",\n  \"description\": \"string\",\n  \"template\": true,\n  \"templateTitle\": \"string\",\n  \"templateDescription\": \"string\",\n  \"items\": [\n    {\n      \"medicationPresentationDosageId\": 0,\n      \"doseAmount\": 0,\n      \"interval\": 0,\n      \"intervalUnit\": \"minute\",\n      \"occurrences\": 0,\n      \"comments\": \"string\"\n    }\n  ]\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "be610350-1e19-4c16-81cc-1aca8a12900d",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "29f24bac-41d5-48f3-9372-24c7316d7257",
+    "name": "index",
+    "url": "/presentation",
+    "method": "GET",
+    "sortNum": 10000,
+    "created": "2023-05-16T12:27:48.071Z",
+    "modified": "2023-05-16T12:28:00.525Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "6193cc5b-0679-4a0d-921d-87eb3f30dfc2",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "29f24bac-41d5-48f3-9372-24c7316d7257",
+    "name": "show",
+    "url": "/presentation/53",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-05-16T12:27:48.072Z",
+    "modified": "2023-05-16T12:28:31.099Z",
+    "headers": [],
+    "params": [],
     "tests": []
   }
 ]

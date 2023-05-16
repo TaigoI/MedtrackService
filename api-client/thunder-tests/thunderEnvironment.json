@@ -9,7 +9,11 @@
     "data": [
       {
         "name": "base_url",
-        "value": "http://localhost:8080"
+        "value": "http://192.168.0.19:8080"
+      },
+      {
+        "name": "access_token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI1NjE3MTU0MjE0OCIsIm5hbWUiOiJSdWkgRmVybmFuZGVzIiwiaWQiOjEsImV4cCI6MTY4NDMyNDk0OCwiaWF0IjoxNjg0MjM4NTQ4LCJlbWFpbCI6ImRldi5ydWlmZXJuYW5kZXNAZ21haWwuY29tIiwiYXV0aG9yaXRpZXMiOlsidXNlciJdLCJ1c2VybmFtZSI6IjU2MTcxNTQyMTQ4In0.tRK0T4Ew9QboJ4DbtWdC6Y78eKT-LO5JHuHcjtM6BXifnAeJWAwHsrn8O94pBeu8oML_z5JcUwmVSoyQGomHHg"
       }
     ]
   }

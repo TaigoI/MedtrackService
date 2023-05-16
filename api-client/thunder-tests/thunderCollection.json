@@ -11,7 +11,44 @@
         "containerId": "",
         "created": "2023-05-16T02:07:50.866Z",
         "sortNum": 10000
+      },
+      {
+        "_id": "6ec4b589-201e-4ffe-8741-bbe228479658",
+        "name": "Medications",
+        "containerId": "",
+        "created": "2023-05-16T12:04:07.246Z",
+        "sortNum": 20000
+      },
+      {
+        "_id": "a6fb5b92-01d9-4fa9-89b3-5dc255d706d9",
+        "name": "Dosage",
+        "containerId": "",
+        "created": "2023-05-16T12:05:44.185Z",
+        "sortNum": 15000
+      },
+      {
+        "_id": "9ce73129-2a5b-413e-b9dc-72f46c9da762",
+        "name": "Prescriptions",
+        "containerId": "",
+        "created": "2023-05-16T12:09:14.639Z",
+        "sortNum": 17500
+      },
+      {
+        "_id": "29f24bac-41d5-48f3-9372-24c7316d7257",
+        "name": "Presentation",
+        "containerId": "",
+        "created": "2023-05-16T12:27:48.071Z",
+        "sortNum": 18750
       }
-    ]
+    ],
+    "settings": {
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{access_token}}"
+      },
+      "options": {
+        "baseUrl": "{{base_url}}"
+      }
+    }
   }
 ]
