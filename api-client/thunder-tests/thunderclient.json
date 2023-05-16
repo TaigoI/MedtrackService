@@ -1,0 +1,55 @@
+[
+  {
+    "_id": "50efade0-6365-4893-9708-b5b0b7c922f0",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "dc667dd1-7571-4cf4-b337-c08676d4b182",
+    "name": "SignIn",
+    "url": "{{base_url}}/auth/login",
+    "method": "POST",
+    "sortNum": 10000,
+    "created": "2023-05-16T02:07:58.792Z",
+    "modified": "2023-05-16T02:17:59.562Z",
+    "headers": [
+      {
+        "name": "User-Agent",
+        "value": "Thunder Client (https://www.thunderclient.com)",
+        "isDisabled": true
+      },
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"username\": \"56171542148\",\n  \"password\": \"rui123\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "4d3fd96f-ecb5-4c64-8fd9-f2826e36afec",
+    "colId": "05515876-c8a1-4df3-a324-e3ea9c734aef",
+    "containerId": "dc667dd1-7571-4cf4-b337-c08676d4b182",
+    "name": "SignUp",
+    "url": "{{base_url}}/auth/signup",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-05-16T02:12:05.363Z",
+    "modified": "2023-05-16T02:16:48.093Z",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"name\": \"string\",\n  \"cpf\": \"string\",\n  \"email\": \"string\",\n  \"gender\": \"string\",\n  \"councilRegistration\": \"string\",\n  \"birthdate\": \"2023-05-16\",\n  \"mobilePhone\": \"string\",\n  \"businessPhone\": \"string\",\n  \"password\": \"string\"\n}",
+      "form": []
+    },
+    "tests": []
+  }
+]
