@@ -43,7 +43,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleExceptions(Exception ex, WebRequest request) {
         Error err = new Error(ex.getMessage(), ExceptionUtils.getRootCauseMessage(ex), new HashMap<>());
-        return handleExceptionInternal(ex, err, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+        return handleExceptionInternal(ex, err, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @Getter
