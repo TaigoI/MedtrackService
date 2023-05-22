@@ -55,11 +55,12 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests()
-                .anyRequest().authenticated()
                 .requestMatchers("/v3/api-docs/**", "/v2/api-docs", "/swagger-ui/**", "/configuration/ui", "/swagger-resources/**", "/configuration/**", "/swagger-ui.html", "/webjars/**", "/csrf", "/")
                 .permitAll()
                 .requestMatchers("/auth/**")
                 .permitAll()
+                .anyRequest()
+                .authenticated()
                 .and()
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
